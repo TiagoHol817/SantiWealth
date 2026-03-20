@@ -1,0 +1,51 @@
+'use client'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { TrendingUp, X, Check } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+
+export default function UpdateGoalButton({ id, current }: { id: string; current: number }) {
+  const [open, setOpen]     = useState(false)
+  const [valor, setValor]   = useState(String(current))
+  const [saving, setSaving] = useState(false)
+  const router = useRouter()
+
+  async function actualizar() {
+    setSaving(true)
+    const supabase = createClient()
+    await supabase.from('goals').update({ current_amount: Number(valor) }).eq('id', id)
+    setSaving(false)
+    setOpen(false)
+    router.refresh()
+  }
+
+  const inp = {
+    backgroundColor: '#0f1117', border: '1px solid #2a3040', borderRadius: '10px',
+    color: '#e5e7eb', padding: '6px 10px', fontSize: '13px', outline: 'none', width: '160px'
+  }
+
+ if (!open) return (
+  <button onClick={() => setOpen(true)}
+    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all hover:opacity-80"
+    style={{ backgroundColor: '#00d4aa20', color: '#00d4aa', border: '1px solid #00d4aa30', position: 'relative', zIndex: 10 }}>
+    <TrendingUp size={12} /> Actualizar
+  </button>
+)
+
+  return (
+    <div className="flex gap-2 items-center">
+      <input style={inp} type="number" value={valor}
+        onChange={e => setValor(e.target.value)} placeholder="Nuevo monto" />
+      <button onClick={actualizar} disabled={saving}
+        className="w-8 h-8 rounded-lg flex items-center justify-center"
+        style={{ backgroundColor: '#00d4aa', color: '#000' }}>
+        <Check size={14} />
+      </button>
+      <button onClick={() => setOpen(false)}
+        className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10"
+        style={{ color: '#6b7280' }}>
+        <X size={14} />
+      </button>
+    </div>
+  )
+}
