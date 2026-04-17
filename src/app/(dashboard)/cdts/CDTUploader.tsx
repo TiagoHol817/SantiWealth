@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, X, Pencil, Trash2, ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/context/ToastContext'
 
 type CDTData = {
   id?: string
@@ -15,14 +16,18 @@ const EMPTY: CDTData = {
   tasa_ea: '', tasa_nominal: '', plazo_dias: '', interes_periodo: ''
 }
 
+// Parsea números con puntos como separadores de miles: "10.000.000" → 10000000
+const parseCOP = (v: string) => Number(v.toString().replace(/\./g, '').replace(/,/g, ''))
+
 export default function CDTUploader({ cdts }: { cdts?: { id: string; name: string; notes: any; current_balance: number }[] }) {
-  const [mode, setMode]           = useState<'none'|'add'|'edit'>('none')
+  const [mode, setMode]             = useState<'none'|'add'|'edit'>('none')
   const [showManage, setShowManage] = useState(false)
-  const [saving, setSaving]       = useState(false)
-  const [deleting, setDeleting]   = useState<string|null>(null)
-  const [error, setError]         = useState('')
-  const [form, setForm]           = useState<CDTData>(EMPTY)
-  const router = useRouter()
+  const [saving, setSaving]         = useState(false)
+  const [deleting, setDeleting]     = useState<string|null>(null)
+  const [form, setForm]             = useState<CDTData>(EMPTY)
+  const router                      = useRouter()
+  const { toast }                   = useToast()
+
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
   function openEdit(cdt: { id: string; name: string; notes: any; current_balance: number }) {
@@ -42,7 +47,7 @@ export default function CDTUploader({ cdts }: { cdts?: { id: string; name: strin
   }
 
   async function guardar() {
-    setSaving(true); setError('')
+    setSaving(true)
     try {
       const supabase = createClient()
       const notes = JSON.stringify({
@@ -50,31 +55,66 @@ export default function CDTUploader({ cdts }: { cdts?: { id: string; name: strin
         vencimiento:     form.vencimiento,
         tasa_ea:         Number(form.tasa_ea),
         tasa_nominal:    Number(form.tasa_nominal),
-        plazo_dias:      Number(form.plazo_dias),
-        interes_periodo: Number(form.interes_periodo),
+        plazo_dias:      parseCOP(form.plazo_dias),
+        interes_periodo: parseCOP(form.interes_periodo),
       })
+
       if (mode === 'edit' && form.id) {
-        await supabase.from('accounts').update({
-          name: form.nombre, current_balance: Number(form.capital), notes,
+        const { error } = await supabase.from('accounts').update({
+          name:            form.nombre,
+          current_balance: parseCOP(form.capital),
+          notes,
         }).eq('id', form.id)
+
+        if (error) throw error
+        toast.success('CDT actualizado', `${form.nombre} se guardó correctamente.`)
       } else {
         const { data: { user } } = await supabase.auth.getUser()
-        await supabase.from('accounts').insert({
-          user_id: user!.id, name: form.nombre, type: 'other',
-          currency: 'COP', current_balance: Number(form.capital), notes,
+        const { error } = await supabase.from('accounts').insert({
+          user_id:         user!.id,
+          name:            form.nombre,
+          type:            'other',
+          currency:        'COP',
+          current_balance: parseCOP(form.capital),
+          notes,
         })
+
+        if (error) throw error
+        toast.success('CDT agregado', `${form.nombre} fue creado exitosamente.`)
       }
-      setMode('none'); setForm(EMPTY); router.refresh()
-    } catch (e: any) { setError(e.message) }
-    setSaving(false)
+
+      setMode('none')
+      setForm(EMPTY)
+      router.refresh()
+    } catch (e: any) {
+      toast.error(
+        'Error al guardar CDT',
+        'Ocurrió un problema al guardar. Por favor intenta de nuevo.'
+      )
+    } finally {
+      setSaving(false)
+    }
   }
 
-  async function eliminar(id: string) {
+  async function eliminar(id: string, nombre?: string) {
     if (!confirm('¿Eliminar este CDT?')) return
     setDeleting(id)
-    const supabase = createClient()
-    await supabase.from('accounts').delete().eq('id', id)
-    setDeleting(null); setMode('none'); router.refresh()
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('accounts').delete().eq('id', id)
+
+      if (error) throw error
+      toast.success('CDT eliminado', nombre ? `${nombre} fue eliminado.` : 'CDT eliminado correctamente.')
+      setMode('none')
+      router.refresh()
+    } catch (e: any) {
+      toast.error(
+        'Error al eliminar CDT',
+        'No se pudo eliminar. Por favor intenta de nuevo.'
+      )
+    } finally {
+      setDeleting(null)
+    }
   }
 
   const inp = {
@@ -132,7 +172,7 @@ export default function CDTUploader({ cdts }: { cdts?: { id: string; name: strin
                         <Pencil size={12} />
                       </button>
                       <button
-                        onClick={() => { eliminar(cdt.id); setShowManage(false) }}
+                        onClick={() => { eliminar(cdt.id, cdt.name); setShowManage(false) }}
                         disabled={deleting === cdt.id}
                         className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-red-900/30 transition-all"
                         style={{ color: '#ef4444', border: '1px solid #2a3040' }}>
@@ -180,7 +220,7 @@ export default function CDTUploader({ cdts }: { cdts?: { id: string; name: strin
                 <label style={lbl}>Nombre</label>
                 <input style={inp} value={form.nombre}
                   onChange={e => set('nombre', e.target.value)}
-                  placeholder="CDT Bancolombia #1" />
+                  placeholder="Ej: CDT Banco #1" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {campos.map(([key, label, placeholder]) => (
@@ -197,16 +237,9 @@ export default function CDTUploader({ cdts }: { cdts?: { id: string; name: strin
               </div>
             </div>
 
-            {error && (
-              <p className="mt-3 p-3 rounded-xl text-sm"
-                style={{ color: '#ef4444', backgroundColor: '#ef444415' }}>
-                ⚠️ {error}
-              </p>
-            )}
-
             <div className="flex items-center justify-between mt-5">
               {mode === 'edit' ? (
-                <button onClick={() => eliminar(form.id!)}
+                <button onClick={() => eliminar(form.id!, form.nombre)}
                   className="px-4 py-2 rounded-xl text-sm font-medium transition-all hover:bg-red-900/30"
                   style={{ color: '#ef4444', border: '1px solid #ef444430' }}>
                   Eliminar CDT
@@ -220,11 +253,12 @@ export default function CDTUploader({ cdts }: { cdts?: { id: string; name: strin
                 </button>
                 <button onClick={guardar} disabled={saving}
                   className="px-4 py-2 rounded-xl text-sm font-medium"
-                  style={{ backgroundColor: '#00d4aa', color: '#000' }}>
+                  style={{ backgroundColor: '#00d4aa', color: '#000', opacity: saving ? 0.7 : 1 }}>
                   {saving ? 'Guardando...' : mode === 'edit' ? 'Guardar cambios' : 'Agregar CDT'}
                 </button>
               </div>
             </div>
+
           </div>
         </>
       )}

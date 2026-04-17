@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/context/ToastContext'
 
 const CATEGORIAS = ['Arriendo', 'Servicios públicos', 'Internet/Celular', 'Suscripciones', 'Alimentación', 'Transporte', 'Otro']
 
@@ -22,16 +23,16 @@ type Cost = {
   id: string; name: string; category: string;
   amount: number; frequency: string; active: boolean
 }
-
 type Mode = 'list' | 'add' | 'edit'
 
 export default function CostosForm({ costs }: { costs: Cost[] }) {
-  const [mode, setMode]       = useState<Mode>('list')
-  const [editId, setEditId]   = useState<string | null>(null)
+  const [mode, setMode]           = useState<Mode>('list')
+  const [editId, setEditId]       = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
-  const [error, setError]     = useState('')
-  const [form, setForm]       = useState({ name: '', category: 'Arriendo', amount: '', frequency: 'monthly' })
-  const router = useRouter()
+  const [form, setForm]           = useState({ name: '', category: 'Arriendo', amount: '', frequency: 'monthly' })
+  const router    = useRouter()
+  const { toast } = useToast()
+
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
   const fmtCOP = (n: number) =>
@@ -41,54 +42,79 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
     setForm({ name: cost.name, category: cost.category, amount: String(cost.amount), frequency: cost.frequency })
     setEditId(cost.id)
     setMode('edit')
-    setError('')
   }
 
   function abrirAgregar() {
     setForm({ name: '', category: 'Arriendo', amount: '', frequency: 'monthly' })
     setEditId(null)
     setMode('add')
-    setError('')
   }
 
   async function guardar() {
     setGuardando(true)
-    setError('')
-    const supabase = createClient()
-    const { data } = await supabase.auth.getSession()
-    if (!data.session) { setError('No autenticado.'); setGuardando(false); return }
+    try {
+      const supabase = createClient()
+      const { data } = await supabase.auth.getSession()
+      if (!data.session) throw new Error('Tu sesión ha expirado. Por favor inicia sesión nuevamente.')
 
-    if (mode === 'edit' && editId) {
-      const { error: e } = await supabase.from('operational_costs').update({
-        name: form.name, category: form.category,
-        amount: Number(form.amount), frequency: form.frequency
-      }).eq('id', editId)
-      if (e) { setError(e.message); setGuardando(false); return }
-    } else {
-      const { error: e } = await supabase.from('operational_costs').insert({
-        name: form.name, category: form.category,
-        amount: Number(form.amount), frequency: form.frequency,
-        active: true, user_id: data.session.user.id
-      })
-      if (e) { setError(e.message); setGuardando(false); return }
+      if (mode === 'edit' && editId) {
+        const { error } = await supabase.from('operational_costs').update({
+          name: form.name, category: form.category,
+          amount: Number(form.amount), frequency: form.frequency
+        }).eq('id', editId)
+        if (error) throw error
+        toast.success('Costo actualizado', `${form.name} se guardó correctamente.`)
+      } else {
+        const { error } = await supabase.from('operational_costs').insert({
+          name: form.name, category: form.category,
+          amount: Number(form.amount), frequency: form.frequency,
+          active: true, user_id: data.session.user.id
+        })
+        if (error) throw error
+        toast.success('Costo agregado', `${form.name} · ${fmtCOP(Number(form.amount))}/mes`)
+      }
+
+      setMode('list')
+      router.refresh()
+    } catch (e: any) {
+      toast.error(
+        mode === 'edit' ? 'Error al actualizar costo' : 'Error al agregar costo',
+        'Ocurrió un problema al guardar. Por favor intenta de nuevo.'
+      )
+    } finally {
+      setGuardando(false)
     }
-
-    setGuardando(false)
-    setMode('list')
-    router.refresh()
   }
 
   async function toggleActivo(cost: Cost) {
-    const supabase = createClient()
-    await supabase.from('operational_costs').update({ active: !cost.active }).eq('id', cost.id)
-    router.refresh()
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('operational_costs')
+        .update({ active: !cost.active })
+        .eq('id', cost.id)
+      if (error) throw error
+      toast.info(
+        cost.active ? 'Costo desactivado' : 'Costo activado',
+        cost.name
+      )
+      router.refresh()
+    } catch (e: any) {
+      toast.error('Error al cambiar estado', 'Por favor intenta de nuevo.')
+    }
   }
 
-  async function eliminar(id: string) {
+  async function eliminar(id: string, nombre: string) {
     if (!confirm('¿Eliminar este costo?')) return
-    const supabase = createClient()
-    await supabase.from('operational_costs').delete().eq('id', id)
-    router.refresh()
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('operational_costs').delete().eq('id', id)
+      if (error) throw error
+      toast.success('Costo eliminado', `${nombre} fue eliminado.`)
+      router.refresh()
+    } catch (e: any) {
+      toast.error('Error al eliminar', 'No se pudo eliminar. Por favor intenta de nuevo.')
+    }
   }
 
   if (mode === 'add' || mode === 'edit') {
@@ -116,7 +142,6 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
               value={form.amount} onChange={e => set('amount', e.target.value)} />
           </div>
         </div>
-        {error && <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '12px' }}>⚠️ {error}</p>}
         <div className="flex gap-3 mt-4">
           <button onClick={() => setMode('list')}
             className="flex-1 py-2.5 rounded-xl text-sm font-medium"
@@ -125,7 +150,7 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
           </button>
           <button onClick={guardar} disabled={guardando || !form.name || !form.amount}
             className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-opacity"
-            style={{ backgroundColor: '#00d4aa', color: '#000', opacity: (!form.name || !form.amount) ? 0.5 : 1 }}>
+            style={{ backgroundColor: '#00d4aa', color: '#000', opacity: (!form.name || !form.amount || guardando) ? 0.5 : 1 }}>
             {guardando ? 'Guardando...' : mode === 'edit' ? 'Guardar cambios' : 'Agregar'}
           </button>
         </div>
@@ -135,7 +160,6 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
 
   return (
     <div className="space-y-6">
-      {/* Lista editable */}
       <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
         <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #2a3040' }}>
           <p className="text-white font-semibold">Lista de costos</p>
@@ -156,7 +180,7 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
           const color = COLORES[cost.category] ?? '#6b7280'
           return (
             <div key={cost.id}
-              className="flex items-center justify-between px-6 py-4 group transition-all hover:bg-white/[0.02]"
+              className="flex items-center justify-between px-6 py-4 transition-all hover:bg-white/[0.02]"
               style={{
                 borderBottom: i < costs.length - 1 ? '1px solid #1e2535' : 'none',
                 opacity: cost.active ? 1 : 0.5
@@ -179,8 +203,6 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
                 <p className="tabular-nums font-semibold" style={{ color: '#ef4444', fontSize: '15px' }}>
                   {fmtCOP(cost.amount)}
                 </p>
-
-                {/* Toggle activo */}
                 <button onClick={() => toggleActivo(cost)}
                   className="px-3 py-1 rounded-full text-xs font-medium transition-all"
                   style={{
@@ -190,16 +212,12 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
                   }}>
                   {cost.active ? 'Activo' : 'Inactivo'}
                 </button>
-
-                {/* Editar */}
                 <button onClick={() => abrirEditar(cost)}
                   className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-white/10"
                   style={{ color: '#6b7280' }}>
                   ✏️
                 </button>
-
-                {/* Eliminar */}
-                <button onClick={() => eliminar(cost.id)}
+                <button onClick={() => eliminar(cost.id, cost.name)}
                   className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-red-500/10"
                   style={{ color: '#6b7280' }}>
                   🗑️

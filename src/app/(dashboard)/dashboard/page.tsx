@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import HiddenValue from '@/components/HiddenValue'
 import BalanceToggle from './BalanceToggle'
@@ -13,11 +14,8 @@ import {
   formatByCurrency,
   copToUsd,
 } from '@/lib/services/currency'
-import {
-  FLANDES_DEBT,
-  projectDebtPayoff,
-  formatPayoffDate,
-} from '@/lib/services/debt'
+import HelpModal from '@/components/help/HelpModal'
+import DebtWidget from './DebtWidget'
 
 async function getPortfolioValues(): Promise<{ stocksUSD: number; cryptoUSD: number }> {
   try {
@@ -65,69 +63,86 @@ const TYPE_CONFIG: Record<string, { label: string; color: string; icon: string }
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  const [{ data: accounts }, trmResult, { stocksUSD, cryptoUSD }, { data: history }] =
-    await Promise.all([
-      supabase.from('accounts').select('*'),
-      getTRM(),
-      getPortfolioValues(),
-      supabase
-        .from('patrimony_history')
-        .select('date, net_worth_cop, total_banks, total_stocks, total_crypto')
-        .order('date', { ascending: true })
-        .limit(90),
-    ])
+  const now   = new Date()
+  const year  = now.getFullYear()
+  const month = now.getMonth() + 1
+  const firstDay = `${year}-${String(month).padStart(2, '0')}-01`
+
+  const [
+    { data: accounts },
+    trmResult,
+    { stocksUSD, cryptoUSD },
+    { data: history },
+    { data: txMonth },
+    { data: featuredGoal },
+  ] = await Promise.all([
+    supabase.from('accounts').select('*'),
+    getTRM(),
+    getPortfolioValues(),
+    supabase
+      .from('patrimony_history')
+      .select('date, net_worth_cop, total_banks, total_stocks, total_crypto')
+      .order('date', { ascending: true })
+      .limit(90),
+    supabase
+      .from('transactions')
+      .select('type, amount, currency')
+      .gte('date', firstDay),
+    supabase
+      .from('goals')
+      .select('*')
+      .eq('is_featured', true)
+      .limit(1)
+      .maybeSingle(),
+  ])
 
   const trm = trmResult.rate
 
   // ── Totales por categoría ──────────────────────────────────────────────────
-  const banks      = accounts?.filter(a => ['bank', 'cash', 'other'].includes(a.type)) ?? []
-  const cryptoAccs = accounts?.filter(a => a.type === 'crypto') ?? []
+  const banks       = accounts?.filter(a => ['bank', 'cash', 'other'].includes(a.type)) ?? []
   const liabilities = accounts?.filter(a => a.type === 'liability') ?? []
-
-  const aptDebt    = liabilities[0]
-  const otherDebts = liabilities.slice(1)
+  const aptDebt     = liabilities[0]
+  const otherDebts  = liabilities.slice(1)
 
   const totalBanks = banks.reduce(
     (s, a) => s + normalizeToCOP(a.current_balance, a.currency, trm), 0
   )
-  const totalBrokers = stocksUSD * trm
-  const totalCrypto  = cryptoUSD * trm
+  const totalBrokers    = stocksUSD * trm
+  const totalCrypto     = cryptoUSD * trm
   const totalOtherDebts = otherDebts.reduce(
     (s, a) => s + normalizeToCOP(a.current_balance, a.currency, trm), 0
   )
-  const totalAssets   = totalBanks + totalBrokers + totalCrypto
-  const netWorthCOP   = totalAssets + totalOtherDebts
-  const netWorthUSD   = copToUsd(netWorthCOP, trm)
+  const totalAssets = totalBanks + totalBrokers + totalCrypto
+  const netWorthCOP = totalAssets + totalOtherDebts
+  const netWorthUSD = copToUsd(netWorthCOP, trm)
 
-  // ── Deuda Flandes ──────────────────────────────────────────────────────────
-  const aptDebtVal = Math.abs(Number(aptDebt?.current_balance) || FLANDES_DEBT.currentBalance)
-  const flandesSnapshot = { ...FLANDES_DEBT, currentBalance: aptDebtVal }
-  const debtProjection  = projectDebtPayoff(flandesSnapshot)
+  // ── Variación vs ayer ──────────────────────────────────────────────────────
+  const historyArr      = history ?? []
+  const yesterdaySnap   = historyArr.length >= 2 ? historyArr[historyArr.length - 2] : null
+  const variationCOP    = yesterdaySnap ? netWorthCOP - yesterdaySnap.net_worth_cop : undefined
+  const variationPct    = yesterdaySnap && yesterdaySnap.net_worth_cop > 0
+    ? ((netWorthCOP - yesterdaySnap.net_worth_cop) / yesterdaySnap.net_worth_cop) * 100
+    : undefined
+
+  // ── Resumen del mes ────────────────────────────────────────────────────────
+  const txArr      = txMonth ?? []
+  const ingresosMes = txArr
+    .filter(t => t.type === 'income')
+    .reduce((s, t) => s + normalizeToCOP(t.amount, t.currency ?? 'COP', trm), 0)
+  const gastosMes = txArr
+    .filter(t => t.type === 'expense')
+    .reduce((s, t) => s + normalizeToCOP(t.amount, t.currency ?? 'COP', trm), 0)
+  const balanceMes = ingresosMes - gastosMes
+
 
   // ── Distribución para pie chart ───────────────────────────────────────────
   const distItems = [
-    {
-      label: 'Efectivo / Bancos',
-      valueCOP: totalBanks,
-      valueUSD: copToUsd(totalBanks, trm),
-      color: '#00d4aa',
-      icon: '🏦',
-    },
-    {
-      label: 'Bolsa de Valores',
-      valueCOP: totalBrokers,
-      valueUSD: stocksUSD,
-      color: '#6366f1',
-      icon: '📈',
-    },
-    {
-      label: 'Criptomonedas',
-      valueCOP: totalCrypto,
-      valueUSD: cryptoUSD,
-      color: '#f59e0b',
-      icon: '₿',
-    },
+    { label: 'Efectivo / Bancos', valueCOP: totalBanks,   valueUSD: copToUsd(totalBanks, trm), color: '#00d4aa', icon: '🏦', href: '/transacciones' },
+    { label: 'Bolsa de Valores',  valueCOP: totalBrokers, valueUSD: stocksUSD,                  color: '#6366f1', icon: '📈', href: '/inversiones'   },
+    { label: 'Criptomonedas',     valueCOP: totalCrypto,  valueUSD: cryptoUSD,                  color: '#f59e0b', icon: '₿',  href: '/inversiones'   },
   ]
+
+  const monthName = now.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
 
   return (
     <div className="space-y-6 pb-8" style={{ color: '#e5e7eb' }}>
@@ -142,11 +157,9 @@ export default async function DashboardPage() {
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p style={{ color: '#6b7280', fontSize: '11px' }}>TRM del día</p>
-            <p
-              className="tabular-nums font-semibold"
-              style={{ color: '#00d4aa', fontSize: '14px' }}
-            >
+            <HelpModal moduleId="dashboard" />
+          <p style={{ color: '#6b7280', fontSize: '11px' }}>TRM del día</p>
+            <p className="tabular-nums font-semibold" style={{ color: '#00d4aa', fontSize: '14px' }}>
               {formatCOP(trm)}
             </p>
             {trmResult.source === 'fallback' && (
@@ -155,48 +168,77 @@ export default async function DashboardPage() {
           </div>
           <ReportePDF
             patrimonio={{
-              netWorthCOP,
-              netWorthUSD,
-              trm,
-              totalBanks,
-              totalBrokers,
-              totalCrypto,
-              cuentas:
-                accounts
-                  ?.filter(a => a.type !== 'liability')
-                  .map(a => ({
-                    name: a.name,
-                    type: a.type,
-                    currency: a.currency,
-                    balance:
-                      a.type === 'brokerage'
-                        ? stocksUSD
-                        : a.type === 'crypto'
-                        ? cryptoUSD
+              netWorthCOP, netWorthUSD, trm,
+              totalBanks, totalBrokers, totalCrypto,
+              cuentas: accounts?.filter(a => a.type !== 'liability').map(a => ({
+                name:     a.name,
+                type:     a.type,
+                currency: a.currency,
+                balance:  a.type === 'brokerage' ? stocksUSD
+                        : a.type === 'crypto'    ? cryptoUSD
                         : Number(a.current_balance),
-                  })) ?? [],
+              })) ?? [],
             }}
           />
         </div>
       </div>
 
-      {/* ── Patrimonio neto (COP + USD) ──────────────────────────────────────── */}
+      {/* ── Patrimonio neto con variación ────────────────────────────────────── */}
       <BalanceToggle
         copValue={formatCOP(netWorthCOP)}
         usdValue={formatUSD(netWorthUSD)}
         trm={formatCOP(trm)}
+        variationCOP={variationCOP}
+        variationPct={variationPct}
       />
 
-      {/* ── Widgets de distribución ──────────────────────────────────────────── */}
+      {/* ── Resumen del mes ──────────────────────────────────────────────────── */}
+      <div
+        className="rounded-2xl p-5"
+        style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-white font-semibold">Resumen de {monthName}</p>
+          <Link
+            href="/transacciones"
+            className="text-xs px-3 py-1 rounded-full transition-all hover:opacity-80"
+            style={{ backgroundColor: '#00d4aa20', color: '#00d4aa', border: '1px solid #00d4aa30' }}
+          >
+            Ver transacciones →
+          </Link>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: 'Ingresos',     value: ingresosMes, color: '#00d4aa' },
+            { label: 'Gastos',       value: gastosMes,   color: '#ef4444' },
+            { label: 'Balance neto', value: balanceMes,  color: balanceMes >= 0 ? '#00d4aa' : '#ef4444' },
+          ].map(item => (
+            <div key={item.label}
+              className="rounded-xl p-4"
+              style={{ backgroundColor: '#0f1117' }}>
+              <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+                {item.label}
+              </p>
+              <HiddenValue
+                value={formatCOP(item.value)}
+                className="tabular-nums font-bold"
+                style={{ color: item.color, fontSize: '16px' }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Widgets de distribución con drill-down ───────────────────────────── */}
       <div className="grid grid-cols-3 gap-4">
         {distItems.map(item => {
-          const pct =
-            totalAssets > 0 ? Math.round((item.valueCOP / totalAssets) * 100) : 0
+          const pct = totalAssets > 0 ? Math.round((item.valueCOP / totalAssets) * 100) : 0
           return (
-            <div
+            <Link
               key={item.label}
-              className="rounded-2xl p-5 relative overflow-hidden"
-              style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}
+              href={item.href}
+              className="rounded-2xl p-5 relative overflow-hidden block transition-all hover:scale-[1.02] hover:border-opacity-60"
+              style={{ backgroundColor: '#1a1f2e', border: `1px solid #2a3040` }}
             >
               <div
                 className="absolute bottom-0 left-0 w-32 h-32 rounded-full opacity-5 blur-2xl"
@@ -219,10 +261,7 @@ export default async function DashboardPage() {
                 className="tabular-nums font-bold"
                 style={{ color: item.color, fontSize: '19px' }}
               />
-              <p
-                className="tabular-nums"
-                style={{ color: '#4b5563', fontSize: '12px', marginTop: '2px' }}
-              >
+              <p className="tabular-nums" style={{ color: '#4b5563', fontSize: '12px', marginTop: '2px' }}>
                 {formatUSD(item.valueUSD)}
               </p>
               <div
@@ -234,119 +273,49 @@ export default async function DashboardPage() {
                   style={{ width: `${pct}%`, backgroundColor: item.color }}
                 />
               </div>
-            </div>
+              <p style={{ color: '#4b5563', fontSize: '10px', marginTop: '6px', textAlign: 'right' }}>
+                Ver detalle →
+              </p>
+            </Link>
           )
         })}
       </div>
 
-      {/* ── Gráfico de pastel + deuda Flandes (grid 2 cols) ─────────────────── */}
+      {/* ── Gráfico de pastel + Flandes ──────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4">
-
         <AssetPieChart items={distItems} trm={trm} />
 
-        {/* Deuda Flandes */}
-        <div
-          className="rounded-2xl p-6 relative overflow-hidden"
-          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}
-        >
-          <div
-            className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5 blur-3xl"
-            style={{ background: '#00d4aa', transform: 'translate(20%, -20%)' }}
+
+        {featuredGoal && (
+          <DebtWidget
+            goal={{
+              id:             featuredGoal.id,
+              name:           featuredGoal.name,
+              target_amount:  Number(featuredGoal.target_amount),
+              current_amount: Number(featuredGoal.current_amount),
+              deadline:       featuredGoal.deadline,
+              icon:           featuredGoal.icon ?? '🏠',
+              color:          featuredGoal.color ?? '#00d4aa',
+            }}
           />
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-                style={{ backgroundColor: '#00d4aa20' }}
-              >
-                🏠
-              </div>
-              <div>
-                <h2 className="text-white font-semibold text-lg">Apartamento Flandes</h2>
-                <p style={{ color: '#6b7280', fontSize: '13px' }}>
-                  Restante: {formatCOP(debtProjection.remainingBalance)}
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p
-                className="tabular-nums font-black"
-                style={{ color: '#00d4aa', fontSize: '32px', lineHeight: 1 }}
-              >
-                {debtProjection.progressPct}%
+        )}
+        {!featuredGoal && (
+          <div className="rounded-2xl p-8 flex items-center justify-center"
+            style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', minHeight: '200px' }}>
+            <div className="text-center">
+              <p style={{ fontSize: '32px', marginBottom: '10px' }}>📌</p>
+              <p className="text-white font-medium mb-1">Sin compromiso destacado</p>
+              <p style={{ color: '#6b7280', fontSize: '12px', marginBottom: '14px' }}>
+                Destaca una meta desde el módulo de Metas para verla aquí
               </p>
-              <p
-                className="tabular-nums"
-                style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px' }}
-              >
-                {formatCOP(debtProjection.amountPaid)} pagados
-              </p>
+              <a href="/metas"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all hover:opacity-80"
+                style={{ backgroundColor: '#00d4aa20', color: '#00d4aa', border: '1px solid #00d4aa30' }}>
+                Ir a Metas →
+              </a>
             </div>
           </div>
-
-          <div
-            className="rounded-full overflow-hidden"
-            style={{ backgroundColor: '#0f1117', height: '12px' }}
-          >
-            <div
-              className="h-full rounded-full"
-              style={{
-                width: `${debtProjection.progressPct}%`,
-                background: 'linear-gradient(90deg, #00d4aa 0%, #6366f1 100%)',
-              }}
-            />
-          </div>
-
-          <div className="flex justify-between mt-3">
-            <p style={{ color: '#4b5563', fontSize: '12px' }}>
-              Pagado:{' '}
-              <span className="tabular-nums text-white">{formatCOP(debtProjection.amountPaid)}</span>
-            </p>
-            <p style={{ color: '#4b5563', fontSize: '12px' }}>
-              Meta:{' '}
-              <span className="tabular-nums text-white">
-                {formatCOP(FLANDES_DEBT.originalDebt)}
-              </span>
-            </p>
-          </div>
-
-          {/* Proyección */}
-          <div
-            className="mt-4 pt-4 grid grid-cols-2 gap-3"
-            style={{ borderTop: '1px solid #1e2535' }}
-          >
-            <div
-              className="rounded-xl p-3"
-              style={{ backgroundColor: '#0f1117' }}
-            >
-              <p style={{ color: '#6b7280', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Meses restantes
-              </p>
-              <p
-                className="tabular-nums font-bold"
-                style={{ color: '#00d4aa', fontSize: '22px', marginTop: '2px' }}
-              >
-                {isFinite(debtProjection.monthsRemaining)
-                  ? debtProjection.monthsRemaining
-                  : '∞'}
-              </p>
-            </div>
-            <div
-              className="rounded-xl p-3"
-              style={{ backgroundColor: '#0f1117' }}
-            >
-              <p style={{ color: '#6b7280', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Fecha estimada
-              </p>
-              <p
-                className="font-bold"
-                style={{ color: '#6366f1', fontSize: '16px', marginTop: '2px' }}
-              >
-                {formatPayoffDate(debtProjection.estimatedPayoffDate)}
-              </p>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* ── Lista de cuentas ─────────────────────────────────────────────────── */}
@@ -364,15 +333,12 @@ export default async function DashboardPage() {
           </span>
         </div>
         {accounts?.filter(a => a.type !== 'liability').map((account, i, arr) => {
-          const cfg = TYPE_CONFIG[account.type] ?? { label: account.type, color: '#6b7280', icon: '💼' }
-          const balance = Number(account.current_balance) || 0
-          const isNegative = balance < 0
-          const displayValue =
-            account.type === 'brokerage'
-              ? formatUSD(stocksUSD)
-              : account.type === 'crypto'
-              ? formatUSD(cryptoUSD)
-              : formatByCurrency(account.current_balance, account.currency)
+          const cfg          = TYPE_CONFIG[account.type] ?? { label: account.type, color: '#6b7280', icon: '💼' }
+          const balance      = Number(account.current_balance) || 0
+          const isNegative   = balance < 0
+          const displayValue = account.type === 'brokerage' ? formatUSD(stocksUSD)
+                             : account.type === 'crypto'    ? formatUSD(cryptoUSD)
+                             : formatByCurrency(account.current_balance, account.currency)
           return (
             <div
               key={account.id}
@@ -388,13 +354,10 @@ export default async function DashboardPage() {
                 </div>
                 <div>
                   <p className="text-white text-sm font-medium">{account.name}</p>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: cfg.color + '15', color: cfg.color }}
-                  >
+                  <span className="text-xs px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: cfg.color + '15', color: cfg.color }}>
                     {cfg.label} · {account.currency}
-                    {(account.type === 'brokerage' || account.type === 'crypto') &&
-                      ' · Tiempo real'}
+                    {(account.type === 'brokerage' || account.type === 'crypto') && ' · Tiempo real'}
                   </span>
                 </div>
               </div>
@@ -408,10 +371,10 @@ export default async function DashboardPage() {
         })}
       </div>
 
-      {/* ── Gráfico histórico del patrimonio ─────────────────────────────────── */}
-      <PatrimonyChart data={history ?? []} />
+      {/* ── Gráfico histórico ─────────────────────────────────────────────────── */}
+      <PatrimonyChart data={historyArr} />
 
-      {/* ── Guardar snapshot diario ───────────────────────────────────────────── */}
+      {/* ── Snapshot diario ───────────────────────────────────────────────────── */}
       <SnapshotSaver
         netWorthCOP={netWorthCOP}
         netWorthUSD={netWorthUSD}
