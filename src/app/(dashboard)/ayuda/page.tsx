@@ -22,7 +22,7 @@ export default function AyudaPage() {
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Centro de ayuda</h1>
             <p style={{ color: '#9ca3af', fontSize: '15px', lineHeight: '1.7', maxWidth: '560px' }}>
-              Todo lo que necesitas saber para sacarle el máximo provecho a SantiWealth.
+              Todo lo que necesitas saber para sacarle el máximo provecho a WealtHost.
               Cada módulo tiene su propia guía con el flujo de datos, pasos y tips.
             </p>
           </div>

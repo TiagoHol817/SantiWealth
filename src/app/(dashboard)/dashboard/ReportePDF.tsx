@@ -64,7 +64,7 @@ export default function ReportePDF({ patrimonio }: { patrimonio: PatrimonioData 
       doc.setTextColor(...VERDE)
       doc.setFontSize(14)
       doc.setFont('helvetica', 'bold')
-      doc.text('SantiWealth', 27, 22)
+      doc.text('WealtHost', 27, 22)
       doc.setTextColor(...GRIS)
       doc.setFontSize(8)
       doc.setFont('helvetica', 'normal')
@@ -344,12 +344,12 @@ export default function ReportePDF({ patrimonio }: { patrimonio: PatrimonioData 
         doc.rect(0, 287, W, 10, 'F')
         doc.setTextColor(...GRIS)
         doc.setFontSize(7)
-        doc.text('SantiWealth — Reporte confidencial', 15, 293)
+        doc.text('WealtHost — Reporte confidencial', 15, 293)
         doc.text(`Pagina ${i} de ${totalPages}`, W - 15, 293, { align: 'right' })
       }
 
       const nombreMes = fmtMes(mes).replace(' ', '_')
-      doc.save(`SantiWealth_Reporte_${nombreMes}.pdf`)
+      doc.save(`WealtHost_Reporte_${nombreMes}.pdf`)
     } catch (e) {
       console.error(e)
     }

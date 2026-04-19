@@ -1,4 +1,4 @@
-# Proyecto SantiWealth - Guía de Contexto
+# Proyecto WealtHost - Guía de Contexto
 
 - **Stack:** Next.js (App Router), Prisma ORM, TypeScript, Tailwind CSS, ShadcnUI.
 - **Objetivo:** Plataforma profesional de gestión de patrimonio neto personal.

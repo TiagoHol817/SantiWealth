@@ -2,15 +2,15 @@
 import { useEffect, useState } from 'react'
 import { X, ChevronRight, ChevronLeft } from 'lucide-react'
 
-const ONBOARDING_KEY = 'santiwealth_onboarding_done'
+const ONBOARDING_KEY = 'wealthost_onboarding_done'
 
 const STEPS = [
   {
     icon:    '👋',
     color:   '#00d4aa',
-    title:   '¡Bienvenido a SantiWealth!',
+    title:   '¡Bienvenido a WealtHost!',
     desc:    'Tu plataforma personal de gestión de riqueza. En menos de 2 minutos te explicamos todo lo que necesitas saber para empezar.',
-    detail:  'SantiWealth consolida en un solo lugar tus cuentas bancarias, inversiones, criptomonedas, presupuestos, metas y reportes financieros profesionales.',
+    detail:  'WealtHost consolida en un solo lugar tus cuentas bancarias, inversiones, criptomonedas, presupuestos, metas y reportes financieros profesionales.',
   },
   {
     icon:    '💳',
