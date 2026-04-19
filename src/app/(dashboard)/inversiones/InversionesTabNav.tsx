@@ -46,8 +46,8 @@ export default function InversionesTabNav({
             {tab.id === 'renta-fija' && cdtCount > 0 && (
               <span className="tabular-nums text-xs px-1.5 py-0.5 rounded-full"
                 style={{
-                  backgroundColor: showAlert ? '#f59e0b25' : '#00d4aa20',
-                  color:           showAlert ? '#f59e0b'   : '#00d4aa',
+                  backgroundColor: showAlert ? '#f59e0b25' : '#10b98120',
+                  color:           showAlert ? '#f59e0b'   : '#10b981',
                 }}>
                 {showAlert ? `⚠️ ${proximoVenc}d` : cdtCount}
               </span>

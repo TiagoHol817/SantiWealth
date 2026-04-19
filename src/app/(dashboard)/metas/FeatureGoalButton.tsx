@@ -25,18 +25,18 @@ export default function FeatureGoalButton({ id, isFeatured, goalName }: Props) {
 
       if (!isFeatured) {
         // Quitar destacado de todas las demás
-        await supabase.from('goals')
+        await supabase.from('investment_goals')
           .update({ is_featured: false })
           .eq('user_id', user.id)
           .eq('is_featured', true)
         // Destacar esta
-        const { error } = await supabase.from('goals')
+        const { error } = await supabase.from('investment_goals')
           .update({ is_featured: true })
           .eq('id', id)
         if (error) throw error
         toast.success('Compromiso destacado', `"${goalName}" aparece ahora en tu Dashboard.`)
       } else {
-        const { error } = await supabase.from('goals')
+        const { error } = await supabase.from('investment_goals')
           .update({ is_featured: false })
           .eq('id', id)
         if (error) throw error

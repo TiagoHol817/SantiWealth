@@ -10,7 +10,7 @@ const fmtCOP = (n: number) =>
 
 const TYPE_ICON: Record<string, { icon: string; bg: string; color: string }> = {
   expense:      { icon: '↓', bg: '#2d1515', color: '#ef4444' },
-  income:       { icon: '↑', bg: '#0a2d1f', color: '#00d4aa' },
+  income:       { icon: '↑', bg: '#0a2d1f', color: '#10b981' },
   debt_payment: { icon: '⚡', bg: '#2d2010', color: '#f59e0b' },
 }
 
@@ -86,10 +86,10 @@ export default async function TransaccionesPage({
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Ingresos del mes',   value: totalIngresos,               color: '#00d4aa' },
+          { label: 'Ingresos del mes',   value: totalIngresos,               color: '#10b981' },
           { label: 'Gastos del mes',     value: totalGastos,                  color: '#ef4444' },
           { label: 'Pagos de deuda',     value: totalDeuda,                   color: '#f59e0b' },
-          { label: 'Balance',           value: totalIngresos - totalGastos,  color: totalIngresos - totalGastos >= 0 ? '#00d4aa' : '#ef4444' },
+          { label: 'Balance',           value: totalIngresos - totalGastos,  color: totalIngresos - totalGastos >= 0 ? '#10b981' : '#ef4444' },
         ].map(item => (
           <div key={item.label} className="rounded-xl p-5"
             style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>

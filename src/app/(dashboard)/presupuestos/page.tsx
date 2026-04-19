@@ -17,12 +17,12 @@ function getBarColor(pct: number, excedido: boolean): string {
   if (excedido) return '#ef4444'
   if (pct > 80)  return '#f59e0b'
   if (pct > 60)  return '#6366f1'
-  return '#00d4aa'
+  return '#10b981'
 }
 
 function HealthScore({ score }: { score: number }) {
   const sinDatos     = score < 0
-  const color        = sinDatos ? '#4b5563' : score >= 80 ? '#00d4aa' : score >= 50 ? '#f59e0b' : '#ef4444'
+  const color        = sinDatos ? '#4b5563' : score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444'
   const label        = sinDatos ? 'Sin presupuesto' : score >= 80 ? 'Excelente control' : score >= 50 ? 'Moderado' : 'Atención requerida'
   const displayScore = sinDatos ? '--' : String(score)
   const r = 28, circ = 2 * Math.PI * r
@@ -148,8 +148,8 @@ export default async function PresupuestosPage({
 
         {[
           { label: 'Presupuesto total', value: totalLimite,  color: '#6366f1' },
-          { label: 'Gastado',           value: totalGastado, color: pctTotal > 100 ? '#ef4444' : pctTotal > 80 ? '#f59e0b' : '#00d4aa' },
-          { label: 'Disponible',        value: disponible,   color: disponible >= 0 ? '#00d4aa' : '#ef4444' },
+          { label: 'Gastado',           value: totalGastado, color: pctTotal > 100 ? '#ef4444' : pctTotal > 80 ? '#f59e0b' : '#10b981' },
+          { label: 'Disponible',        value: disponible,   color: disponible >= 0 ? '#10b981' : '#ef4444' },
         ].map(item => (
           <div key={item.label}
             className="rounded-2xl p-5 relative overflow-hidden"
@@ -262,7 +262,7 @@ export default async function PresupuestosPage({
                         </span>
                         {/* Delta vs mes anterior */}
                         {deltaVsPrev !== null && (
-                          <p style={{ color: mejoro ? '#00d4aa' : '#ef4444', fontSize: '10px', marginTop: '4px' }}>
+                          <p style={{ color: mejoro ? '#10b981' : '#ef4444', fontSize: '10px', marginTop: '4px' }}>
                             {mejoro ? '↓' : '↑'} {Math.abs(deltaVsPrev).toFixed(0)}% vs {nombreMesPrev}
                           </p>
                         )}
@@ -355,8 +355,8 @@ export default async function PresupuestosPage({
                               <span
                                 className="tabular-nums text-xs font-bold px-2 py-1 rounded-full"
                                 style={{
-                                  backgroundColor: mejoro ? '#00d4aa20' : '#ef444420',
-                                  color:           mejoro ? '#00d4aa'   : '#ef4444',
+                                  backgroundColor: mejoro ? '#10b98120' : '#ef444420',
+                                  color:           mejoro ? '#10b981'   : '#ef4444',
                                 }}>
                                 {mejoro ? '↓' : '↑'} {Math.abs(pctDelta).toFixed(0)}%
                               </span>

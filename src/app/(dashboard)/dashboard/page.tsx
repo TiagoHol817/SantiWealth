@@ -16,6 +16,9 @@ import {
 } from '@/lib/services/currency'
 import HelpModal from '@/components/help/HelpModal'
 import DebtWidget from './DebtWidget'
+import WealthScoreWidget from './WealthScoreWidget'
+import { computeWealthScore } from '@/lib/services/wealthScore'
+import SmartGreeting from './SmartGreeting'
 
 async function getPortfolioValues(): Promise<{ stocksUSD: number; cryptoUSD: number }> {
   try {
@@ -53,15 +56,22 @@ async function getPortfolioValues(): Promise<{ stocksUSD: number; cryptoUSD: num
 }
 
 const TYPE_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
-  bank:      { label: 'Banco',     color: '#00d4aa', icon: '🏦' },
-  cash:      { label: 'Efectivo',  color: '#00d4aa', icon: '💵' },
-  other:     { label: 'CDT',       color: '#00d4aa', icon: '📄' },
+  bank:      { label: 'Banco',     color: '#10b981', icon: '🏦' },
+  cash:      { label: 'Efectivo',  color: '#10b981', icon: '💵' },
+  other:     { label: 'CDT',       color: '#10b981', icon: '📄' },
   brokerage: { label: 'Inversión', color: '#6366f1', icon: '📈' },
   crypto:    { label: 'Cripto',    color: '#f59e0b', icon: '₿'  },
 }
 
 export default async function DashboardPage() {
   const supabase = await createClient()
+
+  // Resolve display name: full_name → email prefix → fallback
+  const { data: { user } } = await supabase.auth.getUser()
+  const userName =
+    user?.user_metadata?.full_name ??
+    user?.email?.split('@')[0] ??
+    'Santiago'
 
   const now   = new Date()
   const year  = now.getFullYear()
@@ -89,7 +99,7 @@ export default async function DashboardPage() {
       .select('type, amount, currency')
       .gte('date', firstDay),
     supabase
-      .from('goals')
+      .from('investment_goals')
       .select('*')
       .eq('is_featured', true)
       .limit(1)
@@ -134,10 +144,18 @@ export default async function DashboardPage() {
     .reduce((s, t) => s + normalizeToCOP(t.amount, t.currency ?? 'COP', trm), 0)
   const balanceMes = ingresosMes - gastosMes
 
+  // ── Wealth Score ──────────────────────────────────────────────────────────
+  const wealthScore = computeWealthScore({
+    monthlyIncome:   ingresosMes,
+    monthlyExpenses: gastosMes,
+    totalAssets,
+    investedAssets:  totalBrokers + totalCrypto,
+    liquidAssets:    totalBanks,
+  })
 
   // ── Distribución para pie chart ───────────────────────────────────────────
   const distItems = [
-    { label: 'Efectivo / Bancos', valueCOP: totalBanks,   valueUSD: copToUsd(totalBanks, trm), color: '#00d4aa', icon: '🏦', href: '/transacciones' },
+    { label: 'Efectivo / Bancos', valueCOP: totalBanks,   valueUSD: copToUsd(totalBanks, trm), color: '#10b981', icon: '🏦', href: '/transacciones' },
     { label: 'Bolsa de Valores',  valueCOP: totalBrokers, valueUSD: stocksUSD,                  color: '#6366f1', icon: '📈', href: '/inversiones'   },
     { label: 'Criptomonedas',     valueCOP: totalCrypto,  valueUSD: cryptoUSD,                  color: '#f59e0b', icon: '₿',  href: '/inversiones'   },
   ]
@@ -149,17 +167,12 @@ export default async function DashboardPage() {
 
       {/* ── Encabezado ──────────────────────────────────────────────────────── */}
       <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
-          <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
-            Resumen de tu patrimonio
-          </p>
-        </div>
+        <SmartGreeting userName={userName} />
         <div className="flex items-center gap-3">
           <div className="text-right">
             <HelpModal moduleId="dashboard" />
           <p style={{ color: '#6b7280', fontSize: '11px' }}>TRM del día</p>
-            <p className="tabular-nums font-semibold" style={{ color: '#00d4aa', fontSize: '14px' }}>
+            <p className="tabular-nums font-semibold" style={{ color: '#D4AF37', fontSize: '14px' }}>
               {formatCOP(trm)}
             </p>
             {trmResult.source === 'fallback' && (
@@ -192,6 +205,9 @@ export default async function DashboardPage() {
         variationPct={variationPct}
       />
 
+      {/* ── Wealth Score ─────────────────────────────────────────────────────── */}
+      <WealthScoreWidget score={wealthScore} />
+
       {/* ── Resumen del mes ──────────────────────────────────────────────────── */}
       <div
         className="rounded-2xl p-5"
@@ -202,16 +218,16 @@ export default async function DashboardPage() {
           <Link
             href="/transacciones"
             className="text-xs px-3 py-1 rounded-full transition-all hover:opacity-80"
-            style={{ backgroundColor: '#00d4aa20', color: '#00d4aa', border: '1px solid #00d4aa30' }}
+            style={{ backgroundColor: '#D4AF3720', color: '#D4AF37', border: '1px solid #D4AF3730' }}
           >
             Ver transacciones →
           </Link>
         </div>
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: 'Ingresos',     value: ingresosMes, color: '#00d4aa' },
+            { label: 'Ingresos',     value: ingresosMes, color: '#10b981' },
             { label: 'Gastos',       value: gastosMes,   color: '#ef4444' },
-            { label: 'Balance neto', value: balanceMes,  color: balanceMes >= 0 ? '#00d4aa' : '#ef4444' },
+            { label: 'Balance neto', value: balanceMes,  color: balanceMes >= 0 ? '#10b981' : '#ef4444' },
           ].map(item => (
             <div key={item.label}
               className="rounded-xl p-4"
@@ -293,9 +309,9 @@ export default async function DashboardPage() {
               name:           featuredGoal.name,
               target_amount:  Number(featuredGoal.target_amount),
               current_amount: Number(featuredGoal.current_amount),
-              deadline:       featuredGoal.deadline,
+              deadline:       featuredGoal.target_date,
               icon:           featuredGoal.icon ?? '🏠',
-              color:          featuredGoal.color ?? '#00d4aa',
+              color:          featuredGoal.color ?? '#10b981',
             }}
           />
         )}
@@ -310,7 +326,7 @@ export default async function DashboardPage() {
               </p>
               <a href="/metas"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all hover:opacity-80"
-                style={{ backgroundColor: '#00d4aa20', color: '#00d4aa', border: '1px solid #00d4aa30' }}>
+                style={{ backgroundColor: '#D4AF3720', color: '#D4AF37', border: '1px solid #D4AF3730' }}>
                 Ir a Metas →
               </a>
             </div>

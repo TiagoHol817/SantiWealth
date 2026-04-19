@@ -17,7 +17,7 @@ export default function UpdateGoalButton({ id, current }: { id: string; current:
     try {
       const supabase = createClient()
       const { error } = await supabase
-        .from('goals')
+        .from('investment_goals')
         .update({ current_amount: Number(valor) })
         .eq('id', id)
 
@@ -41,8 +41,8 @@ export default function UpdateGoalButton({ id, current }: { id: string; current:
     <button onClick={() => setOpen(true)}
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all hover:opacity-80"
       style={{
-        backgroundColor: '#00d4aa20', color: '#00d4aa',
-        border: '1px solid #00d4aa30', position: 'relative', zIndex: 10
+        backgroundColor: '#D4AF3720', color: '#D4AF37',
+        border: '1px solid #D4AF3730', position: 'relative', zIndex: 10
       }}>
       <TrendingUp size={12} /> Actualizar
     </button>
@@ -60,7 +60,7 @@ export default function UpdateGoalButton({ id, current }: { id: string; current:
       />
       <button onClick={actualizar} disabled={saving}
         className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
-        style={{ backgroundColor: '#00d4aa', color: '#000', opacity: saving ? 0.7 : 1 }}>
+        style={{ background: 'linear-gradient(135deg, #D4AF37, #b8922a)', color: '#0f1117', opacity: saving ? 0.7 : 1 }}>
         <Check size={14} />
       </button>
       <button onClick={() => setOpen(false)}

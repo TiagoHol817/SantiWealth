@@ -38,11 +38,11 @@ export default async function ResumenPresupuesto() {
     <div className="rounded-xl p-5 mb-6" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
       <div className="flex items-center justify-between mb-4">
         <p className="text-white font-medium text-sm">Presupuesto del mes</p>
-        <a href="/presupuestos" style={{ color: '#00d4aa', fontSize: '12px' }}>Ver detalle →</a>
+        <a href="/presupuestos" style={{ color: '#10b981', fontSize: '12px' }}>Ver detalle →</a>
       </div>
       <div className="space-y-3">
         {categorias.map(({ cat, limite, gastado, pct, excedido }) => {
-          const color = excedido ? '#ef4444' : pct > 80 ? '#f59e0b' : '#00d4aa'
+          const color = excedido ? '#ef4444' : pct > 80 ? '#f59e0b' : '#10b981'
           return (
             <div key={cat}>
               <div className="flex justify-between mb-1">

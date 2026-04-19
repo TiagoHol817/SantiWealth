@@ -6,7 +6,7 @@ import {
   Tooltip, ResponsiveContainer, Legend
 } from 'recharts'
 
-const COLORS = ['#00d4aa','#6366f1','#f59e0b','#ef4444','#ec4899','#3b82f6','#8b5cf6']
+const COLORS = ['#10b981','#6366f1','#f59e0b','#ef4444','#ec4899','#3b82f6','#8b5cf6']
 
 const fmtCOP = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', notation: 'compact', maximumFractionDigits: 1 }).format(n)
@@ -108,7 +108,7 @@ export default function IngresosClient({
               <p className="text-white font-medium">Sin transacciones de ingreso</p>
             </div>
           ) : transacciones.map((t, i) => {
-            const color = COLORS[fuentes.indexOf(t.category || 'Otro') % COLORS.length] ?? '#00d4aa'
+            const color = COLORS[fuentes.indexOf(t.category || 'Otro') % COLORS.length] ?? '#10b981'
             return (
               <div key={i}
                 className="flex items-center justify-between px-6 py-4 transition-all hover:bg-white/[0.02]"

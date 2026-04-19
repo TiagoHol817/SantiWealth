@@ -34,8 +34,8 @@ function RadialProgress({ pct, color, size = 120 }: { pct: number; color: string
 const HITOS = [
   { pct: 25,  label: '25%',  color: '#6366f1' },
   { pct: 50,  label: '50%',  color: '#f59e0b' },
-  { pct: 75,  label: '75%',  color: '#00d4aa' },
-  { pct: 100, label: '100%', color: '#00d4aa' },
+  { pct: 75,  label: '75%',  color: '#10b981' },
+  { pct: 100, label: '100%', color: '#10b981' },
 ]
 
 function HitosBadges({ pct }: { pct: number }) {
@@ -83,7 +83,7 @@ function calcProyeccion(current: number, target: number, contribAmt: number, fre
 export default async function MetasPage() {
   const supabase = await createClient()
   const { data: goals } = await supabase
-    .from('goals').select('*').order('created_at', { ascending: true })
+    .from('investment_goals').select('*').order('created_at', { ascending: true })
 
   const now    = new Date()
   const mesStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
@@ -137,7 +137,7 @@ export default async function MetasPage() {
                   Total ahorrado
                 </p>
                 <HiddenValue value={fmtCOP(totalAhorrado)} className="tabular-nums font-bold"
-                  style={{ color: '#00d4aa', fontSize: '20px' }} />
+                  style={{ color: '#10b981', fontSize: '20px' }} />
               </div>
               <div>
                 <p style={{ color: '#6b7280', fontSize: '11px', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '8px' }}>
@@ -152,10 +152,10 @@ export default async function MetasPage() {
               <div className="rounded-xl px-4 py-3 flex items-center justify-between"
                 style={{ backgroundColor: '#0f1117', border: '1px solid #1e2535' }}>
                 <div className="flex items-center gap-2">
-                  <span style={{ color: '#00d4aa', fontSize: '14px' }}>💡</span>
+                  <span style={{ color: '#10b981', fontSize: '14px' }}>💡</span>
                   <p style={{ color: '#9ca3af', fontSize: '12px' }}>
                     Capacidad de ahorro este mes:
-                    <strong style={{ color: '#00d4aa', marginLeft: '6px' }}>{fmtCOP(ahorroMes)}</strong>
+                    <strong style={{ color: '#10b981', marginLeft: '6px' }}>{fmtCOP(ahorroMes)}</strong>
                   </p>
                 </div>
                 {faltaTotal > 0 && (
@@ -185,7 +185,7 @@ export default async function MetasPage() {
             const pct        = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0
             const completada = pct >= 100
             const falta      = Math.max(0, target - current)
-            const color      = goal.color ?? '#00d4aa'
+            const color      = goal.color ?? '#10b981'
 
             // Tracker de aportes
             const contribAmt  = Number(goal.contribution_amount) || 0
@@ -206,8 +206,8 @@ export default async function MetasPage() {
             // Deadline
             let diasLabel: string | null = null
             let diasUrgente = false
-            if (goal.deadline && !completada) {
-              const dias = Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / 86400000)
+            if (goal.target_date && !completada) {
+              const dias = Math.ceil((new Date(goal.target_date).getTime() - Date.now()) / 86400000)
               diasLabel   = dias > 0 ? `${dias} días restantes` : 'Fecha vencida'
               diasUrgente = dias > 0 && dias <= 30
             }
@@ -239,7 +239,7 @@ export default async function MetasPage() {
                             <p className="text-white font-bold text-xl">{goal.name}</p>
                             {completada && (
                               <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                                style={{ backgroundColor: '#00d4aa20', color: '#00d4aa' }}>
+                                style={{ backgroundColor: '#10b98120', color: '#10b981' }}>
                                 ✓ Completada
                               </span>
                             )}
@@ -263,7 +263,7 @@ export default async function MetasPage() {
                         />
                         <GoalForm editGoal={{
                           id: goal.id, name: goal.name, target_amount: target,
-                          current_amount: current, deadline: goal.deadline,
+                          current_amount: current, target_date: goal.target_date,
                           icon: goal.icon, color,
                           is_featured: goal.is_featured ?? false,
                           contribution_amount: Number(goal.contribution_amount) || 0,
@@ -345,7 +345,7 @@ export default async function MetasPage() {
                           {fechaPlan && (
                             <div>
                               <p style={{ color: '#4b5563', fontSize: '10px' }}>Según tu plan</p>
-                              <p className="font-semibold" style={{ color: '#00d4aa', fontSize: '13px' }}>
+                              <p className="font-semibold" style={{ color: '#D4AF37', fontSize: '13px' }}>
                                 {fechaPlan}
                               </p>
                             </div>

@@ -86,7 +86,7 @@ export default function TransaccionForm({ accounts }: { accounts: any[] }) {
   if (!open) return (
     <button onClick={() => setOpen(true)}
       className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-      style={{ backgroundColor: '#00d4aa', color: '#000' }}>
+      style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117' }}>
       <Plus size={15} /> Nueva transacción
     </button>
   )
@@ -110,7 +110,7 @@ export default function TransaccionForm({ accounts }: { accounts: any[] }) {
         <div className="flex gap-2 mb-5">
           {([
             ['expense',      'Gasto',      '#ef4444'],
-            ['income',       'Ingreso',    '#00d4aa'],
+            ['income',       'Ingreso',    '#10b981'],
             ['debt_payment', 'Pago deuda', '#f59e0b'],
           ] as [string, string, string][]).map(([val, label, color]) => (
             <button key={val}
@@ -161,7 +161,7 @@ export default function TransaccionForm({ accounts }: { accounts: any[] }) {
 
         <button onClick={guardar} disabled={saving || !form.amount}
           className="w-full py-3 rounded-xl text-sm font-semibold mt-5 transition-all"
-          style={{ backgroundColor: '#00d4aa', color: '#000', opacity: (!form.amount || saving) ? 0.5 : 1 }}>
+          style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117', opacity: (!form.amount || saving) ? 0.5 : 1 }}>
           {saving ? 'Guardando...' : 'Guardar transacción'}
         </button>
       </div>

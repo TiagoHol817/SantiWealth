@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/context/ToastContext'
 
 const ICONOS  = ['🎯','🏠','🚗','✈️','💰','📈','🎓','💍','🏖️','💻','🏗️','📦']
-const COLORES = ['#00d4aa','#6366f1','#f59e0b','#ef4444','#3b82f6','#ec4899']
+const COLORES = ['#D4AF37','#6366f1','#f59e0b','#ef4444','#3b82f6','#ec4899']
 
 const FRECUENCIAS = [
   { value: 'semanal',    label: 'Semanal',    factor: 4.33 },
@@ -16,7 +16,7 @@ const FRECUENCIAS = [
 
 type Goal = {
   id: string; name: string; target_amount: number; current_amount: number
-  deadline?: string; icon: string; color: string; is_featured?: boolean
+  target_date?: string; icon: string; color: string; is_featured?: boolean
   contribution_amount?: number; contribution_freq?: string
 }
 
@@ -28,9 +28,9 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
     name:                  editGoal?.name                  ?? '',
     target_amount:         String(editGoal?.target_amount  ?? ''),
     current_amount:        String(editGoal?.current_amount ?? ''),
-    deadline:              editGoal?.deadline              ?? '',
+    target_date:           editGoal?.target_date           ?? '',
     icon:                  editGoal?.icon                  ?? '🎯',
-    color:                 editGoal?.color                 ?? '#00d4aa',
+    color:                 editGoal?.color                 ?? '#D4AF37',
     is_featured:           editGoal?.is_featured           ?? false,
     contribution_amount:   String(editGoal?.contribution_amount ?? ''),
     contribution_freq:     editGoal?.contribution_freq     ?? 'mensual',
@@ -61,7 +61,7 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
 
       if (form.is_featured && !editGoal?.is_featured) {
         const { data: { user } } = await supabase.auth.getUser()
-        await supabase.from('goals')
+        await supabase.from('investment_goals')
           .update({ is_featured: false })
           .eq('user_id', user!.id)
           .eq('is_featured', true)
@@ -71,7 +71,7 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
         name:                 form.name,
         target_amount:        Number(form.target_amount),
         current_amount:       Number(form.current_amount) || 0,
-        deadline:             form.deadline || null,
+        target_date:          form.target_date || null,
         icon:                 form.icon,
         color:                form.color,
         is_featured:          form.is_featured,
@@ -80,20 +80,20 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
       }
 
       if (isEdit) {
-        const { error } = await supabase.from('goals').update(payload).eq('id', editGoal!.id)
+        const { error } = await supabase.from('investment_goals').update(payload).eq('id', editGoal!.id)
         if (error) throw error
         toast.success('Meta actualizada', `${form.name} se guardó correctamente.`)
       } else {
         const { data: { user } } = await supabase.auth.getUser()
-        const { error } = await supabase.from('goals').insert({ ...payload, user_id: user!.id })
+        const { error } = await supabase.from('investment_goals').insert({ ...payload, user_id: user!.id })
         if (error) throw error
         toast.success('Meta creada', `${form.name} fue creada exitosamente.`)
       }
 
       setOpen(false)
       if (!isEdit) setForm({
-        name:'', target_amount:'', current_amount:'', deadline:'',
-        icon:'🎯', color:'#00d4aa', is_featured: false,
+        name:'', target_amount:'', current_amount:'', target_date:'',
+        icon:'🎯', color:'#D4AF37', is_featured: false,
         contribution_amount:'', contribution_freq:'mensual',
       })
       router.refresh()
@@ -111,7 +111,7 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
     if (!confirm('¿Eliminar esta meta?')) return
     try {
       const supabase = createClient()
-      const { error } = await supabase.from('goals').delete().eq('id', editGoal!.id)
+      const { error } = await supabase.from('investment_goals').delete().eq('id', editGoal!.id)
       if (error) throw error
       toast.success('Meta eliminada', `${editGoal!.name} fue eliminada.`)
       router.refresh()
@@ -138,7 +138,7 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
   ) : (
     <button onClick={() => setOpen(true)}
       className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-      style={{ backgroundColor: '#00d4aa', color: '#000' }}>
+      style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117', boxShadow: '0 2px 10px #D4AF3730' }}>
       <Plus size={15} /> Nueva meta
     </button>
   )
@@ -173,7 +173,7 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
                 className="w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all"
                 style={{
                   backgroundColor: form.icon === i ? '#2a3040' : '#0f1117',
-                  border: `1px solid ${form.icon === i ? '#00d4aa' : '#2a3040'}`,
+                  border: `1px solid ${form.icon === i ? '#D4AF37' : '#2a3040'}`,
                 }}>
                 {i}
               </button>
@@ -217,7 +217,7 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
           <div className="col-span-2">
             <label style={lbl}>Fecha límite (opcional)</label>
             <input style={{ ...inp, colorScheme: 'dark' }} type="date"
-              value={form.deadline} onChange={e => set('deadline', e.target.value)} />
+              value={form.target_date} onChange={e => set('target_date', e.target.value)} />
           </div>
         </div>
 
@@ -268,7 +268,7 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
                 <p style={{ color: '#4b5563', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Fecha estimada
                 </p>
-                <p className="font-semibold" style={{ color: '#00d4aa', fontSize: '13px', marginTop: '2px' }}>
+                <p className="font-semibold" style={{ color: '#10b981', fontSize: '13px', marginTop: '2px' }}>
                   {fechaEst ?? '—'}
                 </p>
               </div>
@@ -330,7 +330,7 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
             <button onClick={guardar} disabled={saving || !form.name || !form.target_amount}
               className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
               style={{
-                backgroundColor: '#00d4aa', color: '#000',
+                background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117',
                 opacity: (!form.name || !form.target_amount || saving) ? 0.5 : 1,
               }}>
               {saving ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear meta'}

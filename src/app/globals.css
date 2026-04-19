@@ -47,6 +47,30 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ── WealtHost Design Tokens ─────────────────────────────────────── */
+:root {
+  /* Luxury Cream — light mode palette */
+  --wh-bg:          #FAFAF8;
+  --wh-card:        #FFFFFF;
+  --wh-card-deep:   #F5F3EF;
+  --wh-border:      #E8E4DC;
+  --wh-text:        #1C1917;
+  --wh-text-muted:  #78716C;
+  --wh-text-faint:  #A8A29E;
+}
+
+.dark {
+  /* Charcoal Night — dark mode palette */
+  --wh-bg:          #0f1117;
+  --wh-card:        #1a1f2e;
+  --wh-card-deep:   #0f1117;
+  --wh-border:      #2a3040;
+  --wh-text:        #e5e7eb;
+  --wh-text-muted:  #6b7280;
+  --wh-text-faint:  #4b5563;
+}
+/* ─────────────────────────────────────────────────────────────────── */
+
 :root {
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);

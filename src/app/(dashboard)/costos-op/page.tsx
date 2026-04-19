@@ -5,7 +5,7 @@ import BurnRateChart from './BurnRateChart'
 import HelpModal from '@/components/help/HelpModal'
 
 const COLORES: Record<string,string> = {
-  'Arriendo':'#6366f1','Servicios públicos':'#f59e0b','Internet/Celular':'#00d4aa',
+  'Arriendo':'#6366f1','Servicios públicos':'#f59e0b','Internet/Celular':'#10b981',
   'Suscripciones':'#ec4899','Alimentación':'#ef4444','Transporte':'#3b82f6','Otro':'#6b7280',
 }
 const ICONOS: Record<string,string> = {
@@ -125,7 +125,7 @@ export default async function CostosOpPage() {
           {deltaVsPrev !== null ? (
             <>
               <p className="tabular-nums font-bold"
-                style={{ color: deltaVsPrev <= 0 ? '#00d4aa' : '#ef4444', fontSize: '20px' }}>
+                style={{ color: deltaVsPrev <= 0 ? '#10b981' : '#ef4444', fontSize: '20px' }}>
                 {deltaVsPrev >= 0 ? '+' : ''}{deltaVsPrev.toFixed(1)}%
               </p>
               <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '4px' }}>
@@ -139,10 +139,10 @@ export default async function CostosOpPage() {
         <div className="rounded-2xl p-5 relative overflow-hidden"
           style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
           <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
-            style={{ background: '#00d4aa', transform: 'translate(30%,-30%)' }} />
+            style={{ background: '#10b981', transform: 'translate(30%,-30%)' }} />
           <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Promedio histórico</p>
           <HiddenValue value={fmtCOP(promedioHistorico)} className="tabular-nums font-bold"
-            style={{ color: '#00d4aa', fontSize: '20px' }} />
+            style={{ color: '#10b981', fontSize: '20px' }} />
           <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '4px' }}>
             Últimos {mesesOrdenados.length} meses
           </p>

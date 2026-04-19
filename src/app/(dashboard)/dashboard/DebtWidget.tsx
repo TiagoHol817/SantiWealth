@@ -24,7 +24,7 @@ const SCENARIOS = [
   { label: 'Base',   extra: 0,           color: '#6b7280' },
   { label: '+50%',   extra: null,         color: '#6366f1' }, // +50% del base
   { label: '+100%',  extra: null,         color: '#f59e0b' }, // doble del base
-  { label: 'Meta',   extra: null,         color: '#00d4aa' }, // llegar en deadline
+  { label: 'Meta',   extra: null,         color: '#10b981' }, // llegar en deadline
 ]
 
 export default function DebtWidget({ goal, avgMonthlyPayment = 0 }: Props) {
@@ -53,7 +53,7 @@ export default function DebtWidget({ goal, avgMonthlyPayment = 0 }: Props) {
     { label: 'Base',     payment: basePayment,               color: '#6b7280' },
     { label: '+50%',     payment: Math.ceil(basePayment * 1.5), color: '#6366f1' },
     { label: '+100%',    payment: Math.ceil(basePayment * 2),   color: '#f59e0b' },
-    { label: '⚡ Meta',  payment: deadlinePayment || Math.ceil(basePayment * 2.5), color: '#00d4aa' },
+    { label: '⚡ Meta',  payment: deadlinePayment || Math.ceil(basePayment * 2.5), color: '#10b981' },
   ]
 
   const currentPayment = scenarios[scenarioIdx].payment
@@ -166,9 +166,9 @@ export default function DebtWidget({ goal, avgMonthlyPayment = 0 }: Props) {
         {/* Alerta de estado */}
         {onTrack === true && (
           <div className="mt-3 px-3 py-2 rounded-xl flex items-center gap-2"
-            style={{ backgroundColor: '#00d4aa15', border: '1px solid #00d4aa30' }}>
+            style={{ backgroundColor: '#10b98115', border: '1px solid #10b98130' }}>
             <span style={{ fontSize: '13px' }}>✓</span>
-            <p style={{ color: '#00d4aa', fontSize: '11px', fontWeight: '600' }}>
+            <p style={{ color: '#10b981', fontSize: '11px', fontWeight: '600' }}>
               En ruta para cumplir tu fecha límite
             </p>
           </div>

@@ -148,9 +148,9 @@ export default function PresupuestoForm({ limites, budgetId, mes, year, limitesA
               onClick={copiarMesAnterior}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all hover:opacity-80"
               style={{
-                backgroundColor: copied ? '#00d4aa20' : '#1a1f2e',
-                color:           copied ? '#00d4aa'   : '#9ca3af',
-                border:          `1px solid ${copied ? '#00d4aa40' : '#2a3040'}`,
+                backgroundColor: copied ? '#10b98120' : '#1a1f2e',
+                color:           copied ? '#10b981'   : '#9ca3af',
+                border:          `1px solid ${copied ? '#10b98140' : '#2a3040'}`,
               }}>
               {copied ? <Check size={12} /> : <Copy size={12} />}
               {copied ? 'Copiado' : 'Copiar mes anterior'}

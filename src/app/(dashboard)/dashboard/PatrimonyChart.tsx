@@ -102,7 +102,7 @@ export default function PatrimonyChart({ data }: PatrimonyChartProps) {
 
         {mode === 'net_worth' && (
           <div className="space-y-1">
-            <p style={{ color: '#00d4aa', fontSize: '12px' }}>
+            <p style={{ color: '#10b981', fontSize: '12px' }}>
               Patrimonio: <span className="font-bold">{formatCOP(data.patrimonio)}</span>
             </p>
           </div>
@@ -110,7 +110,7 @@ export default function PatrimonyChart({ data }: PatrimonyChartProps) {
 
         {mode === 'distribution' && (
           <div className="space-y-1">
-            <p style={{ color: '#00d4aa', fontSize: '12px' }}>
+            <p style={{ color: '#10b981', fontSize: '12px' }}>
               Bancos: <span className="font-bold">{formatCOP(data.bancos)}</span>
             </p>
             <p style={{ color: '#6366f1', fontSize: '12px' }}>
@@ -124,7 +124,7 @@ export default function PatrimonyChart({ data }: PatrimonyChartProps) {
 
         {mode === 'comparison' && (
           <div className="space-y-1">
-            <p style={{ color: '#00d4aa', fontSize: '12px' }}>
+            <p style={{ color: '#10b981', fontSize: '12px' }}>
               Efectivo: <span className="font-bold">{formatCOP(data.bancos)}</span>
             </p>
             <p style={{ color: '#6366f1', fontSize: '12px' }}>
@@ -171,7 +171,7 @@ export default function PatrimonyChart({ data }: PatrimonyChartProps) {
             </p>
             <p
               className="tabular-nums text-sm font-semibold"
-              style={{ color: stats.isPositive ? '#00d4aa' : '#ef4444' }}
+              style={{ color: stats.isPositive ? '#10b981' : '#ef4444' }}
             >
               {stats.isPositive ? '+' : ''}
               {formatCOP(stats.change)} ({stats.changePct.toFixed(2)}%)
@@ -188,9 +188,9 @@ export default function PatrimonyChart({ data }: PatrimonyChartProps) {
             onClick={() => setMode(m.id)}
             className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
             style={{
-              backgroundColor: mode === m.id ? '#00d4aa20' : '#0f1117',
-              color: mode === m.id ? '#00d4aa' : '#6b7280',
-              border: mode === m.id ? '1px solid #00d4aa30' : '1px solid transparent',
+              backgroundColor: mode === m.id ? '#10b98120' : '#0f1117',
+              color: mode === m.id ? '#10b981' : '#6b7280',
+              border: mode === m.id ? '1px solid #10b98130' : '1px solid transparent',
             }}
           >
             {m.icon} {m.label}
@@ -221,8 +221,8 @@ export default function PatrimonyChart({ data }: PatrimonyChartProps) {
             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorPatrimonio" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00d4aa" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#00d4aa" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e2535" />
@@ -242,7 +242,7 @@ export default function PatrimonyChart({ data }: PatrimonyChartProps) {
               <Area
                 type="monotone"
                 dataKey="patrimonio"
-                stroke="#00d4aa"
+                stroke="#10b981"
                 strokeWidth={3}
                 fill="url(#colorPatrimonio)"
               />
@@ -251,8 +251,8 @@ export default function PatrimonyChart({ data }: PatrimonyChartProps) {
             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorBancos" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00d4aa" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#00d4aa" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorInversiones" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
@@ -281,7 +281,7 @@ export default function PatrimonyChart({ data }: PatrimonyChartProps) {
                 type="monotone"
                 dataKey="bancos"
                 stackId="1"
-                stroke="#00d4aa"
+                stroke="#10b981"
                 strokeWidth={2}
                 fill="url(#colorBancos)"
               />
@@ -321,7 +321,7 @@ export default function PatrimonyChart({ data }: PatrimonyChartProps) {
               <Line
                 type="monotone"
                 dataKey="bancos"
-                stroke="#00d4aa"
+                stroke="#10b981"
                 strokeWidth={3}
                 dot={false}
               />
@@ -368,7 +368,7 @@ export default function PatrimonyChart({ data }: PatrimonyChartProps) {
               style={{
                 fontSize: '14px',
                 marginTop: '2px',
-                color: stats.isPositive ? '#00d4aa' : '#ef4444',
+                color: stats.isPositive ? '#10b981' : '#ef4444',
               }}
             >
               {stats.isPositive ? '+' : ''}{stats.changePct.toFixed(2)}%

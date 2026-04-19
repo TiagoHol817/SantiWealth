@@ -610,6 +610,9 @@ model investment_goals {
   color                String?               @default("#27AE60")
   icon                 String?               @default("🎯")
   is_active            Boolean               @default(true)
+  is_featured          Boolean               @default(false)
+  contribution_amount  Decimal?              @default(0) @db.Decimal(20, 6)
+  contribution_freq    String?               @default("mensual")
   notes                String?
   created_at           DateTime              @default(now()) @db.Timestamptz(6)
   updated_at           DateTime              @default(now()) @db.Timestamptz(6)
@@ -703,6 +706,10 @@ model transactions {
   currency                                             String            @default("COP")
   amount_usd                                           Decimal?          @db.Decimal(20, 6)
   trm_used                                             Decimal?          @db.Decimal(10, 2)
+  original_currency                                    String            @default("COP")
+  exchange_rate                                        Decimal           @default(1) @db.Decimal(12, 4)
+  converted_amount_cop                                 Decimal?          @db.Decimal(20, 6)
+  destination_account_id                               String?           @db.Uuid
   description                                          String?
   date                                                 DateTime          @default(dbgenerated("CURRENT_DATE")) @db.Date
   liability_account_id                                 String?           @db.Uuid
@@ -896,6 +903,7 @@ enum tx_type {
   income
   expense
   debt_payment
+  internal_transfer
 
   @@schema("public")
 }

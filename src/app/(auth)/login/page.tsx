@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import WealtHostBrand from '@/components/WealtHostBrand'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -39,8 +40,11 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <span style={{ color: '#00d4aa', fontSize: '24px' }}>$</span>
-            <span className="text-xl font-semibold text-white">SantiWealth</span>
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-base"
+              style={{ background: 'linear-gradient(135deg, #D4AF37, #b8922a)', color: '#000' }}>
+              W
+            </div>
+            <WealtHostBrand size="lg" />
           </div>
           <p className="text-sm" style={{ color: '#6b7280' }}>Personal Finance</p>
         </div>
@@ -85,7 +89,7 @@ export default function LoginPage() {
 
           <div className="text-right">
             <Link href="/login/reset" className="text-xs hover:underline"
-              style={{ color: '#00d4aa' }}>
+              style={{ color: '#D4AF37' }}>
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
@@ -94,7 +98,7 @@ export default function LoginPage() {
             type="submit"
             disabled={loading}
             className="w-full py-2.5 rounded-lg text-sm font-medium transition-opacity disabled:opacity-60"
-            style={{ backgroundColor: '#00d4aa', color: '#0f1117' }}
+            style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117', fontWeight: 700, boxShadow: '0 2px 14px #D4AF3730' }}
           >
             {loading ? 'Ingresando...' : 'Iniciar sesión'}
           </button>

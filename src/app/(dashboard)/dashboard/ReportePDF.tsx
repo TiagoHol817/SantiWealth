@@ -64,7 +64,7 @@ export default function ReportePDF({ patrimonio }: { patrimonio: PatrimonioData 
       doc.setTextColor(...VERDE)
       doc.setFontSize(14)
       doc.setFont('helvetica', 'bold')
-      doc.text('SantiWealth', 27, 22)
+      doc.text('WealtHost', 27, 22)
       doc.setTextColor(...GRIS)
       doc.setFontSize(8)
       doc.setFont('helvetica', 'normal')
@@ -344,12 +344,12 @@ export default function ReportePDF({ patrimonio }: { patrimonio: PatrimonioData 
         doc.rect(0, 287, W, 10, 'F')
         doc.setTextColor(...GRIS)
         doc.setFontSize(7)
-        doc.text('SantiWealth — Reporte confidencial', 15, 293)
+        doc.text('WealtHost — Reporte confidencial', 15, 293)
         doc.text(`Pagina ${i} de ${totalPages}`, W - 15, 293, { align: 'right' })
       }
 
       const nombreMes = fmtMes(mes).replace(' ', '_')
-      doc.save(`SantiWealth_Reporte_${nombreMes}.pdf`)
+      doc.save(`WealtHost_Reporte_${nombreMes}.pdf`)
     } catch (e) {
       console.error(e)
     }
@@ -399,7 +399,7 @@ export default function ReportePDF({ patrimonio }: { patrimonio: PatrimonioData 
                   Secciones
                 </p>
                 <button onClick={() => setSelected(selected.length === SECCIONES.length ? [] : SECCIONES.map(s => s.id))}
-                  style={{ color: '#00d4aa', fontSize: '11px' }}>
+                  style={{ color: '#10b981', fontSize: '11px' }}>
                   {selected.length === SECCIONES.length ? 'Deseleccionar todo' : 'Seleccionar todo'}
                 </button>
               </div>
@@ -408,13 +408,13 @@ export default function ReportePDF({ patrimonio }: { patrimonio: PatrimonioData 
                 return (
                   <button key={s.id} onClick={() => toggle(s.id)}
                     className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all"
-                    style={{ backgroundColor: active ? '#00d4aa15' : '#0f1117', border: `1px solid ${active ? '#00d4aa40' : '#1e2535'}` }}>
+                    style={{ backgroundColor: active ? '#10b98115' : '#0f1117', border: `1px solid ${active ? '#10b98140' : '#1e2535'}` }}>
                     <div className="flex items-center gap-3">
                       <span style={{ fontSize: '16px' }}>{s.icon}</span>
                       <span style={{ color: active ? '#e5e7eb' : '#6b7280', fontSize: '13px' }}>{s.label}</span>
                     </div>
                     <div className="w-5 h-5 rounded-md flex items-center justify-center"
-                      style={{ backgroundColor: active ? '#00d4aa' : '#1e2535' }}>
+                      style={{ backgroundColor: active ? '#10b981' : '#1e2535' }}>
                       {active && <Check size={12} color="#000" />}
                     </div>
                   </button>
@@ -424,7 +424,7 @@ export default function ReportePDF({ patrimonio }: { patrimonio: PatrimonioData 
 
             <button onClick={generar} disabled={loading || selected.length === 0}
               className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all"
-              style={{ backgroundColor: selected.length === 0 ? '#1e2535' : '#00d4aa', color: selected.length === 0 ? '#4b5563' : '#000' }}>
+              style={{ backgroundColor: selected.length === 0 ? '#1e2535' : '#D4AF37', color: selected.length === 0 ? '#4b5563' : '#0f1117' }}>
               {loading ? (
                 <>
                   <div className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />

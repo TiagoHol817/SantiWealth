@@ -47,7 +47,7 @@ export default async function CDTsPage() {
       <div className="grid grid-cols-3 gap-4">
         {[
           { label: 'Capital total',           value: totalCapital,     color: '#e5e7eb' },
-          { label: 'Rendimiento proyectado',  value: totalRendimiento, color: '#00d4aa' },
+          { label: 'Rendimiento proyectado',  value: totalRendimiento, color: '#10b981' },
           { label: 'Rendimiento acumulado',   value: totalActual,      color: '#6366f1' },
         ].map(item => (
           <div key={item.label} className="rounded-2xl p-6 relative overflow-hidden"
@@ -65,7 +65,7 @@ export default async function CDTsPage() {
 
       <div className="space-y-4">
         {cdts.map(cdt => {
-          const accentColor = cdt.vencido ? '#ef4444' : cdt.urgente ? '#f59e0b' : '#00d4aa'
+          const accentColor = cdt.vencido ? '#ef4444' : cdt.urgente ? '#f59e0b' : '#10b981'
           const detalles = [
             { label: 'Tasa EA',          value: `${cdt.meta.tasa_ea}%`,          isAmount: false },
             { label: 'Tasa Nominal',     value: `${cdt.meta.tasa_nominal}%`,     isAmount: false },

@@ -116,7 +116,7 @@ export default function EditarTransaccion({
         <div className="flex gap-2 mb-5">
           {([
             ['expense',      'Gasto',      '#ef4444'],
-            ['income',       'Ingreso',    '#00d4aa'],
+            ['income',       'Ingreso',    '#10b981'],
             ['debt_payment', 'Pago deuda', '#f59e0b'],
           ] as [string, string, string][]).map(([val, label, color]) => (
             <button key={val}
@@ -180,7 +180,7 @@ export default function EditarTransaccion({
             </button>
             <button onClick={handleSave} disabled={loading}
               className="px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2"
-              style={{ backgroundColor: '#00d4aa', color: '#000', opacity: loading ? 0.7 : 1 }}>
+              style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117', opacity: loading ? 0.7 : 1 }}>
               <Check size={14} />
               {loading ? 'Guardando...' : 'Guardar'}
             </button>

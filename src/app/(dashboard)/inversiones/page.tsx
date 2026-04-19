@@ -97,7 +97,7 @@ export default async function InversionesPage({
 
   const grupos = [
     { label: 'ETFs',          items: etfs,   color: '#6366f1' },
-    { label: 'Acciones',      items: stocks, color: '#00d4aa' },
+    { label: 'Acciones',      items: stocks, color: '#10b981' },
     { label: 'Criptomonedas', items: crypto, color: '#f59e0b' },
   ].filter(g => g.items.length > 0).map(g => {
     const tot  = g.items.reduce((s, r) => s + r.mktVal, 0)
@@ -154,7 +154,7 @@ export default async function InversionesPage({
         <HelpModal moduleId="inversiones" />
         <a href="/inversiones"
           className="px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#00d4aa' }}>
+          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#10b981' }}>
           ↻ Actualizar
         </a>
       </div>
@@ -163,8 +163,8 @@ export default async function InversionesPage({
       <div className="grid grid-cols-4 gap-4">
         {[
           { label: 'Valor de mercado',   value: fmtUSD(totalMktVal),    color: '#e5e7eb', sub: `Invertido: ${fmtUSD(totalInvested)}` },
-          { label: 'Ganancia total',     value: fmtUSD(totalGain),      color: isTotalPos ? '#00d4aa' : '#ef4444', sub: fmtPct(totalGainPct) },
-          { label: 'Cambio hoy',         value: fmtUSD(totalDayChange), color: isDayPos   ? '#00d4aa' : '#ef4444', sub: fmtPct(totalDayPct)  },
+          { label: 'Ganancia total',     value: fmtUSD(totalGain),      color: isTotalPos ? '#10b981' : '#ef4444', sub: fmtPct(totalGainPct) },
+          { label: 'Cambio hoy',         value: fmtUSD(totalDayChange), color: isDayPos   ? '#10b981' : '#ef4444', sub: fmtPct(totalDayPct)  },
           { label: 'CDTs — Capital',     value: fmtCOP(totalCapitalCDT), color: '#f59e0b', sub: `Rendimiento: ${fmtCOP(totalActualCDT)}` },
         ].map(item => (
           <div key={item.label} className="rounded-2xl p-5 relative overflow-hidden"
@@ -224,16 +224,16 @@ export default async function InversionesPage({
                   <div>
                     <p style={{ color: '#6b7280', fontSize: '11px', marginBottom: '4px' }}>Ganancia total</p>
                     <HiddenValue value={fmtUSD(totalGain)} className="tabular-nums font-bold"
-                      style={{ color: isTotalPos ? '#00d4aa' : '#ef4444', fontSize: '16px' }} />
-                    <span className="tabular-nums text-xs" style={{ color: isTotalPos ? '#00d4aa' : '#ef4444' }}>
+                      style={{ color: isTotalPos ? '#10b981' : '#ef4444', fontSize: '16px' }} />
+                    <span className="tabular-nums text-xs" style={{ color: isTotalPos ? '#10b981' : '#ef4444' }}>
                       {fmtPct(totalGainPct)}
                     </span>
                   </div>
                   <div>
                     <p style={{ color: '#6b7280', fontSize: '11px', marginBottom: '4px' }}>Cambio hoy</p>
                     <HiddenValue value={fmtUSD(totalDayChange)} className="tabular-nums font-bold"
-                      style={{ color: isDayPos ? '#00d4aa' : '#ef4444', fontSize: '16px' }} />
-                    <span className="tabular-nums text-xs" style={{ color: isDayPos ? '#00d4aa' : '#ef4444' }}>
+                      style={{ color: isDayPos ? '#10b981' : '#ef4444', fontSize: '16px' }} />
+                    <span className="tabular-nums text-xs" style={{ color: isDayPos ? '#10b981' : '#ef4444' }}>
                       {fmtPct(totalDayPct)}
                     </span>
                   </div>
@@ -257,7 +257,7 @@ export default async function InversionesPage({
                 <div className="text-right">
                   <HiddenValue value={fmtUSD(g.total)} className="tabular-nums font-bold"
                     style={{ color: g.color, fontSize: '15px' }} />
-                  <p style={{ color: g.gainTotal >= 0 ? '#00d4aa' : '#ef4444', fontSize: '11px' }}>
+                  <p style={{ color: g.gainTotal >= 0 ? '#10b981' : '#ef4444', fontSize: '11px' }}>
                     {g.gainTotal >= 0 ? '▲' : '▼'} {fmtUSD(Math.abs(g.gainTotal))} ({fmtPct(g.gainPct)})
                   </p>
                 </div>
@@ -292,11 +292,11 @@ export default async function InversionesPage({
                             <HiddenValue value={fmtUSD(row.mktVal)} className="tabular-nums font-bold"
                               style={{ color: g.color, fontSize: '16px' }} />
                             <div className="flex items-center justify-end gap-1.5 mt-0.5">
-                              <span style={{ color: isPos ? '#00d4aa' : '#ef4444', fontSize: '11px', fontWeight: '600' }}>
+                              <span style={{ color: isPos ? '#10b981' : '#ef4444', fontSize: '11px', fontWeight: '600' }}>
                                 {isPos ? '▲' : '▼'} {fmtUSD(Math.abs(row.gain))}
                               </span>
                               <span className="tabular-nums text-xs px-1.5 py-0.5 rounded-full"
-                                style={{ backgroundColor: isPos ? '#00d4aa20' : '#ef444420', color: isPos ? '#00d4aa' : '#ef4444' }}>
+                                style={{ backgroundColor: isPos ? '#10b98120' : '#ef444420', color: isPos ? '#10b981' : '#ef4444' }}>
                                 {fmtPct(row.gainPct)}
                               </span>
                             </div>
@@ -305,8 +305,8 @@ export default async function InversionesPage({
                         <div className="grid grid-cols-3 gap-3 mb-2">
                           {[
                             { label: 'Precio actual', value: fmtUSD(row.price), color: '#e5e7eb' },
-                            { label: 'Cambio hoy',    value: `${isDayR ? '+' : ''}${fmtUSD(row.pd?.dayChange ?? 0)} (${fmtPct(row.pd?.dayPct ?? 0)})`, color: isDayR ? '#00d4aa' : '#ef4444' },
-                            { label: 'Costo prom. DCA', value: `${fmtUSD(row.avgCost)} ${dcaDiff >= 0 ? '▲' : '▼'}${Math.abs(dcaDiff).toFixed(1)}%`, color: dcaDiff >= 0 ? '#00d4aa' : '#ef4444' },
+                            { label: 'Cambio hoy',    value: `${isDayR ? '+' : ''}${fmtUSD(row.pd?.dayChange ?? 0)} (${fmtPct(row.pd?.dayPct ?? 0)})`, color: isDayR ? '#10b981' : '#ef4444' },
+                            { label: 'Costo prom. DCA', value: `${fmtUSD(row.avgCost)} ${dcaDiff >= 0 ? '▲' : '▼'}${Math.abs(dcaDiff).toFixed(1)}%`, color: dcaDiff >= 0 ? '#10b981' : '#ef4444' },
                           ].map(item => (
                             <div key={item.label} className="rounded-xl p-2.5" style={{ backgroundColor: '#0f1117' }}>
                               <p style={{ color: '#4b5563', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -357,7 +357,7 @@ export default async function InversionesPage({
           <div className="grid grid-cols-3 gap-4">
             {[
               { label: 'Capital total',          value: fmtCOP(totalCapitalCDT), color: '#e5e7eb' },
-              { label: 'Rendimiento proyectado', value: fmtCOP(totalRendCDT),    color: '#00d4aa' },
+              { label: 'Rendimiento proyectado', value: fmtCOP(totalRendCDT),    color: '#10b981' },
               { label: 'Rendimiento acumulado',  value: fmtCOP(totalActualCDT),  color: '#6366f1' },
             ].map(item => (
               <div key={item.label} className="rounded-2xl p-5 relative overflow-hidden"
@@ -393,7 +393,7 @@ export default async function InversionesPage({
                 <p style={{ color: '#6b7280', fontSize: '13px' }}>Agrega tu primer CDT con el botón de arriba</p>
               </div>
             ) : cdts.map(cdt => {
-              const color = cdt.vencido ? '#ef4444' : cdt.urgente ? '#f59e0b' : '#00d4aa'
+              const color = cdt.vencido ? '#ef4444' : cdt.urgente ? '#f59e0b' : '#10b981'
               return (
                 <div key={cdt.id} className="rounded-2xl p-6 relative overflow-hidden"
                   style={{ backgroundColor: '#1a1f2e', border: `1px solid ${cdt.vencido ? '#ef444440' : cdt.urgente ? '#f59e0b40' : '#2a3040'}` }}>

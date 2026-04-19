@@ -28,7 +28,7 @@ export const HELP_CONTENT: Record<string, ModuleHelp> = {
     title:       'Dashboard',
     subtitle:    'Tu centro de control financiero',
     icon:        '🏦',
-    color:       '#00d4aa',
+    color:       '#10b981',
     description: 'El Dashboard es tu resumen financiero personal. Muestra en un solo vistazo tu patrimonio neto, la evolución de tus activos y el progreso hacia tus compromisos más importantes.',
     steps: [
       { icon: '💰', title: 'Patrimonio neto',       desc: 'Es la suma de todo lo que tienes (cuentas, inversiones, criptomonedas) menos lo que debes. Se actualiza automáticamente con cada movimiento que registres.' },
@@ -43,7 +43,7 @@ export const HELP_CONTENT: Record<string, ModuleHelp> = {
     ],
     flow: [
       { label: 'Transacciones', icon: '💳', color: '#6366f1' },
-      { label: 'Inversiones',   icon: '📈', color: '#00d4aa' },
+      { label: 'Inversiones',   icon: '📈', color: '#10b981' },
       { label: 'Dashboard',     icon: '🏦', color: '#f59e0b' },
     ],
   },
@@ -113,7 +113,7 @@ export const HELP_CONTENT: Record<string, ModuleHelp> = {
     title:       'Metas Financieras',
     subtitle:    'Seguimiento de tus objetivos',
     icon:        '🏆',
-    color:       '#00d4aa',
+    color:       '#10b981',
     description: 'Define los objetivos financieros que quieres alcanzar: una casa, un viaje, un fondo de emergencia, lo que sea. La app proyecta automáticamente cuándo podrías lograrlo según tus hábitos de ahorro.',
     steps: [
       { icon: '➕', title: 'Crear una meta',        desc: 'Dale un nombre, un ícono y un monto objetivo. Puedes agregar una fecha límite y configurar con cuánta frecuencia planeas aportar dinero.' },
@@ -153,7 +153,7 @@ export const HELP_CONTENT: Record<string, ModuleHelp> = {
     title:       'Ingresos',
     subtitle:    'Conoce de dónde viene tu dinero',
     icon:        '💰',
-    color:       '#00d4aa',
+    color:       '#10b981',
     description: 'Visualiza y analiza todas tus fuentes de ingreso. Entiende de dónde viene tu dinero, qué tan diversificadas están tus fuentes y cómo ha evolucionado tu capacidad de generar ingresos.',
     steps: [
       { icon: '📝', title: 'Cómo registrar ingresos', desc: 'Ve a Transacciones, crea una nueva entrada con tipo "Ingreso" y elige la fuente en el campo correspondiente. Así aparecerá clasificado aquí automáticamente.' },
@@ -168,7 +168,7 @@ export const HELP_CONTENT: Record<string, ModuleHelp> = {
     ],
     flow: [
       { label: 'Transacciones', icon: '💳', color: '#6366f1' },
-      { label: 'Ingresos',      icon: '💰', color: '#00d4aa' },
+      { label: 'Ingresos',      icon: '💰', color: '#10b981' },
       { label: 'Reportes',      icon: '📊', color: '#f59e0b' },
     ],
   },
@@ -193,7 +193,7 @@ export const HELP_CONTENT: Record<string, ModuleHelp> = {
     ],
     flow: [
       { label: 'Transacciones', icon: '💳', color: '#6366f1' },
-      { label: 'Ingresos',      icon: '💰', color: '#00d4aa' },
+      { label: 'Ingresos',      icon: '💰', color: '#10b981' },
       { label: 'Reportes',      icon: '📊', color: '#f59e0b' },
     ],
   },

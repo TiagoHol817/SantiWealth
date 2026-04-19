@@ -5,9 +5,9 @@ import { useEffect, useState } from 'react'
 
 const CONFIG: Record<ToastType, { color: string; bg: string; border: string; icon: string }> = {
   success: {
-    color:  '#00d4aa',
+    color:  '#10b981',
     bg:     '#0a1f1c',
-    border: '#00d4aa40',
+    border: '#10b98140',
     icon:   '✓',
   },
   error: {

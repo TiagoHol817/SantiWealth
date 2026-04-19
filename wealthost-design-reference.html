@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WealtHost — Design Reference System v2.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+/* ═══════════════════════════════════════════════════
+   WEALTHOST DESIGN TOKENS
+═══════════════════════════════════════════════════ */
+:root {
+  /* Brand */
+  --gold:          #D4AF37;
+  --gold-dark:     #b8922a;
+  --gold-glow:     #D4AF3730;
+  --gold-subtle:   #D4AF3715;
+
+  /* Backgrounds */
+  --bg-void:       #0a0c12;
+  --bg-base:       #0f1117;
+  --bg-card:       #1a1f2e;
+  --bg-card-deep:  #141823;
+  --bg-elevated:   #222840;
+  --bg-input:      #0f1117;
+
+  /* Borders */
+  --border-subtle: #1e2535;
+  --border-base:   #2a3040;
+  --border-focus:  #3d4a60;
+
+  /* Text */
+  --text-primary:  #f1f5f9;
+  --text-secondary:#9ca3af;
+  --text-muted:    #6b7280;
+  --text-faint:    #4b5563;
+
+  /* Semantic */
+  --emerald:       #10b981;   /* financial positives */
+  --indigo:        #6366f1;   /* investments/secondary */
+  --amber:         #f59e0b;   /* warnings */
+  --red:           #ef4444;   /* danger/expense */
+  --purple:        #8b5cf6;   /* CDTs/savings products */
+
+  /* Typography */
+  --font-sans:     'Inter', system-ui, sans-serif;
+  --font-mono:     'JetBrains Mono', monospace;
+
+  /* Radius */
+  --r-sm:  6px;
+  --r-md:  10px;
+  --r-lg:  14px;
+  --r-xl:  18px;
+  --r-2xl: 24px;
+
+  /* Shadows */
+  --shadow-card:   0 4px 24px rgba(0,0,0,.4), 0 1px 0 rgba(255,255,255,.03) inset;
+  --shadow-gold:   0 4px 20px rgba(212,175,55,.25);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); background: var(--bg-void); color: var(--text-primary); line-height: 1.5; font-size: 14px; }
+* { scrollbar-width: thin; scrollbar-color: var(--border-base) transparent; }
+
+/* ── Layout shell ── */
+.app-shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+/* ── Sidebar ── */
+.sidebar {
+  background: var(--bg-card);
+  border-right: 1px solid var(--border-subtle);
+  display: flex; flex-direction: column;
+  padding: 20px 0;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 20px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 20px;
+}
+.logo-mark {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 15px; color: #0f1117;
+  box-shadow: var(--shadow-gold);
+  flex-shrink: 0;
+}
+.brand-name { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
+.brand-wealth { color: var(--gold); }
+.brand-host   { color: var(--text-primary); }
+.brand-sub    { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .08em; margin-top: 1px; }
+
+.nav-section { padding: 0 12px; margin-bottom: 8px; }
+.nav-label   { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .1em; padding: 4px 8px 6px; }
+.nav-item    {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: var(--r-md);
+  color: var(--text-muted); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .15s; position: relative;
+  text-decoration: none;
+}
+.nav-item:hover     { background: rgba(255,255,255,.05); color: var(--text-secondary); }
+.nav-item.active    { background: var(--gold-subtle); color: var(--gold); }
+.nav-item.active::before {
+  content:''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 20px; background: var(--gold); border-radius: 0 2px 2px 0;
+}
+.nav-icon { width: 18px; height: 18px; opacity: .7; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; background: var(--gold-subtle); color: var(--gold);
+  border: 1px solid var(--gold-glow); border-radius: 20px;
+  font-size: 9px; font-weight: 700; padding: 1px 6px;
+}
+
+.sidebar-bottom {
+  margin-top: auto; padding: 16px 20px 0;
+  border-top: 1px solid var(--border-subtle);
+}
+.user-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--r-md);
+  background: var(--bg-base); cursor: pointer;
+}
+.user-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--indigo), var(--purple));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: white; flex-shrink: 0;
+}
+.user-info-name { font-size: 12px; font-weight: 600; }
+.user-info-plan { font-size: 10px; color: var(--gold); }
+
+/* ── Main content ── */
+.main { background: var(--bg-base); overflow-y: auto; }
+.page-content { padding: 32px; max-width: 1280px; }
+
+/* ── Cards ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-base);
+  border-radius: var(--r-2xl);
+  box-shadow: var(--shadow-card);
+}
+.card-sm { border-radius: var(--r-xl); }
+.card-p  { padding: 24px; }
+.card-p-sm { padding: 16px; }
+
+/* ── Typography ── */
+.page-title { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); }
+.page-sub   { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+.section-label { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-faint); margin-bottom: 6px; }
+.metric-value  { font-size: 32px; font-weight: 800; letter-spacing: -1px; font-family: var(--font-mono); line-height: 1; }
+.metric-sub    { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* ── Buttons ── */
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; border: none; text-decoration: none; }
+.btn-gold     { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: #0f1117; box-shadow: var(--shadow-gold); }
+.btn-gold:hover { opacity: .9; transform: translateY(-1px); }
+.btn-ghost    { background: transparent; color: var(--text-muted); border: 1px solid var(--border-base); }
+.btn-ghost:hover { background: rgba(255,255,255,.05); color: var(--text-secondary); }
+.btn-sm       { padding: 6px 12px; font-size: 12px; }
+.btn-icon     { width: 34px; height: 34px; padding: 0; border-radius: var(--r-md); justify-content: center; }
+
+/* ── Badges ── */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-gold    { background: var(--gold-subtle);        color: var(--gold);    border: 1px solid var(--gold-glow); }
+.badge-emerald { background: rgba(16,185,129,.15);      color: var(--emerald); border: 1px solid rgba(16,185,129,.3); }
+.badge-red     { background: rgba(239,68,68,.15);       color: var(--red);     border: 1px solid rgba(239,68,68,.3); }
+.badge-amber   { background: rgba(245,158,11,.15);      color: var(--amber);   border: 1px solid rgba(245,158,11,.3); }
+.badge-indigo  { background: rgba(99,102,241,.15);      color: var(--indigo);  border: 1px solid rgba(99,102,241,.3); }
+.badge-purple  { background: rgba(139,92,246,.15);      color: var(--purple);  border: 1px solid rgba(139,92,246,.3); }
+
+/* ── Progress bar ── */
+.progress-track { height: 8px; background: var(--bg-base); border-radius: 4px; overflow: hidden; }
+.progress-fill  { height: 100%; border-radius: 4px; transition: width .7s ease; }
+
+/* ── Divider ── */
+.divider { height: 1px; background: var(--border-subtle); margin: 24px 0; }
+
+/* ── Grid helpers ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+.flex   { display: flex; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.flex-center  { display: flex; align-items: center; }
+.gap-2 { gap: 8px; } .gap-3 { gap: 12px; } .gap-4 { gap: 16px; }
+.mb-2 { margin-bottom: 8px; } .mb-3 { margin-bottom: 12px; } .mb-4 { margin-bottom: 16px; } .mb-6 { margin-bottom: 24px; }
+.mt-3 { margin-top: 12px; } .mt-4 { margin-top: 16px; }
+.space-y-4 > * + * { margin-top: 16px; }
+.space-y-6 > * + * { margin-top: 24px; }
+
+/* ── Glow orb (decorative) ── */
+.orb {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  filter: blur(40px); opacity: .06;
+}
+
+/* ── Table ── */
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-faint); font-weight: 600; text-align: left; padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); }
+td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border-subtle); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.02); }
+
+/* ── Chip tabs ── */
+.chip-tabs { display: flex; gap: 4px; background: var(--bg-base); padding: 4px; border-radius: var(--r-md); border: 1px solid var(--border-subtle); }
+.chip { padding: 5px 14px; border-radius: calc(var(--r-md) - 2px); font-size: 12px; font-weight: 500; cursor: pointer; color: var(--text-muted); }
+.chip.active { background: var(--bg-card); color: var(--text-primary); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+
+/* ── Stat card ── */
+.stat-card { padding: 20px; border-radius: var(--r-xl); background: var(--bg-card); border: 1px solid var(--border-base); position: relative; overflow: hidden; }
+.stat-value { font-size: 22px; font-weight: 800; letter-spacing: -.5px; font-family: var(--font-mono); margin-top: 6px; }
+.stat-delta { font-size: 11px; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+
+/* ── SVG radial ── */
+.radial-wrap { flex-shrink: 0; }
+
+/* ── Input field ── */
+.field { background: var(--bg-input); border: 1px solid var(--border-base); border-radius: var(--r-md); color: var(--text-primary); padding: 9px 13px; font-size: 13px; font-family: var(--font-sans); width: 100%; outline: none; }
+.field:focus { border-color: var(--gold); }
+.field-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; display: block; }
+
+/* ── Section headers across pages ── */
+.page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; }
+
+/* ─────────────── DESIGN REFERENCE WRAPPER ─────────────── */
+.ref-page { padding: 60px; background: var(--bg-void); }
+.ref-section { margin-bottom: 80px; }
+.ref-section-title {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .15em;
+  color: var(--text-faint); border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 10px; margin-bottom: 32px;
+}
+.token-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.token-swatch { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; border: 1px solid rgba(255,255,255,.08); }
+.token-name  { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); width: 100px; }
+.token-hex   { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.token-role  { font-size: 12px; color: var(--text-muted); }
+
+/* ── Notification dot ── */
+.notif-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--red);
+  position: absolute; top: -2px; right: -2px;
+  box-shadow: 0 0 0 2px var(--bg-card);
+}
+
+/* ── Chart bars ── */
+.bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+.bar { flex: 1; border-radius: 4px 4px 0 0; min-height: 4px; transition: height .3s; }
+
+/* ── Tooltip ── */
+.tooltip {
+  position: absolute; background: var(--bg-elevated);
+  border: 1px solid var(--border-base); border-radius: var(--r-md);
+  padding: 10px 14px; font-size: 12px; pointer-events: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5); z-index: 100;
+}
+
+/* ── Module section divider ── */
+.module-sep {
+  padding: 6px 0 32px;
+  font-size: 10px; text-transform: uppercase; letter-spacing: .15em;
+  color: var(--text-faint); border-top: 1px solid var(--border-subtle);
+  margin-top: 60px;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     DESIGN REFERENCE DOCUMENT — WealtHost v2.0
+     This file is the single source of truth for visual design.
+     All 9 modules + design system tokens are represented here.
+═══════════════════════════════════════════════════════════ -->
+
+<div class="ref-page">
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 0: COVER                                            -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div style="text-align:center;padding:60px 0 80px;border-bottom:1px solid #1e2535;margin-bottom:80px;">
+  <div style="display:inline-flex;align-items:center;gap:14px;margin-bottom:20px;">
+    <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#D4AF37,#b8922a);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;color:#0f1117;box-shadow:0 8px 32px rgba(212,175,55,.4);">W</div>
+    <div style="text-align:left;">
+      <div style="font-size:32px;font-weight:900;letter-spacing:-1px;">
+        <span style="color:#D4AF37;">Wealth</span><span style="color:#f1f5f9;">Host</span>
+      </div>
+      <div style="font-size:11px;color:#4b5563;text-transform:uppercase;letter-spacing:.15em;">Personal Finance Platform — Design Reference v2.0</div>
+    </div>
+  </div>
+  <p style="color:#6b7280;font-size:14px;max-width:500px;margin:0 auto;line-height:1.7;">
+    Luxury wealth management for high-net-worth individuals.<br/>
+    9 modules · Dark-first · COP/USD dual-currency · Real-time portfolio.
+  </p>
+  <div style="display:flex;gap:20px;justify-content:center;margin-top:32px;flex-wrap:wrap;">
+    <span class="badge badge-gold">Luxury Charcoal Dark</span>
+    <span class="badge badge-emerald">Real Financial Data</span>
+    <span class="badge badge-indigo">9 Modules</span>
+    <span class="badge badge-amber">COP / USD Dual Currency</span>
+    <span class="badge badge-purple">WealthScore Engine</span>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 1: DESIGN TOKENS                                    -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div class="ref-section">
+  <p class="ref-section-title">01 — Design Tokens &amp; Color System</p>
+
+  <div class="grid-2" style="gap:40px;">
+    <!-- Brand + Semantic colors -->
+    <div>
+      <p style="font-size:12px;font-weight:700;color:#9ca3af;margin-bottom:14px;">Brand &amp; Semantic</p>
+      <div class="token-row"><div class="token-swatch" style="background:#D4AF37;"></div><span class="token-name">--gold</span><span class="token-hex">#D4AF37</span><span class="token-role">— Brand · CTA buttons · Gold accents</span></div>
+      <div class="token-row"><div class="token-swatch" style="background:#10b981;"></div><span class="token-name">--emerald</span><span class="token-hex">#10b981</span><span class="token-role">— Income · Gains · Positive indicators</span></div>
+      <div class="token-row"><div class="token-swatch" style="background:#6366f1;"></div><span class="token-name">--indigo</span><span class="token-hex">#6366f1</span><span class="token-role">— Investments · Stock portfolio</span></div>
+      <div class="token-row"><div class="token-swatch" style="background:#f59e0b;"></div><span class="token-name">--amber</span><span class="token-hex">#f59e0b</span><span class="token-role">— Debt payments · Warnings · Crypto</span></div>
+      <div class="token-row"><div class="token-swatch" style="background:#ef4444;"></div><span class="token-name">--red</span><span class="token-hex">#ef4444</span><span class="token-role">— Expenses · Losses · Danger states</span></div>
+      <div class="token-row"><div class="token-swatch" style="background:#8b5cf6;"></div><span class="token-name">--purple</span><span class="token-hex">#8b5cf6</span><span class="token-role">— CDTs · Fixed-income savings products</span></div>
+    </div>
+
+    <!-- Background layer system -->
+    <div>
+      <p style="font-size:12px;font-weight:700;color:#9ca3af;margin-bottom:14px;">Background Layers (Depth)</p>
+      <div class="token-row"><div class="token-swatch" style="background:#0a0c12;border-color:#1e2535;"></div><span class="token-name">--bg-void</span><span class="token-hex">#0a0c12</span><span class="token-role">— Page background / outermost</span></div>
+      <div class="token-row"><div class="token-swatch" style="background:#0f1117;border-color:#1e2535;"></div><span class="token-name">--bg-base</span><span class="token-hex">#0f1117</span><span class="token-role">— Main content background</span></div>
+      <div class="token-row"><div class="token-swatch" style="background:#1a1f2e;border-color:#2a3040;"></div><span class="token-name">--bg-card</span><span class="token-hex">#1a1f2e</span><span class="token-role">— Cards, panels, modals</span></div>
+      <div class="token-row"><div class="token-swatch" style="background:#141823;border-color:#2a3040;"></div><span class="token-name">--bg-card-deep</span><span class="token-hex">#141823</span><span class="token-role">— Nested cards / inset sections</span></div>
+      <div class="token-row"><div class="token-swatch" style="background:#2a3040;"></div><span class="token-name">--border-base</span><span class="token-hex">#2a3040</span><span class="token-role">— Default border / divider</span></div>
+      <div class="token-row"><div class="token-swatch" style="background:#1e2535;"></div><span class="token-name">--border-subtle</span><span class="token-hex">#1e2535</span><span class="token-role">— Subtle dividers / section breaks</span></div>
+    </div>
+  </div>
+
+  <!-- Typography Scale -->
+  <div style="margin-top:40px;padding-top:32px;border-top:1px solid #1e2535;">
+    <p style="font-size:12px;font-weight:700;color:#9ca3af;margin-bottom:20px;">Typography Scale — Inter (sans) + JetBrains Mono (numbers)</p>
+    <div class="space-y-4">
+      <div style="display:flex;align-items:baseline;gap:20px;">
+        <span style="font-size:36px;font-weight:900;letter-spacing:-1.5px;">$ 85.182.255</span>
+        <span class="token-hex">36px · 900 · Mono · Hero KPI</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:20px;">
+        <span style="font-size:28px;font-weight:800;letter-spacing:-.5px;">Metas Financieras</span>
+        <span class="token-hex">28px · 800 · Sans · Page title</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:20px;">
+        <span style="font-size:22px;font-weight:700;letter-spacing:-.3px;">$ 7.000.000</span>
+        <span class="token-hex">22px · 700 · Mono · Section value</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:20px;">
+        <span style="font-size:16px;font-weight:600;">Patrimonio Neto</span>
+        <span class="token-hex">16px · 600 · Sans · Card title</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:20px;">
+        <span style="font-size:13px;font-weight:400;color:#9ca3af;">Ingresos este mes · 3 registros</span>
+        <span class="token-hex">13px · 400 · Sans · Body / metadata</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:20px;">
+        <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:#4b5563;">PATRIMONIO NETO</span>
+        <span class="token-hex">10px · 600 · Uppercase · Section label</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Component states -->
+  <div style="margin-top:40px;padding-top:32px;border-top:1px solid #1e2535;">
+    <p style="font-size:12px;font-weight:700;color:#9ca3af;margin-bottom:20px;">Button System</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+      <button class="btn btn-gold">+ Nueva transacción</button>
+      <button class="btn btn-gold btn-sm">Guardar cambios</button>
+      <button class="btn btn-ghost">Exportar PDF</button>
+      <button class="btn btn-ghost btn-sm">Cancelar</button>
+      <div style="display:flex;gap:8px;">
+        <span class="badge badge-gold">ÓPTIMO</span>
+        <span class="badge badge-emerald">↑ +$80.287</span>
+        <span class="badge badge-red">↓ Gasto</span>
+        <span class="badge badge-amber">⚡ Deuda</span>
+        <span class="badge badge-indigo">📈 Bolsa</span>
+        <span class="badge badge-purple">📄 CDT</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 2: GLOBAL CHROME — Sidebar + Header               -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div class="ref-section">
+  <p class="ref-section-title">02 — Global Chrome: Sidebar &amp; Navigation</p>
+
+  <div style="max-width:260px;">
+    <div class="sidebar" style="position:relative;height:auto;border-radius:var(--r-2xl);border:1px solid var(--border-subtle);">
+      <!-- Logo -->
+      <div class="sidebar-logo" style="padding:20px 20px 20px;border-bottom:1px solid #1e2535;margin-bottom:0;">
+        <div class="logo-mark">W</div>
+        <div>
+          <div class="brand-name"><span class="brand-wealth">Wealth</span><span class="brand-host">Host</span></div>
+          <div class="brand-sub">Personal Finance</div>
+        </div>
+      </div>
+
+      <div style="padding:16px 12px 8px;">
+        <!-- Principal -->
+        <p class="nav-label" style="padding:12px 8px 6px;">Principal</p>
+        <a class="nav-item active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          Transacciones
+          <span class="nav-badge">12</span>
+        </a>
+        <a class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          Inversiones
+        </a>
+        <a class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          Presupuestos
+        </a>
+
+        <p class="nav-label" style="padding:16px 8px 6px;">Planificación</p>
+        <a class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          Metas
+        </a>
+        <a class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          Ingresos
+        </a>
+        <a class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+          Costos Op.
+        </a>
+        <a class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Reportes
+        </a>
+      </div>
+
+      <!-- User bottom -->
+      <div style="padding:16px 12px;border-top:1px solid #1e2535;margin-top:20px;">
+        <!-- Featured goal chip -->
+        <div style="background:#6366f110;border:1px solid #6366f125;border-radius:var(--r-md);padding:10px 12px;margin-bottom:10px;">
+          <p style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#4b5563;margin-bottom:4px;">📌 Meta en Dashboard</p>
+          <p style="font-size:12px;font-weight:600;color:#e5e7eb;">🏠 Apartamento Flandes</p>
+          <div class="progress-track" style="margin-top:6px;height:4px;">
+            <div class="progress-fill" style="width:15%;background:linear-gradient(90deg,#6366f1,#8b5cf6);"></div>
+          </div>
+          <p style="font-size:10px;color:#6b7280;margin-top:4px;">$ 41M / $ 280M · 15%</p>
+        </div>
+
+        <div class="user-chip">
+          <div class="user-avatar">S</div>
+          <div>
+            <div class="user-info-name">Santiago</div>
+            <div class="user-info-plan">Plan Pro · v2.0</div>
+          </div>
+          <svg style="margin-left:auto;color:#4b5563;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 3: MODULE 1 — DASHBOARD                            -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div class="ref-section">
+  <p class="ref-section-title">03 — Module 1: Dashboard — Patrimonio &amp; Wealth Score</p>
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-sub">Resumen de tu patrimonio · 19 de abril, 2026</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div style="text-align:right;">
+        <p style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#4b5563;">TRM del día</p>
+        <p style="font-size:16px;font-weight:700;color:#D4AF37;font-family:var(--font-mono);">$ 3.593</p>
+      </div>
+      <button class="btn btn-ghost btn-sm">↗ Exportar PDF</button>
+    </div>
+  </div>
+
+  <!-- Hero: Patrimonio Neto -->
+  <div class="card card-p mb-4" style="background:linear-gradient(135deg,#1a1f2e 0%,#141823 100%);position:relative;overflow:hidden;">
+    <div class="orb" style="width:400px;height:400px;background:#D4AF37;right:-100px;top:-100px;"></div>
+    <div class="orb" style="width:200px;height:200px;background:#6366f1;left:-50px;bottom:-50px;"></div>
+
+    <div style="position:relative;">
+      <p class="section-label">Patrimonio Neto</p>
+      <div style="display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:52px;font-weight:900;letter-spacing:-2px;font-family:var(--font-mono);color:#f1f5f9;line-height:1;">
+            $ 85.182.255
+          </div>
+          <p style="font-size:13px;color:#6b7280;margin-top:6px;font-family:var(--font-mono);">≈ USD $ 23.708</p>
+        </div>
+        <div style="padding:12px 20px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);border-radius:var(--r-xl);margin-bottom:4px;">
+          <p style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:2px;">vs ayer</p>
+          <p style="font-size:20px;font-weight:800;color:#10b981;font-family:var(--font-mono);">+$ 80.287</p>
+          <p style="font-size:11px;color:#10b981;opacity:.8;">+0.09%</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Distribution mini-bar -->
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid #1e2535;">
+      <div style="display:flex;gap:3px;height:8px;border-radius:4px;overflow:hidden;margin-bottom:12px;">
+        <div style="flex:0 0 54%;background:#10b981;border-radius:4px 0 0 4px;"></div>
+        <div style="flex:0 0 30%;background:#6366f1;"></div>
+        <div style="flex:0 0 16%;background:#f59e0b;border-radius:0 4px 4px 0;"></div>
+      </div>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#10b981;"></div>
+          <div>
+            <p style="font-size:11px;color:#6b7280;">Efectivo / Bancos</p>
+            <p style="font-size:13px;font-weight:700;color:#10b981;font-family:var(--font-mono);">$ 46.020.000 <span style="font-size:10px;color:#6b7280;">54%</span></p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#6366f1;"></div>
+          <div>
+            <p style="font-size:11px;color:#6b7280;">Bolsa de Valores</p>
+            <p style="font-size:13px;font-weight:700;color:#6366f1;font-family:var(--font-mono);">$ 25.000.000 <span style="font-size:10px;color:#6b7280;">29%</span></p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b;"></div>
+          <div>
+            <p style="font-size:11px;color:#6b7280;">Criptomonedas</p>
+            <p style="font-size:13px;font-weight:700;color:#f59e0b;font-family:var(--font-mono);">$ 14.162.000 <span style="font-size:10px;color:#6b7280;">17%</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WealthScore -->
+  <div class="card card-p mb-4" style="border-color:#10b98130;position:relative;overflow:hidden;">
+    <div class="orb" style="width:300px;height:300px;background:#10b981;right:-60px;top:-60px;"></div>
+    <div style="position:relative;">
+      <div class="flex-between mb-4">
+        <div>
+          <p style="font-size:15px;font-weight:700;color:#f1f5f9;">Wealth Score</p>
+          <p style="font-size:11px;color:#6b7280;">Salud financiera inteligente</p>
+        </div>
+        <span class="badge badge-emerald" style="font-size:13px;padding:6px 16px;">ÓPTIMO</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:32px;">
+        <!-- Radial SVG -->
+        <svg width="120" height="120" viewBox="0 0 100 100" style="flex-shrink:0;">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="#0f1117" stroke-width="9"/>
+          <circle cx="50" cy="50" r="42" fill="none"
+            stroke="#10b981" stroke-width="9"
+            stroke-dasharray="263.5 263.9"
+            stroke-linecap="round"
+            transform="rotate(-90 50 50)"
+            style="filter:drop-shadow(0 0 8px rgba(16,185,129,.5))"/>
+          <text x="50" y="46" text-anchor="middle" fill="#10b981"
+            font-size="24" font-weight="800" font-family="Inter,sans-serif">96</text>
+          <text x="50" y="62" text-anchor="middle" fill="#4b5563"
+            font-size="9" font-family="Inter,sans-serif">/100</text>
+        </svg>
+
+        <!-- Pillars -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <div class="flex-between" style="margin-bottom:5px;">
+              <p style="font-size:11px;color:#9ca3af;">Tasa de Ahorro</p>
+              <p style="font-size:11px;font-weight:800;color:#10b981;font-family:var(--font-mono);">100</p>
+            </div>
+            <div class="progress-track" style="height:6px;">
+              <div class="progress-fill" style="width:100%;background:linear-gradient(90deg,#10b98188,#10b981);"></div>
+            </div>
+            <p style="font-size:10px;color:#4b5563;margin-top:3px;">Ahorras el 99.0% de tus ingresos</p>
+          </div>
+          <div>
+            <div class="flex-between" style="margin-bottom:5px;">
+              <p style="font-size:11px;color:#9ca3af;">Activos Productivos</p>
+              <p style="font-size:11px;font-weight:800;color:#6366f1;font-family:var(--font-mono);">86</p>
+            </div>
+            <div class="progress-track" style="height:6px;">
+              <div class="progress-fill" style="width:86%;background:linear-gradient(90deg,#6366f188,#6366f1);"></div>
+            </div>
+            <p style="font-size:10px;color:#4b5563;margin-top:3px;">57.0% de tu dinero está invertido</p>
+          </div>
+          <div>
+            <div class="flex-between" style="margin-bottom:5px;">
+              <p style="font-size:11px;color:#9ca3af;">Fondo de Emergencia</p>
+              <p style="font-size:11px;font-weight:800;color:#D4AF37;font-family:var(--font-mono);">100</p>
+            </div>
+            <div class="progress-track" style="height:6px;">
+              <div class="progress-fill" style="width:100%;background:linear-gradient(90deg,#D4AF3788,#D4AF37);"></div>
+            </div>
+            <p style="font-size:10px;color:#4b5563;margin-top:3px;">321.2 meses cubiertos · óptimo</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;padding:10px 16px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:var(--r-md);">
+        <p style="font-size:12px;color:#9ca3af;">✨ Patrimonio en excelente forma — continúa así</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Month stats row -->
+  <div class="grid-3 mb-4">
+    <div class="stat-card">
+      <p class="section-label">Ingresos · Abril 2026</p>
+      <p class="stat-value" style="color:#10b981;">$ 7.000.000</p>
+      <div class="stat-delta" style="color:#10b981;"><span>↑</span> +12% vs mes anterior</div>
+    </div>
+    <div class="stat-card">
+      <p class="section-label">Gastos · Abril 2026</p>
+      <p class="stat-value" style="color:#ef4444;">$ 70.000</p>
+      <div class="stat-delta" style="color:#10b981;"><span>↓</span> -45% vs mes anterior</div>
+    </div>
+    <div class="stat-card" style="border-color:#D4AF3730;background:linear-gradient(135deg,#1a1f2e,#141823);">
+      <p class="section-label">Balance mensual</p>
+      <p class="stat-value" style="color:#D4AF37;">$ 6.930.000</p>
+      <div class="stat-delta" style="color:#D4AF37;"><span>↑</span> Tasa de ahorro: 99%</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 4: MODULE 2 — TRANSACCIONES                        -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div class="ref-section">
+  <p class="ref-section-title">04 — Module 2: Transacciones</p>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Transacciones</h1>
+      <p class="page-sub">Historial de movimientos financieros</p>
+    </div>
+    <button class="btn btn-gold">+ Nueva transacción</button>
+  </div>
+
+  <!-- Filters bar -->
+  <div class="card card-p-sm mb-4" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+    <div class="chip-tabs">
+      <span class="chip active">Todos</span>
+      <span class="chip">Ingresos</span>
+      <span class="chip">Gastos</span>
+      <span class="chip">Deudas</span>
+    </div>
+    <input class="field" style="width:200px;" placeholder="Buscar transacción..." />
+    <select class="field" style="width:150px;"><option>Abril 2026</option></select>
+    <select class="field" style="width:150px;"><option>Todas las cuentas</option></select>
+  </div>
+
+  <!-- Summary row -->
+  <div class="grid-3 mb-4" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+    <div class="stat-card">
+      <p class="section-label">Total ingresos</p>
+      <p class="stat-value" style="font-size:18px;color:#10b981;">+$ 7.000.000</p>
+    </div>
+    <div class="stat-card">
+      <p class="section-label">Total gastos</p>
+      <p class="stat-value" style="font-size:18px;color:#ef4444;">-$ 70.000</p>
+    </div>
+    <div class="stat-card">
+      <p class="section-label">Pagos de deuda</p>
+      <p class="stat-value" style="font-size:18px;color:#f59e0b;">$ 0</p>
+    </div>
+    <div class="stat-card" style="border-color:#D4AF3725;">
+      <p class="section-label">Balance neto</p>
+      <p class="stat-value" style="font-size:18px;color:#D4AF37;">$ 6.930.000</p>
+    </div>
+  </div>
+
+  <!-- Transactions table -->
+  <div class="card" style="overflow:hidden;">
+    <table>
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Descripción</th>
+          <th>Categoría</th>
+          <th>Cuenta</th>
+          <th>Fecha</th>
+          <th style="text-align:right;">Monto</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span style="width:28px;height:28px;border-radius:8px;background:#0a2d1f;color:#10b981;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">↑</span></td>
+          <td><p style="font-weight:600;">Nómina Empresa</p><p style="font-size:11px;color:#6b7280;">Depósito directo</p></td>
+          <td><span class="badge badge-emerald">Salario</span></td>
+          <td style="color:#9ca3af;">Bancolombia</td>
+          <td style="color:#6b7280;font-size:12px;">01 abr 2026</td>
+          <td style="text-align:right;font-weight:700;color:#10b981;font-family:var(--font-mono);">+$ 7.000.000</td>
+          <td><button class="btn btn-ghost btn-sm btn-icon">✏️</button></td>
+        </tr>
+        <tr>
+          <td><span style="width:28px;height:28px;border-radius:8px;background:#2d1515;color:#ef4444;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">↓</span></td>
+          <td><p style="font-weight:600;">Mercado</p><p style="font-size:11px;color:#6b7280;">Compras semanales</p></td>
+          <td><span class="badge badge-red">Alimentación</span></td>
+          <td style="color:#9ca3af;">Nequi</td>
+          <td style="color:#6b7280;font-size:12px;">05 abr 2026</td>
+          <td style="text-align:right;font-weight:700;color:#ef4444;font-family:var(--font-mono);">-$ 45.000</td>
+          <td><button class="btn btn-ghost btn-sm btn-icon">✏️</button></td>
+        </tr>
+        <tr>
+          <td><span style="width:28px;height:28px;border-radius:8px;background:#2d1515;color:#ef4444;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">↓</span></td>
+          <td><p style="font-weight:600;">Transporte</p><p style="font-size:11px;color:#6b7280;">Bus intermunicipal</p></td>
+          <td><span class="badge badge-red">Movilidad</span></td>
+          <td style="color:#9ca3af;">Efectivo</td>
+          <td style="color:#6b7280;font-size:12px;">10 abr 2026</td>
+          <td style="text-align:right;font-weight:700;color:#ef4444;font-family:var(--font-mono);">-$ 25.000</td>
+          <td><button class="btn btn-ghost btn-sm btn-icon">✏️</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 5: MODULE 3 — INVERSIONES                          -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div class="ref-section">
+  <p class="ref-section-title">05 — Module 3: Inversiones — Portfolio Real-time</p>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Inversiones</h1>
+      <p class="page-sub">Portafolio en tiempo real · Cotizaciones Yahoo Finance</p>
+    </div>
+    <button class="btn btn-gold">+ Agregar posición</button>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="grid-4 mb-4">
+    <div class="stat-card" style="border-color:#6366f130;">
+      <p class="section-label">Portafolio total</p>
+      <p class="stat-value" style="font-size:18px;color:#6366f1;">$ 25.000.000</p>
+      <p class="stat-delta" style="color:#10b981;">+2.3% hoy</p>
+    </div>
+    <div class="stat-card">
+      <p class="section-label">Acciones</p>
+      <p class="stat-value" style="font-size:18px;color:#6366f1;">$ 18.000.000</p>
+      <p style="font-size:11px;color:#6b7280;margin-top:4px;">3 posiciones</p>
+    </div>
+    <div class="stat-card">
+      <p class="section-label">Cripto</p>
+      <p class="stat-value" style="font-size:18px;color:#f59e0b;">$ 7.000.000</p>
+      <p style="font-size:11px;color:#6b7280;margin-top:4px;">BTC · ETH</p>
+    </div>
+    <div class="stat-card">
+      <p class="section-label">Ganancia no realizada</p>
+      <p class="stat-value" style="font-size:18px;color:#10b981;">+$ 3.200.000</p>
+      <p class="stat-delta" style="color:#10b981;">+14.6% total</p>
+    </div>
+  </div>
+
+  <!-- Portfolio table -->
+  <div class="card" style="overflow:hidden;">
+    <div style="padding:16px 20px;border-bottom:1px solid #1e2535;display:flex;gap:8px;">
+      <div class="chip-tabs">
+        <span class="chip active">Todos</span>
+        <span class="chip">Acciones</span>
+        <span class="chip">Cripto</span>
+        <span class="chip">CDTs</span>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Activo</th>
+          <th>Precio actual</th>
+          <th>Cambio 24h</th>
+          <th>Shares</th>
+          <th>Costo prom.</th>
+          <th style="text-align:right;">Valor total (USD)</th>
+          <th style="text-align:right;">P&amp;L</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:34px;height:34px;border-radius:10px;background:#6366f115;border:1px solid #6366f130;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#6366f1;">A</div>
+              <div><p style="font-weight:700;">AAPL</p><p style="font-size:11px;color:#6b7280;">Apple Inc.</p></div>
+            </div>
+          </td>
+          <td style="font-family:var(--font-mono);font-weight:600;">$ 213.49</td>
+          <td><span class="badge badge-emerald">+1.82%</span></td>
+          <td style="color:#9ca3af;font-family:var(--font-mono);">23.5</td>
+          <td style="color:#6b7280;font-family:var(--font-mono);">$ 178.20</td>
+          <td style="text-align:right;font-family:var(--font-mono);font-weight:700;">$ 5.017</td>
+          <td style="text-align:right;color:#10b981;font-family:var(--font-mono);font-weight:700;">+$ 828 <span style="font-size:10px;">+19.8%</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:34px;height:34px;border-radius:10px;background:#f59e0b15;border:1px solid #f59e0b30;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#f59e0b;">₿</div>
+              <div><p style="font-weight:700;">BTC-USD</p><p style="font-size:11px;color:#6b7280;">Bitcoin</p></div>
+            </div>
+          </td>
+          <td style="font-family:var(--font-mono);font-weight:600;">$ 84.210</td>
+          <td><span class="badge badge-red">-0.43%</span></td>
+          <td style="color:#9ca3af;font-family:var(--font-mono);">0.0185</td>
+          <td style="color:#6b7280;font-family:var(--font-mono);">$ 62.000</td>
+          <td style="text-align:right;font-family:var(--font-mono);font-weight:700;">$ 1.558</td>
+          <td style="text-align:right;color:#10b981;font-family:var(--font-mono);font-weight:700;">+$ 408 <span style="font-size:10px;">+35.5%</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:34px;height:34px;border-radius:10px;background:#8b5cf615;border:1px solid #8b5cf630;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#8b5cf6;">V</div>
+              <div><p style="font-weight:700;">VOO</p><p style="font-size:11px;color:#6b7280;">Vanguard S&amp;P 500</p></div>
+            </div>
+          </td>
+          <td style="font-family:var(--font-mono);font-weight:600;">$ 492.10</td>
+          <td><span class="badge badge-emerald">+0.67%</span></td>
+          <td style="color:#9ca3af;font-family:var(--font-mono);">12</td>
+          <td style="color:#6b7280;font-family:var(--font-mono);">$ 430.00</td>
+          <td style="text-align:right;font-family:var(--font-mono);font-weight:700;">$ 5.905</td>
+          <td style="text-align:right;color:#10b981;font-family:var(--font-mono);font-weight:700;">+$ 745 <span style="font-size:10px;">+14.4%</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 6: MODULE 4 — METAS FINANCIERAS                    -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div class="ref-section">
+  <p class="ref-section-title">06 — Module 4: Metas Financieras &amp; Tracker de Aportes</p>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Metas Financieras</h1>
+      <p class="page-sub">Seguimiento de tus objetivos · 2 activas</p>
+    </div>
+    <button class="btn btn-gold">+ Nueva meta</button>
+  </div>
+
+  <!-- Global summary -->
+  <div class="card card-p mb-4" style="background:linear-gradient(135deg,#1a1f2e,#0f1117);position:relative;overflow:hidden;">
+    <div class="orb" style="width:300px;height:300px;background:#6366f1;right:-80px;top:-80px;"></div>
+    <div style="position:relative;display:flex;align-items:center;gap:32px;">
+      <!-- Radial global -->
+      <svg width="130" height="130" viewBox="0 0 100 100" style="flex-shrink:0;">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#0f1117" stroke-width="8"/>
+        <circle cx="50" cy="50" r="46" fill="none"
+          stroke="#6366f1" stroke-width="8"
+          stroke-dasharray="54.6 288.9"
+          stroke-linecap="round"
+          transform="rotate(-90 50 50)"
+          style="filter:drop-shadow(0 0 8px rgba(99,102,241,.5))"/>
+        <text x="50" y="47" text-anchor="middle" fill="#6366f1"
+          font-size="22" font-weight="800" font-family="Inter,sans-serif">19%</text>
+        <text x="50" y="62" text-anchor="middle" fill="#4b5563"
+          font-size="9" font-family="Inter,sans-serif">global</text>
+      </svg>
+      <div style="flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+        <div>
+          <p class="section-label">Total a ahorrar</p>
+          <p style="font-size:20px;font-weight:800;color:#6366f1;font-family:var(--font-mono);">$ 380M</p>
+        </div>
+        <div>
+          <p class="section-label">Total ahorrado</p>
+          <p style="font-size:20px;font-weight:800;color:#10b981;font-family:var(--font-mono);">$ 70.6M</p>
+        </div>
+        <div>
+          <p class="section-label">Completadas</p>
+          <p style="font-size:20px;font-weight:800;color:#f59e0b;font-family:var(--font-mono);">0 <span style="font-size:16px;color:#4b5563;">/ 2</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Goal cards -->
+  <div class="space-y-4">
+    <!-- Goal 1: Apartamento Flandes -->
+    <div class="card card-p" style="border-color:#6366f160;position:relative;overflow:hidden;">
+      <div class="orb" style="width:300px;height:300px;background:#6366f1;right:-60px;top:-60px;"></div>
+      <div style="position:relative;display:flex;align-items:center;gap:24px;">
+        <svg width="110" height="110" viewBox="0 0 100 100" style="flex-shrink:0;">
+          <circle cx="50" cy="50" r="46" fill="none" stroke="#0f1117" stroke-width="8"/>
+          <circle cx="50" cy="50" r="46" fill="none"
+            stroke="#6366f1" stroke-width="8"
+            stroke-dasharray="43.4 288.9"
+            stroke-linecap="round"
+            transform="rotate(-90 50 50)"
+            style="filter:drop-shadow(0 0 6px rgba(99,102,241,.6))"/>
+          <text x="50" y="46" text-anchor="middle" fill="#6366f1"
+            font-size="18" font-weight="800" font-family="Inter,sans-serif">15%</text>
+        </svg>
+        <div style="flex:1;">
+          <div class="flex-between mb-3">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:44px;height:44px;border-radius:14px;background:#6366f120;display:flex;align-items:center;justify-content:center;font-size:22px;">🏠</div>
+              <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+                  <p style="font-size:18px;font-weight:800;color:#f1f5f9;">Apartamento Flandes</p>
+                  <span class="badge badge-indigo" style="font-size:9px;">📌 En Dashboard</span>
+                </div>
+                <p style="font-size:13px;color:#6b7280;">Meta: <strong style="color:#f1f5f9;font-family:var(--font-mono);">$ 280.000.000</strong></p>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ghost btn-sm btn-icon">📌</button>
+              <button class="btn btn-ghost btn-sm btn-icon">✏️</button>
+              <button class="btn btn-gold btn-sm">📈 Actualizar</button>
+            </div>
+          </div>
+          <!-- Hitos -->
+          <div style="display:flex;gap:6px;margin-bottom:12px;">
+            <span class="badge badge-indigo" style="font-size:10px;">✓ 25%</span>
+            <span style="background:#1e2535;color:#4b5563;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid #2a3040;">50%</span>
+            <span style="background:#1e2535;color:#4b5563;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid #2a3040;">75%</span>
+            <span style="background:#1e2535;color:#4b5563;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid #2a3040;">100%</span>
+          </div>
+          <!-- Progress -->
+          <div class="progress-track mb-2" style="height:8px;">
+            <div class="progress-fill" style="width:15%;background:linear-gradient(90deg,#6366f1aa,#6366f1);"></div>
+          </div>
+          <!-- Metrics grid -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;">
+            <div style="background:#0f1117;border-radius:10px;padding:10px;">
+              <p class="section-label">Ahorrado</p>
+              <p style="font-size:13px;font-weight:700;color:#6366f1;font-family:var(--font-mono);">$ 41M</p>
+            </div>
+            <div style="background:#0f1117;border-radius:10px;padding:10px;">
+              <p class="section-label">Falta</p>
+              <p style="font-size:13px;font-weight:700;color:#ef4444;font-family:var(--font-mono);">$ 239M</p>
+            </div>
+            <div style="background:#0f1117;border-radius:10px;padding:10px;">
+              <p class="section-label">Próximo hito</p>
+              <p style="font-size:12px;font-weight:700;color:#f59e0b;">50% · $ 99M más</p>
+            </div>
+            <div style="background:#0f1117;border-radius:10px;padding:10px;">
+              <p class="section-label">Según tu plan</p>
+              <p style="font-size:13px;font-weight:700;color:#D4AF37;">ago 2028</p>
+            </div>
+          </div>
+          <!-- Contribution tracker -->
+          <div style="background:#0a0d14;border:1px solid #1e2535;border-radius:10px;padding:12px;margin-top:10px;">
+            <p class="section-label" style="margin-bottom:8px;">📅 Plan de aportes</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+              <div><p style="font-size:10px;color:#4b5563;">mensual</p><p style="font-size:13px;font-weight:700;color:#6366f1;font-family:var(--font-mono);">$ 2.000.000</p></div>
+              <div><p style="font-size:10px;color:#4b5563;">Meses restantes</p><p style="font-size:16px;font-weight:800;color:#6366f1;font-family:var(--font-mono);">120</p></div>
+              <div><p style="font-size:10px;color:#4b5563;">Fecha estimada</p><p style="font-size:13px;font-weight:700;color:#D4AF37;">abr 2036</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 7: MODULE 5 — PRESUPUESTOS                         -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div class="ref-section">
+  <p class="ref-section-title">07 — Module 5: Presupuestos &amp; Control de Gastos</p>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Presupuestos</h1>
+      <p class="page-sub">Abril 2026 · Control de gastos por categoría</p>
+    </div>
+    <button class="btn btn-gold">+ Nuevo presupuesto</button>
+  </div>
+
+  <!-- Budget health cards -->
+  <div class="grid-3 mb-4">
+    <div class="stat-card" style="border-color:#10b98130;">
+      <p class="section-label">Dentro del presupuesto</p>
+      <p class="stat-value" style="font-size:26px;color:#10b981;">4</p>
+      <p style="font-size:11px;color:#6b7280;margin-top:4px;">categorías en verde</p>
+    </div>
+    <div class="stat-card" style="border-color:#f59e0b30;">
+      <p class="section-label">En alerta</p>
+      <p class="stat-value" style="font-size:26px;color:#f59e0b;">1</p>
+      <p style="font-size:11px;color:#6b7280;margin-top:4px;">>80% consumido</p>
+    </div>
+    <div class="stat-card" style="border-color:#ef444430;">
+      <p class="section-label">Excedido</p>
+      <p class="stat-value" style="font-size:26px;color:#ef4444;">0</p>
+      <p style="font-size:11px;color:#6b7280;margin-top:4px;">categorías en rojo</p>
+    </div>
+  </div>
+
+  <!-- Budget list -->
+  <div class="space-y-4">
+    <!-- Budget item 1 -->
+    <div class="card card-p">
+      <div class="flex-between mb-3">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:#10b98120;display:flex;align-items:center;justify-content:center;font-size:18px;">🍔</div>
+          <div>
+            <p style="font-weight:700;">Alimentación</p>
+            <p style="font-size:11px;color:#6b7280;">Gastos mensuales</p>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <p style="font-size:15px;font-weight:800;font-family:var(--font-mono);color:#10b981;">$ 45.000 <span style="font-size:11px;color:#6b7280;">/ $ 400.000</span></p>
+          <p style="font-size:11px;color:#10b981;">11% · quedan $ 355.000</p>
+        </div>
+      </div>
+      <div class="progress-track" style="height:8px;">
+        <div class="progress-fill" style="width:11%;background:linear-gradient(90deg,#10b98188,#10b981);"></div>
+      </div>
+    </div>
+
+    <!-- Budget item 2: warning -->
+    <div class="card card-p" style="border-color:#f59e0b40;">
+      <div class="flex-between mb-3">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:#f59e0b20;display:flex;align-items:center;justify-content:center;font-size:18px;">🚗</div>
+          <div>
+            <p style="font-weight:700;">Transporte</p>
+            <p style="font-size:11px;color:#f59e0b;">⚠ Superas el 80%</p>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <p style="font-size:15px;font-weight:800;font-family:var(--font-mono);color:#f59e0b;">$ 82.000 <span style="font-size:11px;color:#6b7280;">/ $ 100.000</span></p>
+          <p style="font-size:11px;color:#f59e0b;">82% consumido</p>
+        </div>
+      </div>
+      <div class="progress-track" style="height:8px;">
+        <div class="progress-fill" style="width:82%;background:linear-gradient(90deg,#f59e0b88,#f59e0b);"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 8: MODULE 6 — INGRESOS                             -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div class="ref-section">
+  <p class="ref-section-title">08 — Module 6: Ingresos — Fuentes y Tendencia</p>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Ingresos</h1>
+      <p class="page-sub">Análisis de fuentes de ingreso · Últimos 6 meses</p>
+    </div>
+    <a href="/transacciones" class="btn btn-ghost">→ Ver en Transacciones</a>
+  </div>
+
+  <!-- KPI cards -->
+  <div class="grid-3 mb-4">
+    <div class="stat-card" style="border-color:#D4AF3730;background:linear-gradient(135deg,#1a1f2e,#141823);">
+      <p class="section-label">Este mes</p>
+      <p class="stat-value" style="color:#D4AF37;">$ 7.000.000</p>
+      <p class="stat-delta" style="color:#10b981;">+12% vs anterior</p>
+    </div>
+    <div class="stat-card">
+      <p class="section-label">Promedio mensual</p>
+      <p class="stat-value" style="font-size:20px;color:#6366f1;">$ 6.240.000</p>
+      <p style="font-size:11px;color:#6b7280;margin-top:4px;">Últimos 6 meses</p>
+    </div>
+    <div class="stat-card">
+      <p class="section-label">Fuente principal</p>
+      <p style="font-size:16px;font-weight:700;color:#10b981;margin-top:6px;">💼 Nómina Empresa</p>
+      <p style="font-size:11px;color:#6b7280;margin-top:4px;">100% de los ingresos</p>
+    </div>
+  </div>
+
+  <!-- Bar chart historical -->
+  <div class="card card-p">
+    <p style="font-size:13px;font-weight:700;margin-bottom:16px;">Histórico últimos 6 meses</p>
+    <div style="display:flex;align-items:flex-end;gap:12px;height:100px;padding-bottom:8px;">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <p style="font-size:10px;color:#6b7280;font-family:var(--font-mono);">5.8M</p>
+        <div style="width:100%;height:58px;background:linear-gradient(180deg,#6366f1,#6366f188);border-radius:6px 6px 0 0;"></div>
+        <p style="font-size:10px;color:#6b7280;">Nov</p>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <p style="font-size:10px;color:#6b7280;font-family:var(--font-mono);">6.0M</p>
+        <div style="width:100%;height:60px;background:linear-gradient(180deg,#6366f1,#6366f188);border-radius:6px 6px 0 0;"></div>
+        <p style="font-size:10px;color:#6b7280;">Dic</p>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <p style="font-size:10px;color:#6b7280;font-family:var(--font-mono);">6.0M</p>
+        <div style="width:100%;height:60px;background:linear-gradient(180deg,#6366f1,#6366f188);border-radius:6px 6px 0 0;"></div>
+        <p style="font-size:10px;color:#6b7280;">Ene</p>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <p style="font-size:10px;color:#6b7280;font-family:var(--font-mono);">6.5M</p>
+        <div style="width:100%;height:65px;background:linear-gradient(180deg,#6366f1,#6366f188);border-radius:6px 6px 0 0;"></div>
+        <p style="font-size:10px;color:#6b7280;">Feb</p>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <p style="font-size:10px;color:#6b7280;font-family:var(--font-mono);">6.8M</p>
+        <div style="width:100%;height:68px;background:linear-gradient(180deg,#6366f1,#6366f188);border-radius:6px 6px 0 0;"></div>
+        <p style="font-size:10px;color:#6b7280;">Mar</p>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <p style="font-size:10px;color:#D4AF37;font-weight:700;font-family:var(--font-mono);">7.0M</p>
+        <div style="width:100%;height:70px;background:linear-gradient(180deg,#D4AF37,#b8922a);border-radius:6px 6px 0 0;box-shadow:0 0 12px #D4AF3740;"></div>
+        <p style="font-size:10px;color:#D4AF37;font-weight:700;">Abr ✦</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 9: MODULE 7 — COSTOS OPERACIONALES                 -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div class="ref-section">
+  <p class="ref-section-title">09 — Module 7: Costos Operacionales — Gastos Fijos Mensuales</p>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Costos Operacionales</h1>
+      <p class="page-sub">Gastos fijos recurrentes · Obligaciones mensuales</p>
+    </div>
+    <button class="btn btn-gold">+ Agregar costo</button>
+  </div>
+
+  <!-- Total widget -->
+  <div class="card card-p mb-4" style="display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <p class="section-label">Total comprometido mensual</p>
+      <p style="font-size:36px;font-weight:900;color:#ef4444;font-family:var(--font-mono);letter-spacing:-1px;">- $ 1.245.000</p>
+      <p style="font-size:12px;color:#6b7280;margin-top:4px;">17.8% del ingreso mensual promedio</p>
+    </div>
+    <div style="text-align:right;">
+      <p class="section-label">Ingreso libre</p>
+      <p style="font-size:28px;font-weight:800;color:#10b981;font-family:var(--font-mono);">$ 5.755.000</p>
+      <p style="font-size:11px;color:#10b981;">82.2% disponible</p>
+    </div>
+  </div>
+
+  <!-- Costs list -->
+  <div class="card" style="overflow:hidden;">
+    <table>
+      <thead>
+        <tr><th>Costo</th><th>Categoría</th><th>Frecuencia</th><th style="text-align:right;">Mensual</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><p style="font-weight:600;">📱 Plan celular</p><p style="font-size:11px;color:#6b7280;">Claro Colombia</p></td>
+          <td><span class="badge badge-indigo">Comunicaciones</span></td>
+          <td style="color:#9ca3af;font-size:12px;">Mensual</td>
+          <td style="text-align:right;font-family:var(--font-mono);font-weight:700;color:#ef4444;">- $ 60.000</td>
+          <td><button class="btn btn-ghost btn-sm btn-icon">✏️</button></td>
+        </tr>
+        <tr>
+          <td><p style="font-weight:600;">🏠 Arriendo estudio</p><p style="font-size:11px;color:#6b7280;">Bogotá D.C.</p></td>
+          <td><span class="badge badge-amber">Vivienda</span></td>
+          <td style="color:#9ca3af;font-size:12px;">Mensual</td>
+          <td style="text-align:right;font-family:var(--font-mono);font-weight:700;color:#ef4444;">- $ 800.000</td>
+          <td><button class="btn btn-ghost btn-sm btn-icon">✏️</button></td>
+        </tr>
+        <tr>
+          <td><p style="font-weight:600;">💡 Servicios públicos</p><p style="font-size:11px;color:#6b7280;">Agua · Luz · Gas</p></td>
+          <td><span class="badge badge-amber">Vivienda</span></td>
+          <td style="color:#9ca3af;font-size:12px;">Mensual</td>
+          <td style="text-align:right;font-family:var(--font-mono);font-weight:700;color:#ef4444;">- $ 180.000</td>
+          <td><button class="btn btn-ghost btn-sm btn-icon">✏️</button></td>
+        </tr>
+        <tr>
+          <td><p style="font-weight:600;">🎬 Streaming</p><p style="font-size:11px;color:#6b7280;">Netflix · Spotify</p></td>
+          <td><span class="badge badge-purple">Entretenimiento</span></td>
+          <td style="color:#9ca3af;font-size:12px;">Mensual</td>
+          <td style="text-align:right;font-family:var(--font-mono);font-weight:700;color:#ef4444;">- $ 55.000</td>
+          <td><button class="btn btn-ghost btn-sm btn-icon">✏️</button></td>
+        </tr>
+        <tr>
+          <td><p style="font-weight:600;">💻 Dominios / Hosting</p><p style="font-size:11px;color:#6b7280;">Proyectos propios</p></td>
+          <td><span class="badge badge-indigo">Tech</span></td>
+          <td style="color:#9ca3af;font-size:12px;">Anual ÷ 12</td>
+          <td style="text-align:right;font-family:var(--font-mono);font-weight:700;color:#ef4444;">- $ 150.000</td>
+          <td><button class="btn btn-ghost btn-sm btn-icon">✏️</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 10: MODULE 8 — CDTs                                -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div class="ref-section">
+  <p class="ref-section-title">10 — Module 8: CDTs — Certificados de Depósito a Término</p>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">CDTs</h1>
+      <p class="page-sub">Inversiones de renta fija · Certificados activos</p>
+    </div>
+    <button class="btn btn-gold">+ Registrar CDT</button>
+  </div>
+
+  <!-- CDT summary -->
+  <div class="grid-3 mb-4">
+    <div class="stat-card" style="border-color:#8b5cf630;">
+      <p class="section-label">Capital invertido</p>
+      <p class="stat-value" style="color:#8b5cf6;">$ 10.000.000</p>
+    </div>
+    <div class="stat-card">
+      <p class="section-label">Intereses estimados</p>
+      <p class="stat-value" style="font-size:20px;color:#10b981;">+$ 1.080.000</p>
+      <p style="font-size:11px;color:#6b7280;margin-top:4px;">Tasa EA prom: 10.8%</p>
+    </div>
+    <div class="stat-card">
+      <p class="section-label">Próximo vencimiento</p>
+      <p style="font-size:15px;font-weight:700;color:#f59e0b;margin-top:6px;">15 jun 2026</p>
+      <p style="font-size:11px;color:#6b7280;margin-top:3px;">57 días restantes</p>
+    </div>
+  </div>
+
+  <!-- CDT cards -->
+  <div class="grid-2">
+    <div class="card card-p" style="border-color:#8b5cf640;">
+      <div class="flex-between mb-3">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+            <span style="font-size:16px;">📄</span>
+            <p style="font-weight:700;font-size:15px;">CDT Bancolombia</p>
+          </div>
+          <p style="font-size:11px;color:#6b7280;">180 días · Tasa EA 10.5%</p>
+        </div>
+        <span class="badge badge-emerald">Activo</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div style="background:#0f1117;border-radius:10px;padding:12px;">
+          <p class="section-label">Capital</p>
+          <p style="font-size:16px;font-weight:800;color:#8b5cf6;font-family:var(--font-mono);">$ 5.000.000</p>
+        </div>
+        <div style="background:#0f1117;border-radius:10px;padding:12px;">
+          <p class="section-label">Al vencimiento</p>
+          <p style="font-size:16px;font-weight:800;color:#10b981;font-family:var(--font-mono);">$ 5.254.000</p>
+        </div>
+      </div>
+      <!-- Time bar -->
+      <div>
+        <div class="flex-between mb-2">
+          <p style="font-size:11px;color:#6b7280;">Progreso del plazo</p>
+          <p style="font-size:11px;font-weight:700;color:#8b5cf6;">68% transcurrido</p>
+        </div>
+        <div class="progress-track" style="height:6px;">
+          <div class="progress-fill" style="width:68%;background:linear-gradient(90deg,#8b5cf688,#8b5cf6);"></div>
+        </div>
+        <p style="font-size:10px;color:#6b7280;margin-top:5px;">Vence: 15 jun 2026 · 57 días</p>
+      </div>
+    </div>
+
+    <div class="card card-p" style="border-color:#8b5cf640;">
+      <div class="flex-between mb-3">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+            <span style="font-size:16px;">📄</span>
+            <p style="font-weight:700;font-size:15px;">CDT Davivienda</p>
+          </div>
+          <p style="font-size:11px;color:#6b7280;">360 días · Tasa EA 11.2%</p>
+        </div>
+        <span class="badge badge-emerald">Activo</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div style="background:#0f1117;border-radius:10px;padding:12px;">
+          <p class="section-label">Capital</p>
+          <p style="font-size:16px;font-weight:800;color:#8b5cf6;font-family:var(--font-mono);">$ 5.000.000</p>
+        </div>
+        <div style="background:#0f1117;border-radius:10px;padding:12px;">
+          <p class="section-label">Al vencimiento</p>
+          <p style="font-size:16px;font-weight:800;color:#10b981;font-family:var(--font-mono);">$ 5.560.000</p>
+        </div>
+      </div>
+      <div>
+        <div class="flex-between mb-2">
+          <p style="font-size:11px;color:#6b7280;">Progreso del plazo</p>
+          <p style="font-size:11px;font-weight:700;color:#8b5cf6;">25% transcurrido</p>
+        </div>
+        <div class="progress-track" style="height:6px;">
+          <div class="progress-fill" style="width:25%;background:linear-gradient(90deg,#8b5cf688,#8b5cf6);"></div>
+        </div>
+        <p style="font-size:10px;color:#6b7280;margin-top:5px;">Vence: 15 ene 2027 · 270 días</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 11: MODULE 9 — DEUDA / DEBT WIDGET                -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div class="ref-section">
+  <p class="ref-section-title">11 — Module 9: Deuda — Simulador de Escenarios de Pago</p>
+
+  <div style="max-width:480px;">
+    <div class="card card-p" style="position:relative;overflow:hidden;border-color:#6366f130;">
+      <div class="orb" style="width:300px;height:300px;background:#6366f1;right:-80px;top:-80px;"></div>
+      <div style="position:relative;">
+        <!-- Header -->
+        <div class="flex-between mb-4">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:12px;background:#6366f120;display:flex;align-items:center;justify-content:center;font-size:18px;">🏠</div>
+            <div>
+              <p style="font-weight:700;font-size:16px;color:#f1f5f9;">Apt. Flandes</p>
+              <p style="font-size:12px;color:#6b7280;">Restante: <strong style="color:#f1f5f9;font-family:var(--font-mono);">$ 239.000.000</strong></p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <p style="font-size:36px;font-weight:900;color:#6366f1;font-family:var(--font-mono);line-height:1;">15%</p>
+            <p style="font-size:11px;color:#6b7280;margin-top:2px;font-family:var(--font-mono);">$ 41M pagados</p>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress-track mb-3" style="height:12px;">
+          <div class="progress-fill" style="width:15%;background:linear-gradient(90deg,#6366f1,#8b5cf6);"></div>
+        </div>
+        <div class="flex-between mb-4">
+          <p style="font-size:12px;color:#4b5563;">Pagado: <span style="color:#f1f5f9;font-family:var(--font-mono);">$ 41M</span></p>
+          <p style="font-size:12px;color:#4b5563;">Meta: <span style="color:#f1f5f9;font-family:var(--font-mono);">$ 280M</span></p>
+        </div>
+
+        <!-- Scenario selector -->
+        <div style="border-top:1px solid #1e2535;padding-top:16px;">
+          <p class="section-label" style="margin-bottom:8px;">Simular abono mensual</p>
+          <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <button style="flex:1;padding:6px;border-radius:10px;font-size:12px;font-weight:600;background:#6b728020;color:#6b7280;border:1px solid #2a3040;">Base</button>
+            <button style="flex:1;padding:6px;border-radius:10px;font-size:12px;font-weight:600;background:#6366f125;color:#6366f1;border:1px solid #6366f160;">+50%</button>
+            <button style="flex:1;padding:6px;border-radius:10px;font-size:12px;font-weight:600;background:#f59e0b20;color:#f59e0b;border:1px solid #2a3040;">+100%</button>
+            <button style="flex:1;padding:6px;border-radius:10px;font-size:12px;font-weight:600;background:#10b98120;color:#10b981;border:1px solid #2a3040;">⚡ Meta</button>
+          </div>
+
+          <!-- Projection stats -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="background:#0f1117;border-radius:12px;padding:14px;">
+              <p class="section-label">Meses restantes</p>
+              <p style="font-size:26px;font-weight:800;color:#6366f1;font-family:var(--font-mono);margin-top:2px;">159</p>
+            </div>
+            <div style="background:#0f1117;border-radius:12px;padding:14px;">
+              <p class="section-label">Fecha estimada</p>
+              <p style="font-size:15px;font-weight:800;color:#6366f1;margin-top:2px;">jul 2039</p>
+            </div>
+          </div>
+
+          <!-- On-track alert -->
+          <div style="margin-top:12px;padding:10px 14px;border-radius:12px;background:#10b98115;border:1px solid #10b98130;display:flex;align-items:center;gap:8px;">
+            <span style="color:#10b981;font-size:14px;">✓</span>
+            <p style="font-size:11px;font-weight:600;color:#10b981;">En ruta para cumplir tu fecha límite</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 12: COMPONENT STATES — Empty & Loading            -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div class="ref-section">
+  <p class="ref-section-title">12 — Component States: Empty, Loading &amp; Error</p>
+
+  <div class="grid-3">
+    <!-- Empty state -->
+    <div class="card card-p" style="text-align:center;padding:48px 24px;">
+      <p style="font-size:48px;margin-bottom:12px;">🎯</p>
+      <p style="font-size:16px;font-weight:700;color:#f1f5f9;margin-bottom:6px;">Sin metas aún</p>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:20px;line-height:1.6;">Crea tu primera meta financiera<br/>y empieza a construir tu futuro</p>
+      <button class="btn btn-gold" style="margin:0 auto;">+ Nueva meta</button>
+    </div>
+
+    <!-- Loading skeleton -->
+    <div class="card card-p">
+      <p style="font-size:11px;color:#4b5563;text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;">Cargando...</p>
+      <div style="height:14px;background:linear-gradient(90deg,#1e2535,#2a3040,#1e2535);border-radius:7px;margin-bottom:12px;width:60%;animation:pulse 1.5s infinite;"></div>
+      <div style="height:32px;background:linear-gradient(90deg,#1e2535,#2a3040,#1e2535);border-radius:8px;margin-bottom:16px;animation:pulse 1.5s infinite .1s;"></div>
+      <div style="height:8px;background:linear-gradient(90deg,#1e2535,#2a3040,#1e2535);border-radius:4px;margin-bottom:8px;animation:pulse 1.5s infinite .2s;"></div>
+      <div style="height:8px;background:linear-gradient(90deg,#1e2535,#2a3040,#1e2535);border-radius:4px;width:80%;animation:pulse 1.5s infinite .3s;"></div>
+    </div>
+
+    <!-- Error state -->
+    <div class="card card-p" style="text-align:center;padding:40px 24px;border-color:#ef444430;">
+      <p style="font-size:40px;margin-bottom:12px;">⚠️</p>
+      <p style="font-size:15px;font-weight:700;color:#ef4444;margin-bottom:6px;">Error al cargar datos</p>
+      <p style="font-size:12px;color:#6b7280;margin-bottom:16px;">No se pudo conectar con Supabase.<br/>Verifica tu conexión e intenta de nuevo.</p>
+      <button class="btn btn-ghost btn-sm" style="margin:0 auto;">↺ Reintentar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 13: TOAST / NOTIFICATION SYSTEM                    -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div class="ref-section">
+  <p class="ref-section-title">13 — Notifications &amp; Toast System</p>
+
+  <div style="display:flex;flex-direction:column;gap:10px;max-width:380px;">
+    <div style="background:#0a2d1f;border:1px solid rgba(16,185,129,.35);border-radius:var(--r-lg);padding:14px 18px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);">
+      <span style="color:#10b981;font-size:16px;margin-top:1px;">✓</span>
+      <div><p style="font-weight:700;color:#10b981;margin-bottom:2px;">Meta actualizada</p><p style="font-size:12px;color:#6b7280;">Apartamento Flandes se guardó correctamente.</p></div>
+    </div>
+    <div style="background:#2d1515;border:1px solid rgba(239,68,68,.35);border-radius:var(--r-lg);padding:14px 18px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);">
+      <span style="color:#ef4444;font-size:16px;margin-top:1px;">✕</span>
+      <div><p style="font-weight:700;color:#ef4444;margin-bottom:2px;">Error al guardar</p><p style="font-size:12px;color:#6b7280;">No se pudo conectar con la base de datos.</p></div>
+    </div>
+    <div style="background:#2d200a;border:1px solid rgba(245,158,11,.35);border-radius:var(--r-lg);padding:14px 18px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);">
+      <span style="color:#f59e0b;font-size:16px;margin-top:1px;">⚠</span>
+      <div><p style="font-weight:700;color:#f59e0b;margin-bottom:2px;">Presupuesto al límite</p><p style="font-size:12px;color:#6b7280;">Transporte superó el 80% del presupuesto.</p></div>
+    </div>
+    <div style="background:#D4AF3710;border:1px solid rgba(212,175,55,.35);border-radius:var(--r-lg);padding:14px 18px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);">
+      <span style="color:#D4AF37;font-size:16px;margin-top:1px;">✦</span>
+      <div><p style="font-weight:700;color:#D4AF37;margin-bottom:2px;">Meta destacada</p><p style="font-size:12px;color:#6b7280;">Apartamento Flandes aparece en tu Dashboard.</p></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<!-- SECTION 14: IMPROVEMENT NOTES FOR CLAUDE DESIGN            -->
+<!-- ─────────────────────────────────────────────────────────── -->
+<div class="ref-section" style="border:1px solid #D4AF3730;border-radius:var(--r-2xl);padding:40px;background:linear-gradient(135deg,#1a1f2e,#141823);">
+  <p style="font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:#D4AF37;margin-bottom:24px;">14 — Notas de Diseño &amp; Oportunidades de Mejora</p>
+
+  <div class="grid-2" style="gap:32px;">
+    <div>
+      <p style="font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:12px;">🎨 Identidad Visual</p>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+        <li style="font-size:13px;color:#9ca3af;display:flex;gap:8px;"><span style="color:#D4AF37;">→</span> El oro <strong style="color:#D4AF37;">#D4AF37</strong> es exclusivo para CTAs y marca. Nunca para datos financieros.</li>
+        <li style="font-size:13px;color:#9ca3af;display:flex;gap:8px;"><span style="color:#10b981;">→</span> El verde esmeralda <strong style="color:#10b981;">#10b981</strong> expresa dinero, crecimiento, salud financiera.</li>
+        <li style="font-size:13px;color:#9ca3af;display:flex;gap:8px;"><span style="color:#6366f1;">→</span> El índigo <strong style="color:#6366f1;">#6366f1</strong> es para inversiones, bolsa, activos productivos.</li>
+        <li style="font-size:13px;color:#9ca3af;display:flex;gap:8px;"><span style="color:#8b5cf6;">→</span> El púrpura <strong style="color:#8b5cf6;">#8b5cf6</strong> exclusivo para CDTs y renta fija.</li>
+        <li style="font-size:13px;color:#9ca3af;display:flex;gap:8px;"><span style="color:#f59e0b;">→</span> El ámbar <strong style="color:#f59e0b;">#f59e0b</strong> para alertas, deudas, cripto, advertencias.</li>
+      </ul>
+    </div>
+    <div>
+      <p style="font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:12px;">✨ Mejoras Visuales Prioritarias</p>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+        <li style="font-size:13px;color:#9ca3af;display:flex;gap:8px;"><span style="color:#D4AF37;">1.</span> Micro-animaciones: números que cuentan al cargar, barras que se llenan</li>
+        <li style="font-size:13px;color:#9ca3af;display:flex;gap:8px;"><span style="color:#D4AF37;">2.</span> Glassmorphism sutil en tarjetas del hero (hero card del patrimonio)</li>
+        <li style="font-size:13px;color:#9ca3af;display:flex;gap:8px;"><span style="color:#D4AF37;">3.</span> Glow effects en el círculo del WealthScore al hover</li>
+        <li style="font-size:13px;color:#9ca3af;display:flex;gap:8px;"><span style="color:#D4AF37;">4.</span> Tabla de transacciones: iconos de banco reales (SVG logos) por cuenta</li>
+        <li style="font-size:13px;color:#9ca3af;display:flex;gap:8px;"><span style="color:#D4AF37;">5.</span> Sparkline mini-charts en cada tarjeta de activo de inversiones</li>
+        <li style="font-size:13px;color:#9ca3af;display:flex;gap:8px;"><span style="color:#D4AF37;">6.</span> Modo Luxury Cream (light): fondo #FAFAF8, cards #FFFFFF, dorado + negro</li>
+        <li style="font-size:13px;color:#9ca3af;display:flex;gap:8px;"><span style="color:#D4AF37;">7.</span> Sidebar: balance neto visible en tiempo real como chip debajo del logo</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="margin-top:28px;padding-top:24px;border-top:1px solid #1e2535;">
+    <p style="font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:10px;">📊 Datos Reales del Usuario</p>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+      <span class="badge badge-gold">Patrimonio: $ 85.182.255 COP</span>
+      <span class="badge badge-emerald">WealthScore: 96 / 100 ÓPTIMO</span>
+      <span class="badge badge-red">Deuda apt.: $ 239M COP restantes</span>
+      <span class="badge badge-indigo">Portfolio: AAPL · VOO · BTC · ETH</span>
+      <span class="badge badge-amber">TRM: $ 3.593 COP / USD</span>
+      <span class="badge badge-purple">CDTs: 2 activos · $ 10M COP</span>
+    </div>
+  </div>
+</div>
+
+</div><!-- /ref-page -->
+
+<style>
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+</style>
+</body>
+</html>

@@ -88,7 +88,7 @@ export default function DonutChartClient({
           </text>
           {hovered && hovered.gainPct !== undefined && (
             <text x="60" y="73" textAnchor="middle"
-              fill={hovered.gainPct >= 0 ? '#00d4aa' : '#ef4444'}
+              fill={hovered.gainPct >= 0 ? '#10b981' : '#ef4444'}
               fontSize="7" fontFamily="Roboto, sans-serif">
               {hovered.gainPct >= 0 ? '+' : ''}{hovered.gainPct.toFixed(1)}%
             </text>
@@ -102,9 +102,9 @@ export default function DonutChartClient({
           onClick={() => setShowCOP(v => !v)}
           className="px-3 py-1 rounded-lg text-xs font-medium transition-all hover:opacity-80"
           style={{
-            backgroundColor: showCOP ? '#00d4aa20' : '#1a1f2e',
-            color:           showCOP ? '#00d4aa'   : '#6b7280',
-            border:          `1px solid ${showCOP ? '#00d4aa40' : '#2a3040'}`,
+            backgroundColor: showCOP ? '#10b98120' : '#1a1f2e',
+            color:           showCOP ? '#10b981'   : '#6b7280',
+            border:          `1px solid ${showCOP ? '#10b98140' : '#2a3040'}`,
           }}>
           {showCOP ? 'COP' : 'USD'}
         </button>

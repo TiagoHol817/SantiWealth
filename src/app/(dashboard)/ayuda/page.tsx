@@ -13,16 +13,16 @@ export default function AyudaPage() {
         style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%)', border: '1px solid #2a3040' }}
       >
         <div className="absolute top-0 right-0 w-72 h-72 rounded-full opacity-5 blur-3xl"
-          style={{ background: '#00d4aa', transform: 'translate(20%,-20%)' }} />
+          style={{ background: '#10b981', transform: 'translate(20%,-20%)' }} />
         <div className="flex items-start gap-6">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
-            style={{ backgroundColor: '#00d4aa20', flexShrink: 0 }}>
+            style={{ backgroundColor: '#10b98120', flexShrink: 0 }}>
             📚
           </div>
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Centro de ayuda</h1>
             <p style={{ color: '#9ca3af', fontSize: '15px', lineHeight: '1.7', maxWidth: '560px' }}>
-              Todo lo que necesitas saber para sacarle el máximo provecho a SantiWealth.
+              Todo lo que necesitas saber para sacarle el máximo provecho a WealtHost.
               Cada módulo tiene su propia guía con el flujo de datos, pasos y tips.
             </p>
           </div>
@@ -39,7 +39,7 @@ export default function AyudaPage() {
               { arrow: true },
               { label: 'Configura presupuestos', icon: '🎯', color: '#f59e0b', href: '/presupuestos'  },
               { arrow: true },
-              { label: 'Guarda snapshots diarios', icon: '📸', color: '#00d4aa', href: '/dashboard' },
+              { label: 'Guarda snapshots diarios', icon: '📸', color: '#10b981', href: '/dashboard' },
               { arrow: true },
               { label: 'Revisa reportes', icon: '📊', color: '#ef4444', href: '/reportes' },
             ].map((item, i) => (
@@ -173,7 +173,7 @@ export default function AyudaPage() {
         style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
         <p className="text-white font-semibold mb-2">¿Algo más que necesitas saber?</p>
         <p style={{ color: '#6b7280', fontSize: '13px' }}>
-          Cada módulo tiene su propio botón <strong style={{ color: '#00d4aa' }}>"? Cómo funciona"</strong> en el header
+          Cada módulo tiene su propio botón <strong style={{ color: '#10b981' }}>"? Cómo funciona"</strong> en el header
           que abre la guía contextual específica.
         </p>
       </div>

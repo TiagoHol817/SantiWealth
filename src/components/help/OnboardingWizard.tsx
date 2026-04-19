@@ -2,15 +2,15 @@
 import { useEffect, useState } from 'react'
 import { X, ChevronRight, ChevronLeft } from 'lucide-react'
 
-const ONBOARDING_KEY = 'santiwealth_onboarding_done'
+const ONBOARDING_KEY = 'wealthost_onboarding_done'
 
 const STEPS = [
   {
     icon:    '👋',
-    color:   '#00d4aa',
-    title:   '¡Bienvenido a SantiWealth!',
+    color:   '#10b981',
+    title:   '¡Bienvenido a WealtHost!',
     desc:    'Tu plataforma personal de gestión de riqueza. En menos de 2 minutos te explicamos todo lo que necesitas saber para empezar.',
-    detail:  'SantiWealth consolida en un solo lugar tus cuentas bancarias, inversiones, criptomonedas, presupuestos, metas y reportes financieros profesionales.',
+    detail:  'WealtHost consolida en un solo lugar tus cuentas bancarias, inversiones, criptomonedas, presupuestos, metas y reportes financieros profesionales.',
   },
   {
     icon:    '💳',
@@ -28,7 +28,7 @@ const STEPS = [
   },
   {
     icon:    '🎯',
-    color:   '#00d4aa',
+    color:   '#10b981',
     title:   'Define presupuestos y metas',
     desc:    'Los presupuestos controlan tus gastos mes a mes. Las metas te proyectan cuándo alcanzarás tus objetivos financieros.',
     detail:  'El Health Score te da una calificación de 0-100 sobre tu control financiero. Las metas usan tu ahorro mensual real para calcular la fecha estimada de cumplimiento.',

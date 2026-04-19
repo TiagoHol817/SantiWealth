@@ -179,10 +179,10 @@ export default async function ReportesPage({
       {/* KPIs rápidos del período */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Ingresos',      value: fmtCOP(totalIngresos),   color: '#00d4aa', sub: `${ingresos.length} transacciones`    },
+          { label: 'Ingresos',      value: fmtCOP(totalIngresos),   color: '#10b981', sub: `${ingresos.length} transacciones`    },
           { label: 'Gastos',        value: fmtCOP(totalGastos),     color: '#ef4444', sub: `${gastos.length} transacciones`      },
           { label: 'Pagos deuda',   value: fmtCOP(totalPagosDeuda), color: '#f59e0b', sub: `${pagosDeuda.length} transacciones`  },
-          { label: 'Balance neto',  value: fmtCOP(utilidadNeta),    color: utilidadNeta >= 0 ? '#00d4aa' : '#ef4444', sub: `Margen ${margenNeto.toFixed(1)}%` },
+          { label: 'Balance neto',  value: fmtCOP(utilidadNeta),    color: utilidadNeta >= 0 ? '#10b981' : '#ef4444', sub: `Margen ${margenNeto.toFixed(1)}%` },
         ].map(item => (
           <div key={item.label} className="rounded-2xl p-5 relative overflow-hidden"
             style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
@@ -207,7 +207,7 @@ export default async function ReportesPage({
             <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '1px' }}>{periodoLabel[periodo] ?? label}</p>
           </div>
           <span className="text-xs px-3 py-1 rounded-full font-semibold"
-            style={{ backgroundColor: utilidadNeta >= 0 ? '#00d4aa20' : '#ef444420', color: utilidadNeta >= 0 ? '#00d4aa' : '#ef4444' }}>
+            style={{ backgroundColor: utilidadNeta >= 0 ? '#10b98120' : '#ef444420', color: utilidadNeta >= 0 ? '#10b981' : '#ef4444' }}>
             {utilidadNeta >= 0 ? '✓ Utilidad' : '✗ Pérdida'}: {fmtCOP(Math.abs(utilidadNeta))}
           </span>
         </div>
@@ -223,12 +223,12 @@ export default async function ReportesPage({
             ) : Object.entries(ingresosPorCat).sort((a,b) => b[1]-a[1]).map(([cat, monto]) => (
               <div key={cat} className="flex justify-between py-2 px-3 rounded-lg mb-1" style={{ backgroundColor: '#0f1117' }}>
                 <span style={{ color: '#9ca3af', fontSize: '13px' }}>{cat}</span>
-                <HiddenValue value={fmtCOP(monto)} className="tabular-nums font-medium" style={{ color: '#00d4aa', fontSize: '13px' }} />
+                <HiddenValue value={fmtCOP(monto)} className="tabular-nums font-medium" style={{ color: '#10b981', fontSize: '13px' }} />
               </div>
             ))}
             <div className="flex justify-between py-2 px-3 mt-1">
               <span style={{ color: '#e5e7eb', fontSize: '13px', fontWeight: '600' }}>Total ingresos</span>
-              <HiddenValue value={fmtCOP(totalIngresos)} className="tabular-nums font-bold" style={{ color: '#00d4aa', fontSize: '14px' }} />
+              <HiddenValue value={fmtCOP(totalIngresos)} className="tabular-nums font-bold" style={{ color: '#10b981', fontSize: '14px' }} />
             </div>
           </div>
 
@@ -272,15 +272,15 @@ export default async function ReportesPage({
 
           {/* Resultado neto */}
           <div className="flex justify-between items-center py-3 px-4 rounded-xl"
-            style={{ backgroundColor: utilidadNeta >= 0 ? '#00d4aa15' : '#ef444415', border: `1px solid ${utilidadNeta >= 0 ? '#00d4aa30' : '#ef444430'}` }}>
+            style={{ backgroundColor: utilidadNeta >= 0 ? '#10b98115' : '#ef444415', border: `1px solid ${utilidadNeta >= 0 ? '#10b98130' : '#ef444430'}` }}>
             <div>
-              <p style={{ color: utilidadNeta >= 0 ? '#00d4aa' : '#ef4444', fontSize: '14px', fontWeight: '700' }}>
+              <p style={{ color: utilidadNeta >= 0 ? '#10b981' : '#ef4444', fontSize: '14px', fontWeight: '700' }}>
                 {utilidadNeta >= 0 ? '✓ Utilidad neta del período' : '✗ Pérdida neta del período'}
               </p>
               <p style={{ color: '#6b7280', fontSize: '11px', marginTop: '2px' }}>Margen neto: {margenNeto.toFixed(1)}%</p>
             </div>
             <HiddenValue value={fmtCOP(Math.abs(utilidadNeta))} className="tabular-nums font-black"
-              style={{ color: utilidadNeta >= 0 ? '#00d4aa' : '#ef4444', fontSize: '22px' }} />
+              style={{ color: utilidadNeta >= 0 ? '#10b981' : '#ef4444', fontSize: '22px' }} />
           </div>
         </div>
       </div>
@@ -291,11 +291,11 @@ export default async function ReportesPage({
           <div className="px-6 py-4" style={{ borderBottom: '1px solid #2a3040', backgroundColor: '#0f1117' }}>
             <p className="text-white font-semibold">Activos</p>
             <HiddenValue value={fmtCOP(totalActivos)} className="tabular-nums font-black mt-1"
-              style={{ color: '#00d4aa', fontSize: '20px' }} />
+              style={{ color: '#10b981', fontSize: '20px' }} />
           </div>
           <div className="p-4 space-y-2">
             {[
-              { label: 'Efectivo / Bancos / CDTs',  value: totalBancos,   color: '#00d4aa' },
+              { label: 'Efectivo / Bancos / CDTs',  value: totalBancos,   color: '#10b981' },
               { label: 'Portafolio de inversiones', value: totalInvCOP,   color: '#6366f1', sub: formatUSD(totalInvUSD) + ' USD' },
             ].map(item => (
               <div key={item.label} className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: '#0f1117' }}>
@@ -323,12 +323,12 @@ export default async function ReportesPage({
                 style={{ color: '#ef4444', fontSize: '14px' }} />
             </div>
             <div className="flex items-center justify-between p-3 rounded-xl"
-              style={{ backgroundColor: patrimonioNeto >= 0 ? '#00d4aa15' : '#ef444415', border: `1px solid ${patrimonioNeto >= 0 ? '#00d4aa30' : '#ef444430'}` }}>
-              <p style={{ color: patrimonioNeto >= 0 ? '#00d4aa' : '#ef4444', fontSize: '13px', fontWeight: '600' }}>
+              style={{ backgroundColor: patrimonioNeto >= 0 ? '#10b98115' : '#ef444415', border: `1px solid ${patrimonioNeto >= 0 ? '#10b98130' : '#ef444430'}` }}>
+              <p style={{ color: patrimonioNeto >= 0 ? '#10b981' : '#ef4444', fontSize: '13px', fontWeight: '600' }}>
                 Patrimonio neto
               </p>
               <HiddenValue value={fmtCOP(patrimonioNeto)} className="tabular-nums font-bold"
-                style={{ color: patrimonioNeto >= 0 ? '#00d4aa' : '#ef4444', fontSize: '14px' }} />
+                style={{ color: patrimonioNeto >= 0 ? '#10b981' : '#ef4444', fontSize: '14px' }} />
             </div>
             <div className="pt-1 px-1">
               <div className="flex justify-between text-xs mb-1">
@@ -374,13 +374,13 @@ export default async function ReportesPage({
                     <tr key={row.mes}
                       style={{
                         borderBottom: i < cashflowArr.length - 1 ? '1px solid #1e2535' : 'none',
-                        backgroundColor: isCurr ? '#00d4aa08' : 'transparent',
+                        backgroundColor: isCurr ? '#10b98108' : 'transparent',
                       }}>
-                      <td style={{ padding: '10px 16px', color: isCurr ? '#00d4aa' : '#e5e7eb', fontWeight: isCurr ? '600' : '400' }}>
+                      <td style={{ padding: '10px 16px', color: isCurr ? '#10b981' : '#e5e7eb', fontWeight: isCurr ? '600' : '400' }}>
                         {row.label} {isCurr && '←'}
                       </td>
                       <td style={{ padding: '10px 16px', textAlign: 'right' }}>
-                        <HiddenValue value={fmtCOP(row.ingresos)} className="tabular-nums" style={{ color: '#00d4aa' }} />
+                        <HiddenValue value={fmtCOP(row.ingresos)} className="tabular-nums" style={{ color: '#10b981' }} />
                       </td>
                       <td style={{ padding: '10px 16px', textAlign: 'right' }}>
                         <HiddenValue value={fmtCOP(row.gastos)} className="tabular-nums" style={{ color: '#ef4444' }} />
@@ -390,11 +390,11 @@ export default async function ReportesPage({
                       </td>
                       <td style={{ padding: '10px 16px', textAlign: 'right' }}>
                         <HiddenValue value={fmtCOP(row.balance)} className="tabular-nums font-semibold"
-                          style={{ color: row.balance >= 0 ? '#00d4aa' : '#ef4444' }} />
+                          style={{ color: row.balance >= 0 ? '#10b981' : '#ef4444' }} />
                       </td>
                       <td style={{ padding: '10px 16px', textAlign: 'right' }}>
                         {margin !== null ? (
-                          <span className="font-semibold" style={{ color: Number(margin) >= 0 ? '#00d4aa' : '#ef4444', fontSize: '11px' }}>
+                          <span className="font-semibold" style={{ color: Number(margin) >= 0 ? '#10b981' : '#ef4444', fontSize: '11px' }}>
                             {margin}%
                           </span>
                         ) : <span style={{ color: '#4b5563' }}>—</span>}

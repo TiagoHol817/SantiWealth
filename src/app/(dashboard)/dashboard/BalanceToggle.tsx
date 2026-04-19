@@ -22,7 +22,7 @@ export default function BalanceToggle({
 
   const hasVariation = variationCOP !== undefined && variationPct !== undefined
   const isPositive = hasVariation && variationCOP >= 0
-  const variationColor = isPositive ? '#00d4aa' : '#ef4444'
+  const variationColor = isPositive ? '#10b981' : '#ef4444'
   const variationSign = isPositive ? '+' : ''
 
   return (
@@ -33,7 +33,7 @@ export default function BalanceToggle({
       {/* Glow effect */}
       <div
         className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-5 blur-3xl"
-        style={{ background: '#00d4aa', transform: 'translate(-30%, -30%)' }}
+        style={{ background: '#10b981', transform: 'translate(-30%, -30%)' }}
       />
 
       <div className="relative">
@@ -52,9 +52,9 @@ export default function BalanceToggle({
             onClick={() => setShowCOP(!showCOP)}
             className="mb-2 px-3 py-1 rounded-full text-xs font-medium transition-all hover:opacity-80"
             style={{
-              backgroundColor: '#00d4aa15',
-              color: '#00d4aa',
-              border: '1px solid #00d4aa30',
+              backgroundColor: '#10b98115',
+              color: '#10b981',
+              border: '1px solid #10b98130',
             }}
           >
             {showCOP ? 'COP' : 'USD'} →

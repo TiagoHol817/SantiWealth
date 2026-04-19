@@ -192,7 +192,7 @@ export default function CDTUploader({ cdts }: { cdts?: { id: string; name: strin
         <button
           onClick={() => { setForm(EMPTY); setMode('add') }}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#00d4aa' }}>
+          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#10b981' }}>
           <Plus size={15} /> Agregar CDT
         </button>
       )}
@@ -253,7 +253,7 @@ export default function CDTUploader({ cdts }: { cdts?: { id: string; name: strin
                 </button>
                 <button onClick={guardar} disabled={saving}
                   className="px-4 py-2 rounded-xl text-sm font-medium"
-                  style={{ backgroundColor: '#00d4aa', color: '#000', opacity: saving ? 0.7 : 1 }}>
+                  style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117', opacity: saving ? 0.7 : 1 }}>
                   {saving ? 'Guardando...' : mode === 'edit' ? 'Guardar cambios' : 'Agregar CDT'}
                 </button>
               </div>

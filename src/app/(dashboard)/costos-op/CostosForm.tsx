@@ -8,7 +8,7 @@ const CATEGORIAS = ['Arriendo', 'Servicios públicos', 'Internet/Celular', 'Susc
 
 const COLORES: Record<string, string> = {
   'Arriendo': '#6366f1', 'Servicios públicos': '#f59e0b',
-  'Internet/Celular': '#00d4aa', 'Suscripciones': '#ec4899',
+  'Internet/Celular': '#10b981', 'Suscripciones': '#ec4899',
   'Alimentación': '#ef4444', 'Transporte': '#3b82f6', 'Otro': '#6b7280',
 }
 
@@ -119,7 +119,7 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
 
   if (mode === 'add' || mode === 'edit') {
     return (
-      <div className="rounded-2xl p-6 mb-6" style={{ backgroundColor: '#1a1f2e', border: '1px solid #00d4aa40' }}>
+      <div className="rounded-2xl p-6 mb-6" style={{ backgroundColor: '#1a1f2e', border: '1px solid #10b98140' }}>
         <div className="flex items-center justify-between mb-5">
           <p className="text-white font-semibold">{mode === 'edit' ? 'Editar costo' : 'Nuevo costo fijo'}</p>
           <button onClick={() => setMode('list')} style={{ color: '#6b7280', fontSize: '22px', lineHeight: 1 }}>×</button>
@@ -150,7 +150,7 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
           </button>
           <button onClick={guardar} disabled={guardando || !form.name || !form.amount}
             className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-opacity"
-            style={{ backgroundColor: '#00d4aa', color: '#000', opacity: (!form.name || !form.amount || guardando) ? 0.5 : 1 }}>
+            style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117', opacity: (!form.name || !form.amount || guardando) ? 0.5 : 1 }}>
             {guardando ? 'Guardando...' : mode === 'edit' ? 'Guardar cambios' : 'Agregar'}
           </button>
         </div>
@@ -165,7 +165,7 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
           <p className="text-white font-semibold">Lista de costos</p>
           <button onClick={abrirAgregar}
             className="px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-            style={{ backgroundColor: '#00d4aa20', border: '1px solid #00d4aa40', color: '#00d4aa' }}>
+            style={{ backgroundColor: '#10b98120', border: '1px solid #10b98140', color: '#10b981' }}>
             + Agregar costo
           </button>
         </div>
@@ -206,9 +206,9 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
                 <button onClick={() => toggleActivo(cost)}
                   className="px-3 py-1 rounded-full text-xs font-medium transition-all"
                   style={{
-                    backgroundColor: cost.active ? '#00d4aa20' : '#1e2535',
-                    color: cost.active ? '#00d4aa' : '#6b7280',
-                    border: `1px solid ${cost.active ? '#00d4aa40' : '#2a3040'}`
+                    backgroundColor: cost.active ? '#10b98120' : '#1e2535',
+                    color: cost.active ? '#10b981' : '#6b7280',
+                    border: `1px solid ${cost.active ? '#10b98140' : '#2a3040'}`
                   }}>
                   {cost.active ? 'Activo' : 'Inactivo'}
                 </button>

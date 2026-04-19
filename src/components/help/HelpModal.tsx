@@ -55,7 +55,7 @@ export default function HelpModal({ moduleId, autoOpen = true }: Props) {
   }
   const tipColor = (type: string) => {
     if (type === 'warning') return { bg: '#2d1f0a', border: '#f59e0b40', text: '#f59e0b' }
-    if (type === 'tip')     return { bg: '#0a2d1f', border: '#00d4aa40', text: '#00d4aa' }
+    if (type === 'tip')     return { bg: '#0a2d1f', border: '#10b98140', text: '#10b981' }
     return { bg: '#0a0d2d', border: '#6366f140', text: '#6366f1' }
   }
 

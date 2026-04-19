@@ -76,7 +76,7 @@ export default async function IngresosPage() {
         </div>
         <Link href="/transacciones"
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-          style={{ backgroundColor: '#00d4aa', color: '#000' }}>
+          style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117' }}>
           + Registrar ingreso
         </Link>
       </div>
@@ -85,14 +85,14 @@ export default async function IngresosPage() {
       <div className="rounded-2xl p-5" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
         <div className="flex items-start gap-4">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
-            style={{ backgroundColor: '#00d4aa20' }}>
+            style={{ backgroundColor: '#10b98120' }}>
             💡
           </div>
           <div className="flex-1">
             <p className="text-white font-semibold mb-1">¿Cómo funciona el tracker de ingresos?</p>
             <p style={{ color: '#9ca3af', fontSize: '13px', lineHeight: '1.6', marginBottom: '12px' }}>
               Cada ingreso que registras en <strong style={{ color: '#e5e7eb' }}>Transacciones</strong> usando
-              tipo <strong style={{ color: '#00d4aa' }}>"Ingreso"</strong> aparece aquí organizado por fuente.
+              tipo <strong style={{ color: '#10b981' }}>"Ingreso"</strong> aparece aquí organizado por fuente.
               La <strong style={{ color: '#e5e7eb' }}>categoría</strong> que elijas es la fuente de ingreso
               (ej: Plataforma digital, Freelance, Salario). Así puedes ver de dónde viene cada peso.
             </p>
@@ -100,7 +100,7 @@ export default async function IngresosPage() {
             {/* Flujo visual */}
             <div className="flex items-center gap-2 flex-wrap">
               {[
-                { icon: '📝', label: 'Transacciones', sub: 'Tipo: Ingreso', color: '#00d4aa' },
+                { icon: '📝', label: 'Transacciones', sub: 'Tipo: Ingreso', color: '#10b981' },
                 { icon: '→', label: '', sub: '', color: '#4b5563' },
                 { icon: '💰', label: 'Ingresos', sub: 'Fuentes del mes', color: '#6366f1' },
                 { icon: '→', label: '', sub: '', color: '#4b5563' },
@@ -127,8 +127,8 @@ export default async function IngresosPage() {
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Ingresos este mes',  value: fmtCOP(totalMes),       color: '#00d4aa', sub: `${txMes.length} registro${txMes.length !== 1 ? 's' : ''}` },
-          { label: 'Vs mes anterior',    value: deltaVsPrev !== null ? `${deltaVsPrev >= 0 ? '+' : ''}${deltaVsPrev.toFixed(1)}%` : '—', color: deltaVsPrev === null ? '#6b7280' : deltaVsPrev >= 0 ? '#00d4aa' : '#ef4444', sub: totalPrevSum > 0 ? fmtCOP(totalPrevSum) : 'Sin historial' },
+          { label: 'Ingresos este mes',  value: fmtCOP(totalMes),       color: '#10b981', sub: `${txMes.length} registro${txMes.length !== 1 ? 's' : ''}` },
+          { label: 'Vs mes anterior',    value: deltaVsPrev !== null ? `${deltaVsPrev >= 0 ? '+' : ''}${deltaVsPrev.toFixed(1)}%` : '—', color: deltaVsPrev === null ? '#6b7280' : deltaVsPrev >= 0 ? '#10b981' : '#ef4444', sub: totalPrevSum > 0 ? fmtCOP(totalPrevSum) : 'Sin historial' },
           { label: 'Promedio mensual',   value: fmtCOP(promedioMensual), color: '#6366f1', sub: `${mesesHistorial.length} meses de historial` },
           { label: 'Fuentes este mes',   value: String(fuentes.length), color: '#f59e0b', sub: fuentes.length === 0 ? 'Sin ingresos aún' : fuentes.map(f => f.nombre).join(', ').slice(0, 30) + (fuentes.map(f => f.nombre).join(', ').length > 30 ? '...' : '') },
         ].map(item => (
@@ -153,19 +153,19 @@ export default async function IngresosPage() {
               <p className="text-white font-semibold">Fuentes de ingreso</p>
               <p style={{ color: '#6b7280', fontSize: '13px', marginTop: '2px' }}>Distribución este mes</p>
             </div>
-            <p className="tabular-nums font-bold" style={{ color: '#00d4aa', fontSize: '18px' }}>{fmtCOP(totalMes)}</p>
+            <p className="tabular-nums font-bold" style={{ color: '#10b981', fontSize: '18px' }}>{fmtCOP(totalMes)}</p>
           </div>
 
           <div className="flex rounded-full overflow-hidden mb-5" style={{ height: '10px' }}>
             {fuentes.map((f, i) => {
-              const colors = ['#00d4aa','#6366f1','#f59e0b','#ef4444','#ec4899','#3b82f6','#8b5cf6']
+              const colors = ['#10b981','#6366f1','#f59e0b','#ef4444','#ec4899','#3b82f6','#8b5cf6']
               return <div key={f.nombre} style={{ width: `${f.pct}%`, backgroundColor: colors[i % colors.length] }} />
             })}
           </div>
 
           <div className="space-y-3">
             {fuentes.map((f, i) => {
-              const colors   = ['#00d4aa','#6366f1','#f59e0b','#ef4444','#ec4899','#3b82f6','#8b5cf6']
+              const colors   = ['#10b981','#6366f1','#f59e0b','#ef4444','#ec4899','#3b82f6','#8b5cf6']
               const color    = colors[i % colors.length]
               const riesgoso = f.pct >= 70
               return (
@@ -220,11 +220,11 @@ export default async function IngresosPage() {
           <p className="text-5xl mb-4">💰</p>
           <p className="text-white font-semibold text-lg mb-2">Aún no hay ingresos registrados</p>
           <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '20px' }}>
-            Ve a Transacciones, crea una nueva con tipo <strong style={{ color: '#00d4aa' }}>"Ingreso"</strong> y elige la fuente en el campo categoría.
+            Ve a Transacciones, crea una nueva con tipo <strong style={{ color: '#10b981' }}>"Ingreso"</strong> y elige la fuente en el campo categoría.
           </p>
           <Link href="/transacciones"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
-            style={{ backgroundColor: '#00d4aa', color: '#000' }}>
+            style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117' }}>
             Registrar primer ingreso →
           </Link>
         </div>

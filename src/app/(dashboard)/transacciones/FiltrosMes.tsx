@@ -12,7 +12,7 @@ const CATEGORIAS = [
 
 const TIPOS = [
   { value: 'todos',        label: 'Todos',     color: '#6b7280' },
-  { value: 'income',       label: 'Ingresos',  color: '#00d4aa' },
+  { value: 'income',       label: 'Ingresos',  color: '#10b981' },
   { value: 'expense',      label: 'Gastos',    color: '#ef4444' },
   { value: 'debt_payment', label: 'Deudas',    color: '#f59e0b' },
 ]
