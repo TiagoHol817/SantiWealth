@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import HiddenValue from '@/components/HiddenValue'
+import { useSettings } from '@/context/SettingsContext'
 
 interface BalanceToggleProps {
   copValue: string
@@ -19,6 +20,7 @@ export default function BalanceToggle({
   variationPct,
 }: BalanceToggleProps) {
   const [showCOP, setShowCOP] = useState(true)
+  const { settings } = useSettings()
 
   const hasVariation = variationCOP !== undefined && variationPct !== undefined
   const isPositive = hasVariation && variationCOP >= 0
@@ -62,7 +64,7 @@ export default function BalanceToggle({
         </div>
 
         {/* Variation display */}
-        {hasVariation && (
+        {hasVariation && settings.show_daily_gains && (
           <div className="flex items-center gap-2 mt-2">
             <span
               className="tabular-nums text-sm font-semibold"

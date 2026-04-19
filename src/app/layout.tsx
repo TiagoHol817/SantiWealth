@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/providers/ThemeProvider";
+import CookieBanner from "@/components/CookieBanner";
 
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
@@ -24,6 +25,7 @@ export default function RootLayout({
       <body className={`${roboto.variable} antialiased`} style={{ fontFamily: 'var(--font-roboto), sans-serif' }}>
         <ThemeProvider>
           {children}
+          <CookieBanner />
         </ThemeProvider>
       </body>
     </html>

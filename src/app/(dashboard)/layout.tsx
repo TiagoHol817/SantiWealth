@@ -1,6 +1,7 @@
 import AppShell from '@/components/AppShell'
 import { BalanceProvider } from '@/context/BalanceContext'
 import { ToastProvider } from '@/context/ToastContext'
+import { SettingsProvider } from '@/context/SettingsContext'
 import ToastContainer from '@/components/ToastContainer'
 import OnboardingWizard from '@/components/help/OnboardingWizard'
 
@@ -11,10 +12,12 @@ export default function DashboardLayout({
 }) {
   return (
     <ToastProvider>
-      <BalanceProvider>
-        <AppShell>{children}</AppShell>
-        <OnboardingWizard />
-      </BalanceProvider>
+      <SettingsProvider>
+        <BalanceProvider>
+          <AppShell>{children}</AppShell>
+          <OnboardingWizard />
+        </BalanceProvider>
+      </SettingsProvider>
       <ToastContainer />
     </ToastProvider>
   )
