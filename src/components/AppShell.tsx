@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Sidebar from '@/components/sidebar'
-import TweaksPanel from '@/components/TweaksPanel'
 import { useSettings } from '@/context/SettingsContext'
 
 const STORAGE_KEY = 'wh_sidebar_collapsed'
@@ -15,7 +14,6 @@ const DENSITY_PADDING: Record<string, string> = {
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [showTweaks, setShowTweaks] = useState(false)
   const { settings } = useSettings()
 
   useEffect(() => {
@@ -36,7 +34,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: '#0f1117' }}>
-      <Sidebar isCollapsed={isCollapsed} onToggle={toggle} onOpenTweaks={() => setShowTweaks(true)} />
+      <Sidebar isCollapsed={isCollapsed} onToggle={toggle} />
       <main
         className="flex-1 overflow-y-auto"
         style={{
@@ -47,7 +45,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       >
         {children}
       </main>
-      <TweaksPanel isOpen={showTweaks} onClose={() => setShowTweaks(false)} />
     </div>
   )
 }

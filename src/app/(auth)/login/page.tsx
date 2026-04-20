@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Globe } from 'lucide-react'
@@ -356,10 +356,9 @@ export default function LoginPage() {
             { href: '/terms', label: 'Términos de servicio' },
             { href: '/privacy', label: 'Política de privacidad' },
           ].map((link, i) => (
-            <>
-              {i > 0 && <span key={`dot-${i}`} style={{ color: '#2a3040', fontSize: '11px' }}>·</span>}
+            <React.Fragment key={link.href}>
+              {i > 0 && <span style={{ color: '#2a3040', fontSize: '11px' }}>·</span>}
               <Link
-                key={link.href}
                 href={link.href}
                 className="text-xs transition-colors"
                 style={{ color: '#4b5563', textDecoration: 'none' }}
@@ -368,7 +367,7 @@ export default function LoginPage() {
               >
                 {link.label}
               </Link>
-            </>
+            </React.Fragment>
           ))}
         </div>
         <p style={{ color: '#1f2937', fontSize: '11px', textAlign: 'center', marginTop: '10px' }}>

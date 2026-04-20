@@ -70,8 +70,9 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   const userName =
     user?.user_metadata?.full_name ??
+    user?.user_metadata?.name ??
     user?.email?.split('@')[0] ??
-    'Santiago'
+    'Usuario'
 
   const now   = new Date()
   const year  = now.getFullYear()

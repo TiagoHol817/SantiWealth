@@ -9,7 +9,7 @@ import {
   LayoutDashboard, ArrowLeftRight, TrendingUp,
   PieChart, Target, Receipt, LogOut,
   Eye, EyeOff, Bell, X, BarChart3, Wallet, HelpCircle,
-  Sun, Moon, PanelLeftClose, PanelLeftOpen, SlidersHorizontal,
+  Sun, Moon, PanelLeftClose, PanelLeftOpen, Settings2,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import WealtHostBrand from '@/components/WealtHostBrand'
@@ -17,7 +17,6 @@ import WealtHostBrand from '@/components/WealtHostBrand'
 interface SidebarProps {
   isCollapsed: boolean
   onToggle: () => void
-  onOpenTweaks: () => void
 }
 
 const navItems = [
@@ -30,6 +29,7 @@ const navItems = [
   { href: '/ingresos',      label: 'Ingresos',      icon: Wallet          },
   { href: '/reportes',      label: 'Reportes',      icon: BarChart3       },
   { href: '/ayuda',         label: 'Ayuda',         icon: HelpCircle      },
+  { href: '/settings',      label: 'Configuración', icon: Settings2       },
 ]
 
 type CDTAlert    = { id: string; name: string; dias: number; capital: number; vencimiento: string }
@@ -80,7 +80,7 @@ function NavTooltip({ label, isCollapsed, children }: { label: string; isCollaps
   )
 }
 
-export default function Sidebar({ isCollapsed, onToggle, onOpenTweaks }: SidebarProps) {
+export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
   const router   = useRouter()
   const { visible, toggle } = useBalance()
@@ -291,15 +291,6 @@ export default function Sidebar({ isCollapsed, onToggle, onOpenTweaks }: Sidebar
               </button>
             )}
 
-            {/* Tweaks */}
-            <button
-              onClick={onOpenTweaks}
-              className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:bg-white/10"
-              style={{ color: '#4b5563' }}
-              title="Tweaks"
-            >
-              <SlidersHorizontal size={13} />
-            </button>
           </div>
         )}
       </div>
@@ -365,14 +356,6 @@ export default function Sidebar({ isCollapsed, onToggle, onOpenTweaks }: Sidebar
               </button>
             </NavTooltip>
           )}
-          <NavTooltip label="Tweaks" isCollapsed={isCollapsed}>
-            <button
-              onClick={onOpenTweaks}
-              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10"
-              style={{ color: '#4b5563' }}>
-              <SlidersHorizontal size={15} />
-            </button>
-          </NavTooltip>
         </div>
       )}
 

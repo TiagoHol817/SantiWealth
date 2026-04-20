@@ -6,6 +6,7 @@ import type { NextRequest } from 'next/server'
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
+  const next = requestUrl.searchParams.get('next') ?? '/dashboard'
 
   if (code) {
     const cookieStore = await cookies()
@@ -23,8 +24,23 @@ export async function GET(request: NextRequest) {
         },
       }
     )
-    await supabase.auth.exchangeCodeForSession(code)
+
+    const { data: { user } } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (user) {
+      // Check if user has completed onboarding
+      const { data: settings } = await supabase
+        .from('user_settings')
+        .select('onboarding_completed')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (!settings?.onboarding_completed) {
+        return NextResponse.redirect(new URL('/onboarding', request.url))
+      }
+    }
   }
 
-  return NextResponse.redirect(new URL('/dashboard', request.url))
+  // Existing user or unknown state → go to intended destination
+  return NextResponse.redirect(new URL(next, request.url))
 }

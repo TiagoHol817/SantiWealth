@@ -909,11 +909,14 @@ enum tx_type {
 }
 
 model user_settings {
-  user_id          String   @id @db.Uuid
-  ui_density       String   @default("normal")
-  show_daily_gains Boolean  @default(true)
-  accent_color     String   @default("gold")
-  updated_at       DateTime @default(now()) @db.Timestamptz(6)
+  user_id               String   @id @db.Uuid
+  ui_density            String   @default("normal")
+  show_daily_gains      Boolean  @default(true)
+  accent_color          String   @default("gold")
+  onboarding_completed  Boolean  @default(false)
+  base_currency         String   @default("COP")
+  country               String   @default("CO")
+  updated_at            DateTime @default(now()) @db.Timestamptz(6)
 
   @@schema("public")
 }
