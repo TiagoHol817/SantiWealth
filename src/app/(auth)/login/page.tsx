@@ -73,13 +73,14 @@ export default function LoginPage() {
   }
 
   async function handleOAuth(provider: 'google' | 'apple') {
-    const supabase = createClient()
-    await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}/auth/callback
-` },
-    })
-  }
+  const supabase = createClient()
+  await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    },
+  })
+}
 
   return (
     <div
