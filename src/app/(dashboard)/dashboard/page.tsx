@@ -179,7 +179,9 @@ export default async function DashboardPage() {
       <StatementBanner />
 
       {/* ── Encabezado ──────────────────────────────────────────────────────── */}
-      <div className="flex items-end justify-between">
+      <div className="relative overflow-hidden">
+        <div className="blob-green absolute -top-20 -right-20 opacity-40" style={{ width: '300px', height: '300px' }} />
+        <div className="relative flex items-end justify-between">
         <SmartGreeting userName={userName} />
         <div className="flex items-center gap-3">
           <div className="text-right">
@@ -206,6 +208,7 @@ export default async function DashboardPage() {
               })) ?? [],
             }}
           />
+        </div>
         </div>
       </div>
 

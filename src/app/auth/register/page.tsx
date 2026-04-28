@@ -189,17 +189,18 @@ export default function RegisterPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-between px-4 py-8"
+      className="relative min-h-screen flex flex-col items-center justify-between px-4 py-8 overflow-hidden"
       style={{
         backgroundColor: '#0f1117',
         backgroundImage: [
-          'radial-gradient(ellipse 80% 60% at 75% 5%, rgba(212,175,55,0.07) 0%, transparent 60%)',
-          'radial-gradient(ellipse 60% 50% at 20% 90%, rgba(99,102,241,0.04) 0%, transparent 55%)',
-          'radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px)',
+          'radial-gradient(circle, rgba(255,255,255,0.018) 1px, transparent 1px)',
         ].join(', '),
-        backgroundSize: 'auto, auto, 28px 28px',
+        backgroundSize: '28px 28px',
       }}
     >
+      {/* Atmospheric blobs */}
+      <div className="blob-green" style={{ top: '-100px', left: '-100px', opacity: 0.6 }} />
+      <div className="blob-gold" style={{ bottom: '-80px', right: '-60px', opacity: 0.7 }} />
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', width: '100%', maxWidth: '440px', margin: '0 auto' }}>
         <div
           className="w-full"
@@ -228,10 +229,10 @@ export default function RegisterPage() {
               <WealtHostBrand size="xl" />
             </div>
             <p style={{ color: '#e5e7eb', fontSize: '17px', fontWeight: 700, marginBottom: '4px' }}>
-              Empieza gratis hoy
+              Empieza a construir tu patrimonio
             </p>
             <p style={{ color: '#6b7280', fontSize: '12px', letterSpacing: '0.01em' }}>
-              Sin tarjeta de crédito. Cancela cuando quieras.
+              Los que empiezan hoy, ganan mañana. Sin tarjeta de crédito.
             </p>
           </div>
 

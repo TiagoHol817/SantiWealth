@@ -125,21 +125,24 @@ export default async function TransaccionesPage({
 
   return (
     <div style={{ color: '#e5e7eb' }}>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Transacciones</h1>
-          <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>Registro de ingresos y gastos</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <HelpModal moduleId="transacciones" />
-          <Link
-            href="/transacciones/importar"
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-            style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#9ca3af' }}
-          >
-            Importar CSV
-          </Link>
-          <TransaccionForm accounts={accounts} />
+      <div className="relative overflow-hidden mb-6">
+        <div className="blob-green absolute -top-20 -right-20 opacity-40" style={{ width: '300px', height: '300px' }} />
+        <div className="relative flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Transacciones</h1>
+            <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>Registro de ingresos y gastos</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <HelpModal moduleId="transacciones" />
+            <Link
+              href="/transacciones/importar"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+              style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#9ca3af' }}
+            >
+              Importar CSV
+            </Link>
+            <TransaccionForm accounts={accounts} />
+          </div>
         </div>
       </div>
 
@@ -178,7 +181,7 @@ export default async function TransaccionesPage({
           { label: 'Pagos de deuda',     value: totalDeuda,                   color: '#f59e0b' },
           { label: 'Balance',           value: totalIngresos - totalGastos,  color: totalIngresos - totalGastos >= 0 ? '#10b981' : '#ef4444' },
         ].map(item => (
-          <div key={item.label} className="rounded-xl p-5"
+          <div key={item.label} className="rounded-xl p-5 card-interactive"
             style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
             <p style={{ color: '#6b7280', fontSize: '12px', marginBottom: '8px' }}>{item.label}</p>
             <p style={{ color: item.color, fontSize: '18px', fontWeight: '600' }} className="tabular-nums">
@@ -259,7 +262,7 @@ export default async function TransaccionesPage({
                 return (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between px-6 py-4 group transition-all hover:bg-white/[0.02]"
+                    className="flex items-center justify-between px-6 py-4 group row-hover"
                     style={{ borderBottom: i < txs.length - 1 ? '1px solid #1e2535' : 'none' }}
                   >
                     <div className="flex items-center gap-4">

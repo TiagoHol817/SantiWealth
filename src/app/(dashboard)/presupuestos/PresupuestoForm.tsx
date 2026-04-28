@@ -93,8 +93,8 @@ export default function PresupuestoForm({ limites, budgetId, mes, year, limitesA
   }
 
   const inp = {
-    backgroundColor: '#0f1117', border: '1px solid #2a3040',
-    borderRadius: '10px', color: '#e5e7eb', padding: '9px 12px 9px 40px',
+    backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: '10px', color: '#e5e7eb', padding: '11px 14px 11px 40px',
     fontSize: '14px', width: '100%', outline: 'none',
   }
 
@@ -111,9 +111,9 @@ export default function PresupuestoForm({ limites, budgetId, mes, year, limitesA
   return (
     <>
       <div className="fixed inset-0 z-40" style={{ backgroundColor: '#00000090' }} onClick={() => setAbierto(false)} />
-      <div className="fixed z-50 rounded-2xl w-full shadow-2xl overflow-y-auto breathe-purple"
+      <div className="fixed z-50 glass-card rounded-2xl w-full shadow-2xl overflow-y-auto breathe-purple"
         style={{
-          backgroundColor: '#1a1f2e', border: '1px solid #6366f140',
+          border: '1px solid #6366f140',
           top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           maxWidth: '560px', maxHeight: '90vh', padding: '1.5rem',
         }}>

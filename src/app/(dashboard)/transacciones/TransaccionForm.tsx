@@ -78,8 +78,8 @@ export default function TransaccionForm({ accounts }: { accounts: any[] }) {
   }
 
   const inp = {
-    backgroundColor: '#0f1117', border: '1px solid #2a3040', borderRadius: '10px',
-    color: '#e5e7eb', padding: '8px 12px', fontSize: '13px', width: '100%', outline: 'none'
+    backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px',
+    color: '#e5e7eb', padding: '11px 14px', fontSize: '13px', width: '100%', outline: 'none'
   }
   const lbl = {
     color: '#6b7280', fontSize: '11px', marginBottom: '4px',
@@ -97,8 +97,8 @@ export default function TransaccionForm({ accounts }: { accounts: any[] }) {
   return (
     <>
       <div className="fixed inset-0 z-40" style={{ backgroundColor: '#00000080' }} onClick={() => setOpen(false)} />
-      <div className="fixed z-50 rounded-2xl p-6 w-full max-w-md shadow-2xl"
-        style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }}>
+      <div className="fixed z-50 glass-card rounded-2xl p-6 w-full max-w-md shadow-2xl"
+        style={{ top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }}>
 
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-white font-semibold text-lg">Nueva transacción</h3>

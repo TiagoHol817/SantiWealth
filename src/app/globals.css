@@ -234,3 +234,156 @@
   .lp-plans-grid  { grid-template-columns: 1fr; }
   .lp-footer-row  { flex-direction: column; align-items: flex-start; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   WealthHost Design System v2 — Visual Upgrade Tokens
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Gradient blobs reutilizables ──────────────────────────────── */
+.blob-green {
+  position: absolute;
+  width: 600px; height: 600px;
+  background: radial-gradient(ellipse, #00d4aa12 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(40px);
+}
+.blob-purple {
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(ellipse, #6366f110 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(40px);
+}
+.blob-amber {
+  position: absolute;
+  width: 400px; height: 400px;
+  background: radial-gradient(ellipse, #f59e0b0e 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(40px);
+}
+.blob-gold {
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(ellipse, #D4AF3710 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(40px);
+}
+
+/* ── Glass card ────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(26, 31, 46, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ── Hover glow en filas de tabla / lista ──────────────────────── */
+.row-hover {
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.row-hover:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+/* ── Input premium ─────────────────────────────────────────────── */
+.input-premium {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #e5e7eb;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 14px;
+  width: 100%;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-premium:focus {
+  border-color: rgba(0,212,170,0.5);
+  box-shadow: 0 0 0 3px rgba(0,212,170,0.08);
+  outline: none;
+}
+.input-premium::placeholder {
+  color: rgba(229,231,235,0.25);
+}
+
+/* ── Botón primario con shimmer ────────────────────────────────── */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  background: #00d4aa;
+  color: #0f1117;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(0,212,170,0.35);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: -50%; left: -60%;
+  width: 40%; height: 200%;
+  background: rgba(255,255,255,0.15);
+  transform: skewX(-20deg);
+  transition: left 0.4s ease;
+}
+.btn-primary:hover::after {
+  left: 120%;
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Card con hover border ─────────────────────────────────────── */
+.card-interactive {
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-interactive:hover {
+  border-color: rgba(0,212,170,0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+/* ── Sidebar nav item ──────────────────────────────────────────── */
+.nav-item {
+  border-left: 2px solid transparent;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.nav-item:hover {
+  background: rgba(255,255,255,0.04);
+  color: #e5e7eb;
+  border-left-color: rgba(255,255,255,0.1);
+}
+.nav-item-active {
+  background: linear-gradient(90deg, rgba(212,175,55,0.12) 0%, transparent 100%);
+  border-left: 2px solid #D4AF37;
+  color: #D4AF37 !important;
+}
+
+/* ── Page header gradient text ─────────────────────────────────── */
+.heading-gradient {
+  background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Metric card número ────────────────────────────────────────── */
+.metric-value {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  font-feature-settings: "tnum";
+}

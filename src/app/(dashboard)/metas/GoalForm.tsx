@@ -124,8 +124,8 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
   }
 
   const inp = {
-    backgroundColor: '#0f1117', border: '1px solid #2a3040', borderRadius: '10px',
-    color: '#e5e7eb', padding: '8px 12px', fontSize: '14px', width: '100%', outline: 'none',
+    backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px',
+    color: '#e5e7eb', padding: '11px 14px', fontSize: '14px', width: '100%', outline: 'none',
   }
   const lbl = {
     color: '#6b7280', fontSize: '11px', marginBottom: '4px',
@@ -149,9 +149,8 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
   return (
     <>
       <div className="fixed inset-0 z-40" style={{ backgroundColor: '#00000080' }} onClick={() => setOpen(false)} />
-      <div className="fixed z-50 rounded-2xl p-6 w-full shadow-2xl overflow-y-auto"
+      <div className="fixed z-50 glass-card rounded-2xl p-6 w-full shadow-2xl overflow-y-auto"
         style={{
-          backgroundColor: '#1a1f2e', border: '1px solid #2a3040',
           top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           maxWidth: '480px', maxHeight: '92vh',
         }}>

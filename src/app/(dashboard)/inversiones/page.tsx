@@ -144,19 +144,24 @@ export default async function InversionesPage({
     <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top right, rgba(99,102,241,0.05) 0%, transparent 60%)' }}>
 
       {/* Header */}
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Inversiones</h1>
-          <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
-            Portafolio en tiempo real · Actualiza cada 60s
-          </p>
+      <div className="relative overflow-hidden">
+        <div className="blob-purple absolute -top-20 -right-20 opacity-40" style={{ width: '300px', height: '300px' }} />
+        <div className="relative flex items-end justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Inversiones</h1>
+            <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
+              Portafolio en tiempo real · Actualiza cada 60s
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <HelpModal moduleId="inversiones" />
+            <a href="/inversiones"
+              className="px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+              style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#10b981' }}>
+              ↻ Actualizar
+            </a>
+          </div>
         </div>
-        <HelpModal moduleId="inversiones" />
-        <a href="/inversiones"
-          className="px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#10b981' }}>
-          ↻ Actualizar
-        </a>
       </div>
 
       {/* KPIs globales */}

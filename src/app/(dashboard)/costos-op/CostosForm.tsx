@@ -14,8 +14,8 @@ const COLORES: Record<string, string> = {
 }
 
 const inputStyle = {
-  backgroundColor: '#0f1117', border: '1px solid #2a3040',
-  borderRadius: '10px', color: '#e5e7eb', padding: '10px 14px',
+  backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: '10px', color: '#e5e7eb', padding: '11px 14px',
   fontSize: '14px', width: '100%', outline: 'none'
 }
 const labelStyle = { color: '#6b7280', fontSize: '12px', marginBottom: '6px', display: 'block' as const }
@@ -122,7 +122,7 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
 
   if (mode === 'add' || mode === 'edit') {
     return (
-      <div className="rounded-2xl p-6 mb-6" style={{ backgroundColor: '#1a1f2e', border: '1px solid #10b98140' }}>
+      <div className="glass-card rounded-2xl p-6 mb-6" style={{ border: '1px solid #10b98140' }}>
         <div className="flex items-center justify-between mb-5">
           <p className="text-white font-semibold">{mode === 'edit' ? 'Editar costo' : 'Nuevo costo fijo'}</p>
           <button onClick={() => setMode('list')} style={{ color: '#6b7280', fontSize: '22px', lineHeight: 1 }}>×</button>

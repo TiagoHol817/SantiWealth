@@ -235,13 +235,17 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           transition: 'max-width 300ms ease, opacity 200ms ease',
           whiteSpace: 'nowrap',
         }}>
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-base flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #D4AF37, #b8922a)', color: '#000' }}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-base flex-shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, #D4AF37, #b8922a)',
+              color: '#000',
+              boxShadow: '0 2px 8px rgba(212,175,55,0.3)',
+            }}>
             W
           </div>
           <div>
             <WealtHostBrand size="sm" />
-            <p style={{ color: '#4b5563', fontSize: '10px', margin: 0 }}>Finanzas personales</p>
+            <p style={{ color: '#4b5563', fontSize: '10px', margin: 0, letterSpacing: '0.02em' }}>Finanzas personales</p>
           </div>
         </div>
 
@@ -552,29 +556,16 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             <NavTooltip key={item.href} label={item.label} tooltip={item.tooltip} isCollapsed={isCollapsed}>
               <Link
                 href={item.href}
-                className="flex items-center rounded-xl text-sm font-medium transition-all duration-200 relative"
+                className={`flex items-center rounded-xl text-sm font-medium relative nav-item${active ? ' nav-item-active' : ''}`}
                 style={{
                   gap: isCollapsed ? '0' : '10px',
                   padding: isCollapsed ? '10px' : '9px 12px',
                   justifyContent: isCollapsed ? 'center' : 'flex-start',
-                  backgroundColor: active ? '#D4AF3718' : 'transparent',
                   color: active ? '#D4AF37' : '#6b7280',
-                }}
-                onMouseEnter={e => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = '#ffffff08'
-                    ;(e.currentTarget as HTMLElement).style.color = '#e5e7eb'
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'
-                    ;(e.currentTarget as HTMLElement).style.color = '#6b7280'
-                  }
                 }}
               >
                 {active && !isCollapsed && (
-                  <div className="absolute left-0 top-1/2 w-1 h-5 rounded-r-full"
+                  <div className="absolute left-0 top-1/2 w-0.5 h-5 rounded-r-full"
                     style={{ backgroundColor: '#D4AF37', transform: 'translateY(-50%)' }} />
                 )}
                 <Icon size={17} strokeWidth={active ? 2.2 : 1.8} style={{ flexShrink: 0 }} />
@@ -627,7 +618,9 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           </button>
         </NavTooltip>
         {!isCollapsed && (
-          <p className="text-center mt-2" style={{ color: '#1f2937', fontSize: '10px' }}>WealtHost v2.0</p>
+          <p className="text-center mt-2" style={{ color: '#2a3040', fontSize: '10px', letterSpacing: '0.04em' }}>
+            WealthHost · v2.0
+          </p>
         )}
       </div>
     </aside>

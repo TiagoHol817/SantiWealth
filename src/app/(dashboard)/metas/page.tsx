@@ -155,22 +155,25 @@ export default async function MetasPage() {
     <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top right, rgba(99,102,241,0.05) 0%, transparent 55%)' }}>
 
       {/* Header */}
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Metas Financieras</h1>
-          <div className="flex items-center gap-3 mt-1">
-            <p style={{ color: '#6b7280', fontSize: '14px' }}>Tu carrera hacia la libertad financiera</p>
-            {racha >= 2 && (
-              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
-                style={{ backgroundColor: '#f59e0b20', color: '#f59e0b', border: '1px solid #f59e0b30' }}>
-                🔥 {racha} meses ahorrando consecutivos
-              </span>
-            )}
+      <div className="relative overflow-hidden">
+        <div className="blob-amber absolute -top-20 -right-20 opacity-40" style={{ width: '300px', height: '300px' }} />
+        <div className="relative flex items-end justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Metas Financieras</h1>
+            <div className="flex items-center gap-3 mt-1">
+              <p style={{ color: '#6b7280', fontSize: '14px' }}>Tu carrera hacia la libertad financiera</p>
+              {racha >= 2 && (
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
+                  style={{ backgroundColor: '#f59e0b20', color: '#f59e0b', border: '1px solid #f59e0b30' }}>
+                  🔥 {racha} meses ahorrando consecutivos
+                </span>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <HelpModal moduleId="metas" />
-          <GoalForm />
+          <div className="flex items-center gap-3">
+            <HelpModal moduleId="metas" />
+            <GoalForm />
+          </div>
         </div>
       </div>
 

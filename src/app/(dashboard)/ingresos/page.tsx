@@ -86,20 +86,23 @@ export default async function IngresosPage() {
     <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top left, rgba(16,185,129,0.04) 0%, transparent 60%)' }}>
 
       {/* Header */}
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Ingresos</h1>
-          <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
-            Quienes conocen sus números, negocian mejor — {nombreMes}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <HelpModal moduleId="ingresos" />
-          <Link href="/transacciones"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-            style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117' }}>
-            + Registrar ingreso
-          </Link>
+      <div className="relative overflow-hidden">
+        <div className="blob-green absolute -top-20 -right-20 opacity-40" style={{ width: '300px', height: '300px' }} />
+        <div className="relative flex items-end justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Ingresos</h1>
+            <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
+              Quienes conocen sus números, negocian mejor — {nombreMes}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <HelpModal moduleId="ingresos" />
+            <Link href="/transacciones"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+              style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117' }}>
+              + Registrar ingreso
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -131,7 +134,7 @@ export default async function IngresosPage() {
             sub: mesMasBajo?.label ?? 'Sin historial',
           },
         ].map((item, idx) => (
-          <div key={item.label} className={`rounded-2xl p-5 relative overflow-hidden${idx === 0 ? ' breathe-green' : ''}`}
+          <div key={item.label} className={`rounded-2xl p-5 relative overflow-hidden card-interactive${idx === 0 ? ' breathe-green' : ''}`}
             style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
             <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
               style={{ background: item.color, transform: 'translate(30%,-30%)' }} />

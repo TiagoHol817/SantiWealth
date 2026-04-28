@@ -137,22 +137,25 @@ export default async function PresupuestosPage({
     <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top left, rgba(245,158,11,0.04) 0%, transparent 60%)' }}>
 
       {/* Header */}
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Presupuestos</h1>
-          <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
-            Control de gastos — {nombreMes}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <HelpModal moduleId="presupuestos" />
-          <PresupuestoForm
-            limites={limites}
-            budgetId={budget?.id}
-            mes={mes}
-            year={year}
-            limitesAnterior={limitesPrev}
-          />
+      <div className="relative overflow-hidden">
+        <div className="blob-purple absolute -top-20 -right-20 opacity-40" style={{ width: '300px', height: '300px' }} />
+        <div className="relative flex items-end justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Presupuestos</h1>
+            <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
+              Control de gastos — {nombreMes}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <HelpModal moduleId="presupuestos" />
+            <PresupuestoForm
+              limites={limites}
+              budgetId={budget?.id}
+              mes={mes}
+              year={year}
+              limitesAnterior={limitesPrev}
+            />
+          </div>
         </div>
       </div>
 
