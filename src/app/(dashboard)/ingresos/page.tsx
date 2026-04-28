@@ -1,9 +1,19 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import IngresosClient from './IngresosClient'
+import HelpModal from '@/components/help/HelpModal'
+import HiddenValue from '@/components/HiddenValue'
 
 const fmtCOP = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n)
+const fmtCompact = (n: number) =>
+  new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', notation: 'compact', maximumFractionDigits: 1 }).format(n)
+
+const SOURCE_COLORS = ['#10b981','#6366f1','#f59e0b','#ef4444','#ec4899','#3b82f6','#8b5cf6']
+const SOURCE_ICONS: Record<string, string> = {
+  'Salario': '💼', 'Freelance': '💻', 'Inversiones': '📈', 'Plataforma digital': '🌐',
+  'Negocio': '🏪', 'Renta': '🏠', 'Otro': '📦', 'Sin categoría': '❓',
+}
 
 export default async function IngresosPage() {
   const supabase = await createClient()
@@ -59,9 +69,18 @@ export default async function IngresosPage() {
   const promedioMensual = mesesHistorial.length > 0
     ? mesesHistorial.reduce((s, m) => s + m.total, 0) / mesesHistorial.length
     : 0
+  const proyeccionAnual = promedioMensual * 12
 
-  const nombreMes     = now.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
-  const sinIngresos   = (txAll?.length ?? 0) === 0
+  const mesMasAlto = mesesHistorial.length > 0
+    ? mesesHistorial.reduce((prev, curr) => curr.total > prev.total ? curr : prev)
+    : null
+  const mesMasBajoData = mesesHistorial.filter(m => m.total > 0)
+  const mesMasBajo = mesMasBajoData.length > 0
+    ? mesMasBajoData.reduce((prev, curr) => curr.total < prev.total ? curr : prev)
+    : null
+
+  const nombreMes   = now.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
+  const sinIngresos = (txAll?.length ?? 0) === 0
 
   return (
     <div className="space-y-6 pb-8" style={{ color: '#e5e7eb' }}>
@@ -74,63 +93,43 @@ export default async function IngresosPage() {
             Tracker de fuentes de ingreso — {nombreMes}
           </p>
         </div>
-        <Link href="/transacciones"
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-          style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117' }}>
-          + Registrar ingreso
-        </Link>
-      </div>
-
-      {/* Banner didáctico — siempre visible */}
-      <div className="rounded-2xl p-5" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-        <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
-            style={{ backgroundColor: '#10b98120' }}>
-            💡
-          </div>
-          <div className="flex-1">
-            <p className="text-white font-semibold mb-1">¿Cómo funciona el tracker de ingresos?</p>
-            <p style={{ color: '#9ca3af', fontSize: '13px', lineHeight: '1.6', marginBottom: '12px' }}>
-              Cada ingreso que registras en <strong style={{ color: '#e5e7eb' }}>Transacciones</strong> usando
-              tipo <strong style={{ color: '#10b981' }}>"Ingreso"</strong> aparece aquí organizado por fuente.
-              La <strong style={{ color: '#e5e7eb' }}>categoría</strong> que elijas es la fuente de ingreso
-              (ej: Plataforma digital, Freelance, Salario). Así puedes ver de dónde viene cada peso.
-            </p>
-
-            {/* Flujo visual */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {[
-                { icon: '📝', label: 'Transacciones', sub: 'Tipo: Ingreso', color: '#10b981' },
-                { icon: '→', label: '', sub: '', color: '#4b5563' },
-                { icon: '💰', label: 'Ingresos', sub: 'Fuentes del mes', color: '#6366f1' },
-                { icon: '→', label: '', sub: '', color: '#4b5563' },
-                { icon: '📊', label: 'Reportes', sub: 'Estado de resultados', color: '#f59e0b' },
-              ].map((step, i) => (
-                step.icon === '→'
-                  ? <span key={i} style={{ color: '#4b5563', fontSize: '18px' }}>→</span>
-                  : (
-                    <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                      style={{ backgroundColor: step.color + '15', border: `1px solid ${step.color}30` }}>
-                      <span style={{ fontSize: '14px' }}>{step.icon}</span>
-                      <div>
-                        <p style={{ color: step.color, fontSize: '12px', fontWeight: '600', lineHeight: 1 }}>{step.label}</p>
-                        <p style={{ color: '#6b7280', fontSize: '10px' }}>{step.sub}</p>
-                      </div>
-                    </div>
-                  )
-              ))}
-            </div>
-          </div>
+        <div className="flex items-center gap-3">
+          <HelpModal moduleId="ingresos" />
+          <Link href="/transacciones"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+            style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117' }}>
+            + Registrar ingreso
+          </Link>
         </div>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Ingresos este mes',  value: fmtCOP(totalMes),       color: '#10b981', sub: `${txMes.length} registro${txMes.length !== 1 ? 's' : ''}` },
-          { label: 'Vs mes anterior',    value: deltaVsPrev !== null ? `${deltaVsPrev >= 0 ? '+' : ''}${deltaVsPrev.toFixed(1)}%` : '—', color: deltaVsPrev === null ? '#6b7280' : deltaVsPrev >= 0 ? '#10b981' : '#ef4444', sub: totalPrevSum > 0 ? fmtCOP(totalPrevSum) : 'Sin historial' },
-          { label: 'Promedio mensual',   value: fmtCOP(promedioMensual), color: '#6366f1', sub: `${mesesHistorial.length} meses de historial` },
-          { label: 'Fuentes este mes',   value: String(fuentes.length), color: '#f59e0b', sub: fuentes.length === 0 ? 'Sin ingresos aún' : fuentes.map(f => f.nombre).join(', ').slice(0, 30) + (fuentes.map(f => f.nombre).join(', ').length > 30 ? '...' : '') },
+          {
+            label: 'Ingresos este mes',
+            value: fmtCOP(totalMes),
+            color: '#10b981',
+            sub: `${txMes.length} registro${txMes.length !== 1 ? 's' : ''}`,
+          },
+          {
+            label: 'Vs mes anterior',
+            value: deltaVsPrev !== null ? `${deltaVsPrev >= 0 ? '+' : ''}${deltaVsPrev.toFixed(1)}%` : '—',
+            color: deltaVsPrev === null ? '#6b7280' : deltaVsPrev >= 0 ? '#10b981' : '#ef4444',
+            sub: totalPrevSum > 0 ? fmtCOP(totalPrevSum) : 'Sin historial',
+          },
+          {
+            label: 'Mes más alto',
+            value: mesMasAlto ? fmtCompact(mesMasAlto.total) : '—',
+            color: '#6366f1',
+            sub: mesMasAlto?.label ?? 'Sin historial',
+          },
+          {
+            label: 'Mes más bajo',
+            value: mesMasBajo ? fmtCompact(mesMasBajo.total) : '—',
+            color: '#f59e0b',
+            sub: mesMasBajo?.label ?? 'Sin historial',
+          },
         ].map(item => (
           <div key={item.label} className="rounded-2xl p-5 relative overflow-hidden"
             style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
@@ -145,6 +144,31 @@ export default async function IngresosPage() {
         ))}
       </div>
 
+      {/* Proyección anual */}
+      {proyeccionAnual > 0 && (
+        <div className="rounded-2xl p-5 flex items-center justify-between relative overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, #0a2d1f 0%, #0f1117 100%)', border: '1px solid #10b98130' }}>
+          <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-[0.06] blur-3xl pointer-events-none"
+            style={{ background: '#10b981', transform: 'translate(20%, -20%)' }} />
+          <div>
+            <p style={{ color: '#6b7280', fontSize: '12px', marginBottom: '4px' }}>A este ritmo, ganarás este año</p>
+            <HiddenValue
+              value={fmtCOP(proyeccionAnual)}
+              className="tabular-nums font-black"
+              style={{ color: '#10b981', fontSize: '26px' }}
+            />
+          </div>
+          <div className="text-right">
+            <p style={{ color: '#4b5563', fontSize: '11px', marginBottom: '2px' }}>Promedio mensual</p>
+            <HiddenValue value={fmtCOP(promedioMensual)} className="tabular-nums font-semibold"
+              style={{ color: '#6b7280', fontSize: '14px' }} />
+            <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '4px' }}>
+              Basado en {mesesHistorial.length} mes{mesesHistorial.length !== 1 ? 'es' : ''} de historial
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Fuentes del mes */}
       {fuentes.length > 0 && (
         <div className="rounded-2xl p-6" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
@@ -153,42 +177,43 @@ export default async function IngresosPage() {
               <p className="text-white font-semibold">Fuentes de ingreso</p>
               <p style={{ color: '#6b7280', fontSize: '13px', marginTop: '2px' }}>Distribución este mes</p>
             </div>
-            <p className="tabular-nums font-bold" style={{ color: '#10b981', fontSize: '18px' }}>{fmtCOP(totalMes)}</p>
+            <HiddenValue value={fmtCOP(totalMes)} className="tabular-nums font-bold"
+              style={{ color: '#10b981', fontSize: '18px' }} />
           </div>
 
+          {/* Stacked bar */}
           <div className="flex rounded-full overflow-hidden mb-5" style={{ height: '10px' }}>
-            {fuentes.map((f, i) => {
-              const colors = ['#10b981','#6366f1','#f59e0b','#ef4444','#ec4899','#3b82f6','#8b5cf6']
-              return <div key={f.nombre} style={{ width: `${f.pct}%`, backgroundColor: colors[i % colors.length] }} />
-            })}
+            {fuentes.map((f, i) => (
+              <div key={f.nombre} style={{ width: `${f.pct}%`, backgroundColor: SOURCE_COLORS[i % SOURCE_COLORS.length] }} />
+            ))}
           </div>
 
-          <div className="space-y-3">
+          {/* Source cards */}
+          <div className="grid grid-cols-2 gap-3">
             {fuentes.map((f, i) => {
-              const colors   = ['#10b981','#6366f1','#f59e0b','#ef4444','#ec4899','#3b82f6','#8b5cf6']
-              const color    = colors[i % colors.length]
-              const riesgoso = f.pct >= 70
+              const color = SOURCE_COLORS[i % SOURCE_COLORS.length]
+              const icon  = SOURCE_ICONS[f.nombre] ?? '💰'
               return (
-                <div key={f.nombre}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-                      <span style={{ color: '#e5e7eb', fontSize: '13px', fontWeight: '500' }}>{f.nombre}</span>
-                      {riesgoso && (
+                <div key={f.nombre} className="rounded-xl p-4 flex items-center justify-between"
+                  style={{ backgroundColor: '#0f1117', border: '1px solid #1e2535' }}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                      style={{ backgroundColor: color + '20' }}>
+                      <span style={{ fontSize: '16px' }}>{icon}</span>
+                    </div>
+                    <div>
+                      <p className="text-white text-sm font-medium">{f.nombre}</p>
+                      {f.pct >= 70 && (
                         <span className="text-xs px-1.5 py-0.5 rounded-full"
                           style={{ backgroundColor: '#f59e0b20', color: '#f59e0b' }}>
                           Alta dependencia
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="tabular-nums font-semibold text-white text-sm">{fmtCOP(f.monto)}</span>
-                      <span className="text-xs px-2 py-0.5 rounded-full tabular-nums"
-                        style={{ backgroundColor: color + '20', color }}>{f.pct}%</span>
-                    </div>
                   </div>
-                  <div className="rounded-full overflow-hidden" style={{ height: '5px', backgroundColor: '#0f1117' }}>
-                    <div className="h-full rounded-full" style={{ width: `${f.pct}%`, backgroundColor: color }} />
+                  <div className="text-right">
+                    <HiddenValue value={fmtCOP(f.monto)} className="tabular-nums font-semibold text-white text-sm" />
+                    <p style={{ color, fontSize: '11px' }}>{f.pct}%</p>
                   </div>
                 </div>
               )

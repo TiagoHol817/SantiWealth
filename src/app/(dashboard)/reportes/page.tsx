@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getTRM, formatUSD, normalizeToCOP } from '@/lib/services/currency'
 import HiddenValue from '@/components/HiddenValue'
 import ReportesClient from './ReportesClient'
+import ReportesActions from './ReportesActions'
 import HelpModal from '@/components/help/HelpModal'
 
 const fmtCOP = (n: number) =>
@@ -38,7 +39,6 @@ function getRangoFechas(periodo: string, mes: string): { desde: string; hasta: s
       label: `Año ${now.getFullYear()}`,
     }
   }
-  // Default: mes
   const [y, m] = mes.split('-')
   return {
     desde: `${y}-${m}-01`,
@@ -61,7 +61,6 @@ export default async function ReportesPage({
   const trmResult = await getTRM()
   const trm       = trmResult.rate
 
-  // ── Transacciones del período ─────────────────────────────────────────────
   const { data: txPeriodo } = await supabase
     .from('transactions')
     .select('type, amount, category, description, date, currency')
@@ -79,7 +78,6 @@ export default async function ReportesPage({
   const utilidadNeta    = totalIngresos - totalGastos - totalPagosDeuda
   const margenNeto      = totalIngresos > 0 ? (utilidadNeta / totalIngresos) * 100 : 0
 
-  // ── Por categoría ─────────────────────────────────────────────────────────
   const ingresosPorCat: Record<string, number> = {}
   ingresos.forEach(t => {
     const cat = t.category || 'Otros ingresos'
@@ -91,7 +89,6 @@ export default async function ReportesPage({
     gastosPorCat[t.category] = (gastosPorCat[t.category] ?? 0) + normalizeToCOP(t.amount, t.currency ?? 'COP', trm)
   })
 
-  // ── Balance General ───────────────────────────────────────────────────────
   const { data: accounts }    = await supabase.from('accounts').select('*')
   const { data: investments } = await supabase.from('investments').select('*')
 
@@ -112,8 +109,8 @@ export default async function ReportesPage({
   const totalInvUSD = invValores.reduce((s, v) => s + v, 0)
   const totalInvCOP = totalInvUSD * trm
 
-  const pasivos      = accounts?.filter(a => a.type === 'liability') ?? []
-  const totalPasivos = pasivos.reduce((s, a) => s + Math.abs(normalizeToCOP(a.current_balance, a.currency, trm)), 0)
+  const pasivos       = accounts?.filter(a => a.type === 'liability') ?? []
+  const totalPasivos  = pasivos.reduce((s, a) => s + Math.abs(normalizeToCOP(a.current_balance, a.currency, trm)), 0)
   const totalActivos  = totalBancos + totalInvCOP
   const patrimonioNeto = totalActivos - totalPasivos
 
@@ -123,7 +120,7 @@ export default async function ReportesPage({
   const desdeHist = `${hace6.getFullYear()}-${String(hace6.getMonth() + 1).padStart(2,'0')}-01`
 
   const { data: txHist } = await supabase
-    .from('transactions').select('date, amount, type, currency')
+    .from('transactions').select('date, amount, type, currency, category')
     .gte('date', desdeHist)
 
   const cashflowMap: Record<string, { ingresos: number; gastos: number; deudas: number }> = {}
@@ -139,11 +136,85 @@ export default async function ReportesPage({
   const cashflowArr = Object.entries(cashflowMap)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([m, data]) => ({
-      mes:     m,
-      label:   new Date(m + '-15').toLocaleDateString('es-CO', { month: 'short', year: '2-digit' }),
+      mes: m,
+      label: new Date(m + '-15').toLocaleDateString('es-CO', { month: 'short', year: '2-digit' }),
       ...data,
       balance: data.ingresos - data.gastos - data.deudas,
     }))
+
+  // ── Auto-insights ─────────────────────────────────────────────────────────
+  type InsightType = 'danger' | 'warning' | 'success'
+  const insightsList: Array<{ type: InsightType; text: string }> = []
+
+  if (cashflowArr.length >= 2) {
+    const curr = cashflowArr[cashflowArr.length - 1]
+    const prev = cashflowArr[cashflowArr.length - 2]
+
+    if (prev.gastos > 0 && curr.gastos > 0) {
+      const deltaGastos = ((curr.gastos - prev.gastos) / prev.gastos) * 100
+      if (deltaGastos > 15) {
+        insightsList.push({
+          type: 'danger',
+          text: `Gastaste ${deltaGastos.toFixed(0)}% más que el mes pasado en total`,
+        })
+      }
+      // Per-category insights from current month gastos
+      const gastosCurrMap: Record<string, number> = {}
+      const gastosPrevMap: Record<string, number> = {}
+      txHist?.filter(t => t.type === 'expense').forEach(t => {
+        const m = t.date.slice(0, 7)
+        const amt = Number(t.amount)
+        const mesActual = curr.mes
+        const mesPrev   = prev.mes
+        if (m === mesActual) gastosCurrMap[t.category ?? 'Otro'] = (gastosCurrMap[t.category ?? 'Otro'] ?? 0) + amt
+        if (m === mesPrev)   gastosPrevMap[t.category ?? 'Otro'] = (gastosPrevMap[t.category ?? 'Otro'] ?? 0) + amt
+      })
+      // Find category with biggest spike
+      let maxDelta = 0; let maxCat = ''
+      Object.entries(gastosCurrMap).forEach(([cat, v]) => {
+        const p = gastosPrevMap[cat] ?? 0
+        if (p > 0) {
+          const d = ((v - p) / p) * 100
+          if (d > maxDelta) { maxDelta = d; maxCat = cat }
+        }
+      })
+      if (maxCat && maxDelta > 20) {
+        insightsList.push({
+          type: 'warning',
+          text: `Gastaste ${maxDelta.toFixed(0)}% más que el mes pasado en ${maxCat}`,
+        })
+      }
+    }
+
+    // Savings rate comparison
+    const currRate = curr.ingresos > 0 ? (curr.balance / curr.ingresos) * 100 : 0
+    const prevRate = prev.ingresos > 0 ? (prev.balance / prev.ingresos) * 100 : 0
+    if (prevRate > 0 && currRate < prevRate - 6) {
+      insightsList.push({
+        type: 'warning',
+        text: `Tu tasa de ahorro bajó de ${prevRate.toFixed(0)}% a ${currRate.toFixed(0)}% este mes`,
+      })
+    }
+  }
+
+  // Consecutive positive months
+  let posConsecutivos = 0
+  for (let i = cashflowArr.length - 1; i >= 0; i--) {
+    if (cashflowArr[i].balance > 0) posConsecutivos++
+    else break
+  }
+  if (posConsecutivos >= 2) {
+    insightsList.push({
+      type: 'success',
+      text: `Llevas ${posConsecutivos} mes${posConsecutivos !== 1 ? 'es' : ''} consecutivos con balance positivo`,
+    })
+  }
+
+  const insightColors: Record<InsightType, { bg: string; border: string; text: string; dot: string }> = {
+    danger:  { bg: '#2d1515', border: '#ef444430', text: '#ef4444', dot: '🔴' },
+    warning: { bg: '#2d1f0a', border: '#f59e0b30', text: '#f59e0b', dot: '🟡' },
+    success: { bg: '#0a2d1f', border: '#10b98130', text: '#10b981', dot: '🟢' },
+  }
 
   const periodoLabel: Record<string, string> = {
     semana: 'Esta semana', quincenal: 'Esta quincena', mes: label, año: label,
@@ -162,11 +233,54 @@ export default async function ReportesPage({
         </div>
         <div className="flex items-center gap-3">
           <HelpModal moduleId="reportes" />
+          <ReportesActions />
           <ReportesClient cashflow={cashflowArr} />
         </div>
       </div>
 
-      {/* Empty state — no transactions yet */}
+      {/* ── INSIGHTS AUTOMÁTICOS ─────────────────────────────────────────── */}
+      <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+        <div className="px-6 py-4 flex items-center justify-between"
+          style={{ borderBottom: '1px solid #2a3040', backgroundColor: '#0f1117' }}>
+          <div>
+            <p className="text-white font-semibold">Insights automáticos</p>
+            <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '1px' }}>
+              Generados a partir de tu historial financiero
+            </p>
+          </div>
+          {insightsList.length > 0 && (
+            <span className="px-2.5 py-1 rounded-full text-xs font-bold"
+              style={{ backgroundColor: '#ef444420', color: '#ef4444' }}>
+              {insightsList.length} insight{insightsList.length !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+        <div className="p-5">
+          {insightsList.length === 0 ? (
+            <div className="text-center py-6">
+              <p className="text-3xl mb-2">📊</p>
+              <p style={{ color: '#6b7280', fontSize: '13px' }}>
+                Los insights aparecerán cuando tengas suficientes transacciones registradas.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {insightsList.map((insight, i) => {
+                const c = insightColors[insight.type]
+                return (
+                  <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl"
+                    style={{ backgroundColor: c.bg, border: `1px solid ${c.border}` }}>
+                    <span style={{ fontSize: '14px', flexShrink: 0 }}>{c.dot}</span>
+                    <p style={{ color: c.text, fontSize: '13px', fontWeight: '500' }}>{insight.text}</p>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Empty state */}
       {(txPeriodo?.length ?? 0) === 0 && cashflowArr.length === 0 && (
         <div className="rounded-2xl p-16 text-center"
           style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
@@ -178,7 +292,7 @@ export default async function ReportesPage({
         </div>
       )}
 
-      {/* Banner didáctico de período activo */}
+      {/* Period banner */}
       <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
         style={{ backgroundColor: '#6366f115', border: '1px solid #6366f130' }}>
         <span style={{ fontSize: '16px' }}>📅</span>
@@ -188,13 +302,13 @@ export default async function ReportesPage({
         </p>
       </div>
 
-      {/* KPIs rápidos del período */}
+      {/* KPIs rápidos */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Ingresos',      value: fmtCOP(totalIngresos),   color: '#10b981', sub: `${ingresos.length} transacciones`    },
-          { label: 'Gastos',        value: fmtCOP(totalGastos),     color: '#ef4444', sub: `${gastos.length} transacciones`      },
-          { label: 'Pagos deuda',   value: fmtCOP(totalPagosDeuda), color: '#f59e0b', sub: `${pagosDeuda.length} transacciones`  },
-          { label: 'Balance neto',  value: fmtCOP(utilidadNeta),    color: utilidadNeta >= 0 ? '#10b981' : '#ef4444', sub: `Margen ${margenNeto.toFixed(1)}%` },
+          { label: 'Ingresos',     value: fmtCOP(totalIngresos),   color: '#10b981', sub: `${ingresos.length} transacciones`   },
+          { label: 'Gastos',       value: fmtCOP(totalGastos),     color: '#ef4444', sub: `${gastos.length} transacciones`     },
+          { label: 'Pagos deuda',  value: fmtCOP(totalPagosDeuda), color: '#f59e0b', sub: `${pagosDeuda.length} transacciones` },
+          { label: 'Balance neto', value: fmtCOP(utilidadNeta),    color: utilidadNeta >= 0 ? '#10b981' : '#ef4444', sub: `Margen ${margenNeto.toFixed(1)}%` },
         ].map(item => (
           <div key={item.label} className="rounded-2xl p-5 relative overflow-hidden"
             style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
@@ -225,7 +339,6 @@ export default async function ReportesPage({
         </div>
 
         <div className="p-6">
-          {/* Ingresos */}
           <div className="mb-4">
             <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
               (+) Ingresos
@@ -246,7 +359,6 @@ export default async function ReportesPage({
 
           <div style={{ borderTop: '1px solid #1e2535', marginBottom: '16px' }} />
 
-          {/* Gastos */}
           <div className="mb-4">
             <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
               (−) Gastos operacionales
@@ -282,7 +394,6 @@ export default async function ReportesPage({
 
           <div style={{ borderTop: '1px solid #2a3040', marginBottom: '12px' }} />
 
-          {/* Resultado neto */}
           <div className="flex justify-between items-center py-3 px-4 rounded-xl"
             style={{ backgroundColor: utilidadNeta >= 0 ? '#10b98115' : '#ef444415', border: `1px solid ${utilidadNeta >= 0 ? '#10b98130' : '#ef444430'}` }}>
             <div>
@@ -380,8 +491,8 @@ export default async function ReportesPage({
               </thead>
               <tbody>
                 {cashflowArr.map((row, i) => {
-                  const margin  = row.ingresos > 0 ? ((row.balance / row.ingresos) * 100).toFixed(0) : null
-                  const isCurr  = row.mes === mes
+                  const margin = row.ingresos > 0 ? ((row.balance / row.ingresos) * 100).toFixed(0) : null
+                  const isCurr = row.mes === mes
                   return (
                     <tr key={row.mes}
                       style={{
