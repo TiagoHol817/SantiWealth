@@ -150,7 +150,7 @@ export default async function MetasPage() {
     : null
 
   return (
-    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb' }}>
+    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top right, rgba(99,102,241,0.05) 0%, transparent 55%)' }}>
 
       {/* Header */}
       <div className="flex items-end justify-between">
@@ -237,7 +237,7 @@ export default async function MetasPage() {
 
       {/* Empty state — race themed */}
       {!goals || goals.length === 0 ? (
-        <div className="rounded-2xl overflow-hidden relative"
+        <div className="rounded-2xl overflow-hidden relative breathe-purple"
           style={{ background: 'linear-gradient(135deg, #0f1117 0%, #1a1f2e 50%, #0d1526 100%)', border: '1px solid #2a3040' }}>
           <div className="absolute top-0 left-1/2 w-64 h-64 rounded-full opacity-[0.06] blur-3xl pointer-events-none"
             style={{ background: '#6366f1', transform: 'translate(-50%, -30%)' }} />
@@ -276,13 +276,14 @@ export default async function MetasPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {goals.map(goal => {
+          {goals.map((goal, goalIndex) => {
             const current    = Number(goal.current_amount)
             const target     = Number(goal.target_amount)
             const pct        = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0
             const completada = pct >= 100
             const falta      = Math.max(0, target - current)
             const color      = goal.color ?? '#10b981'
+            const goalAnimClass = completada ? 'flash-gold-once' : goalIndex === 0 ? 'breathe-purple' : ''
 
             const contribAmt  = Number(goal.contribution_amount) || 0
             const contribFreq = goal.contribution_freq ?? 'mensual'
@@ -318,7 +319,7 @@ export default async function MetasPage() {
 
             return (
               <div key={goal.id}
-                className="rounded-2xl p-6 relative overflow-hidden"
+                className={`rounded-2xl p-6 relative overflow-hidden${goalAnimClass ? ` ${goalAnimClass}` : ''}`}
                 style={{ backgroundColor: '#1a1f2e', border: `1px solid ${completada ? color + '60' : '#2a3040'}` }}>
                 <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5 blur-3xl"
                   style={{ background: color, transform: 'translate(20%,-20%)' }} />

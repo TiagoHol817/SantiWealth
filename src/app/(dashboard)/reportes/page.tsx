@@ -268,7 +268,7 @@ export default async function ReportesPage({
               {insightsList.map((insight, i) => {
                 const c = insightColors[insight.type]
                 return (
-                  <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl"
+                  <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl fade-light"
                     style={{ backgroundColor: c.bg, border: `1px solid ${c.border}` }}>
                     <span style={{ fontSize: '14px', flexShrink: 0 }}>{c.dot}</span>
                     <p style={{ color: c.text, fontSize: '13px', fontWeight: '500' }}>{insight.text}</p>

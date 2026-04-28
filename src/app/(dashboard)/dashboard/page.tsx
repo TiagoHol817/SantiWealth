@@ -16,7 +16,7 @@ import {
   copToUsd,
 } from '@/lib/services/currency'
 import HelpModal from '@/components/help/HelpModal'
-import DebtWidget from './DebtWidget'
+import FeaturedGoalWidget from './FeaturedGoalWidget'
 import WealthScoreWidget from './WealthScoreWidget'
 import { computeWealthScore } from '@/lib/services/wealthScore'
 import SmartGreeting from './SmartGreeting'
@@ -86,7 +86,7 @@ export default async function DashboardPage() {
     { stocksUSD, cryptoUSD },
     { data: history },
     { data: txMonth },
-    { data: featuredGoal },
+    { data: allGoals },
   ] = await Promise.all([
     supabase.from('accounts').select('*'),
     getTRM(),
@@ -102,11 +102,17 @@ export default async function DashboardPage() {
       .gte('date', firstDay),
     supabase
       .from('investment_goals')
-      .select('*')
-      .eq('is_featured', true)
-      .limit(1)
-      .maybeSingle(),
+      .select('*'),
   ])
+
+  const featuredGoal = allGoals?.find(g => g.is_featured)
+    ?? (allGoals && allGoals.length > 0
+      ? [...allGoals].sort((a, b) => {
+          const pA = Number(a.target_amount) > 0 ? Number(a.current_amount) / Number(a.target_amount) : 0
+          const pB = Number(b.target_amount) > 0 ? Number(b.current_amount) / Number(b.target_amount) : 0
+          return pB - pA
+        })[0]
+      : null)
 
   const trm = trmResult.rate
 
@@ -165,7 +171,7 @@ export default async function DashboardPage() {
   const monthName = now.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
 
   return (
-    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb' }}>
+    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top left, rgba(16,185,129,0.04) 0%, transparent 60%)' }}>
 
       {/* ── Encabezado ──────────────────────────────────────────────────────── */}
       <div className="flex items-end justify-between">
@@ -305,15 +311,15 @@ export default async function DashboardPage() {
 
 
         {featuredGoal && (
-          <DebtWidget
+          <FeaturedGoalWidget
             goal={{
               id:             featuredGoal.id,
               name:           featuredGoal.name,
               target_amount:  Number(featuredGoal.target_amount),
               current_amount: Number(featuredGoal.current_amount),
-              deadline:       featuredGoal.target_date,
-              icon:           featuredGoal.icon ?? '🏠',
-              color:          featuredGoal.color ?? '#10b981',
+              target_date:    featuredGoal.target_date,
+              icon:           featuredGoal.icon ?? '🎯',
+              color:          featuredGoal.color ?? '#6366f1',
             }}
           />
         )}

@@ -92,7 +92,7 @@ export default async function CostosOpPage() {
   const ahorroInactivos = inactivos.reduce((s, c) => s + Number(c.amount), 0)
 
   return (
-    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb' }}>
+    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top left, rgba(0,212,170,0.04) 0%, transparent 60%)' }}>
 
       {/* Header */}
       <div className="flex items-end justify-between">
@@ -108,7 +108,7 @@ export default async function CostosOpPage() {
 
       {/* Hero — Compromiso mensual */}
       {totalMensual > 0 && (
-        <div className="rounded-2xl p-6 relative overflow-hidden"
+        <div className="rounded-2xl p-6 relative overflow-hidden breathe-teal"
           style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%)', border: '1px solid #2a3040' }}>
           <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-[0.06] blur-3xl pointer-events-none"
             style={{ background: '#ef4444', transform: 'translate(20%,-20%)' }} />

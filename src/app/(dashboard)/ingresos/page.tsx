@@ -83,7 +83,7 @@ export default async function IngresosPage() {
   const sinIngresos = (txAll?.length ?? 0) === 0
 
   return (
-    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb' }}>
+    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top left, rgba(16,185,129,0.04) 0%, transparent 60%)' }}>
 
       {/* Header */}
       <div className="flex items-end justify-between">
@@ -130,8 +130,8 @@ export default async function IngresosPage() {
             color: '#f59e0b',
             sub: mesMasBajo?.label ?? 'Sin historial',
           },
-        ].map(item => (
-          <div key={item.label} className="rounded-2xl p-5 relative overflow-hidden"
+        ].map((item, idx) => (
+          <div key={item.label} className={`rounded-2xl p-5 relative overflow-hidden${idx === 0 ? ' breathe-green' : ''}`}
             style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
             <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
               style={{ background: item.color, transform: 'translate(30%,-30%)' }} />

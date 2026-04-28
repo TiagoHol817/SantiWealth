@@ -29,7 +29,7 @@ export default function BalanceToggle({
 
   return (
     <div
-      className="rounded-2xl p-6 relative overflow-hidden"
+      className="rounded-2xl p-6 relative overflow-hidden breathe-green"
       style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}
     >
       {/* Glow effect */}

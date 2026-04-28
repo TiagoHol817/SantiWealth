@@ -89,8 +89,10 @@ export default function WealthScoreWidget({ score, hasTransactions = true }: Pro
     )
   }
 
+  const animClass = total < 60 ? 'breathe-purple' : total < 80 ? 'breathe-amber' : ''
+
   return (
-    <div className="rounded-2xl p-5 relative overflow-hidden"
+    <div className={`rounded-2xl p-5 relative overflow-hidden${animClass ? ` ${animClass}` : ''}`}
       style={{ backgroundColor: '#1a1f2e', border: `1px solid ${color}30` }}>
       <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5 blur-3xl"
         style={{ background: color, transform: 'translate(20%,-20%)' }} />

@@ -141,7 +141,7 @@ export default async function InversionesPage({
     new Date(d).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
 
   return (
-    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb' }}>
+    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top right, rgba(99,102,241,0.05) 0%, transparent 60%)' }}>
 
       {/* Header */}
       <div className="flex items-end justify-between">
@@ -162,12 +162,12 @@ export default async function InversionesPage({
       {/* KPIs globales */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Valor de mercado',   value: fmtUSD(totalMktVal),    color: '#e5e7eb', sub: `Invertido: ${fmtUSD(totalInvested)}` },
-          { label: 'Ganancia total',     value: fmtUSD(totalGain),      color: isTotalPos ? '#10b981' : '#ef4444', sub: fmtPct(totalGainPct) },
-          { label: 'Cambio hoy',         value: fmtUSD(totalDayChange), color: isDayPos   ? '#10b981' : '#ef4444', sub: fmtPct(totalDayPct)  },
-          { label: 'CDTs — Capital',     value: fmtCOP(totalCapitalCDT), color: '#f59e0b', sub: `Rendimiento: ${fmtCOP(totalActualCDT)}` },
+          { label: 'Valor de mercado',   value: fmtUSD(totalMktVal),    color: '#e5e7eb', sub: `Invertido: ${fmtUSD(totalInvested)}`,   animClass: 'breathe-green' },
+          { label: 'Ganancia total',     value: fmtUSD(totalGain),      color: isTotalPos ? '#10b981' : '#ef4444', sub: fmtPct(totalGainPct), animClass: isTotalPos ? 'breathe-green' : '' },
+          { label: 'Cambio hoy',         value: fmtUSD(totalDayChange), color: isDayPos   ? '#10b981' : '#ef4444', sub: fmtPct(totalDayPct),  animClass: '' },
+          { label: 'CDTs — Capital',     value: fmtCOP(totalCapitalCDT), color: '#f59e0b', sub: `Rendimiento: ${fmtCOP(totalActualCDT)}`, animClass: '' },
         ].map(item => (
-          <div key={item.label} className="rounded-2xl p-5 relative overflow-hidden"
+          <div key={item.label} className={`rounded-2xl p-5 relative overflow-hidden${item.animClass ? ` ${item.animClass}` : ''}`}
             style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
             <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
               style={{ background: item.color, transform: 'translate(30%,-30%)' }} />
