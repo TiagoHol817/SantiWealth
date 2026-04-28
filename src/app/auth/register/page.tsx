@@ -164,10 +164,15 @@ export default function RegisterPage() {
   // ── Google OAuth ───────────────────────────────────────────────────────────
   async function handleGoogle() {
     const supabase = createClient()
+    const siteUrl  = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wealthhost-nu.vercel.app'
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${siteUrl}/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
       },
     })
   }
