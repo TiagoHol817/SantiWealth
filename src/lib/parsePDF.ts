@@ -1,153 +1,203 @@
-/* ── Bancolombia PDF Parser ─────────────────────────────────────────────
-   Parses plain-text extracted from a Bancolombia PDF statement.
-   Never touches disk — all in memory.
-   ─────────────────────────────────────────────────────────────────────── */
+// src/lib/parsePDF.ts
+// Usa pdfjs-dist (Mozilla) — soporta PDFs con contraseña (Bancolombia = cédula)
+// Nunca se persiste la contraseña en DB ni logs
 
-export type PDFTransaction = {
-  date: string           // YYYY-MM-DD
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdfjs = require('pdfjs-dist/legacy/build/pdf.mjs')
+
+// Evitar warning de worker en Node
+pdfjs.GlobalWorkerOptions.workerSrc = ''
+
+export interface ParsedTransaction {
+  date: string        // YYYY-MM-DD
   description: string
-  amount: number         // always positive
+  amount: number      // positivo siempre
   type: 'income' | 'expense'
+  balance: number
+  accountLast4: string
+  statementYear: number
 }
 
-export type PDFParseResult = {
-  transactions: PDFTransaction[]
+// Legacy alias for existing import sites
+export type PDFTransaction = ParsedTransaction
+
+export interface ParsePDFResult {
+  transactions: ParsedTransaction[]
+  accountLast4: string
+  statementYear: number
+  pageCount: number
+}
+
+// Legacy alias
+export type PDFParseResult = ParsePDFResult
+
+// ─── Extrae texto del PDF con soporte de contraseña ──────────────
+async function extractText(buffer: ArrayBuffer, password?: string): Promise<{ text: string; pageCount: number }> {
+  const loadingTask = pdfjs.getDocument({
+    data: new Uint8Array(buffer),
+    password: password ?? '',
+    useSystemFonts: true,
+  })
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let pdf: any
+
+  try {
+    pdf = await loadingTask.promise
+  } catch (err: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const errAny = err as any
+    const msg = errAny instanceof Error ? errAny.message : String(errAny)
+    const name = errAny?.name ?? ''
+
+    const isPasswordException = name === 'PasswordException' || msg.includes('PasswordException')
+    if (isPasswordException) {
+      // code 1 = NEED_PASSWORD (no password provided), code 2 = INCORRECT_PASSWORD
+      const code = errAny?.code ?? 0
+      const isWrong = code === 2 || msg.toLowerCase().includes('incorrect')
+      if (isWrong) throw new Error('WRONG_PASSWORD')
+      throw new Error('PASSWORD_REQUIRED')
+    }
+    throw new Error('PDF_PARSE_ERROR')
+  }
+
+  const pageCount = pdf.numPages
+  let fullText = ''
+  for (let i = 1; i <= pageCount; i++) {
+    const page = await pdf.getPage(i)
+    const content = await page.getTextContent()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pageText = content.items.map((item: any) => ('str' in item ? item.str : '')).join(' ')
+    fullText += pageText + '\n'
+  }
+
+  return { text: fullText, pageCount }
+}
+
+// ─── Detecta número de cuenta (últimos 4 dígitos) ────────────────
+function extractAccountLast4(text: string): string {
+  // Bancolombia: "Cuenta de Ahorros No. XXXX XXXX XXXX 7584"
+  // o "No. ***7584"
+  const patterns = [
+    /cuenta[^\d]*(\d{4})\s*$/im,
+    /no\.?\s*[\*x]+(\d{4})/i,
+    /(\d{4})\s+cuenta/i,
+    /cuenta.*?(\d{4})(?:\s|$)/i,
+  ]
+  for (const p of patterns) {
+    const m = text.match(p)
+    if (m) return m[1]
+  }
+  return '????'
+}
+
+// ─── Detecta año del extracto ─────────────────────────────────────
+function extractYear(text: string): number {
+  const m = text.match(/20(2[0-9]|3[0-9])/)
+  return m ? parseInt(m[0]) : new Date().getFullYear()
+}
+
+// ─── Parser de líneas Bancolombia ────────────────────────────────
+// Formato típico: "DD/MM/YYYY  Descripción larga aquí   1.234.567,00   5.678.900,00"
+function parseTransactions(
+  text: string,
+  accountLast4: string,
+  statementYear: number
+): ParsedTransaction[] {
+  const transactions: ParsedTransaction[] = []
+
+  const lines = text.split('\n')
+  const dateLineRegex = /^(\d{2})[\/\-](\d{2})[\/\-](\d{2,4})\s+(.+?)\s+([\d.,]+)\s+([\d.,]+)\s*$/
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed) continue
+
+    const match = trimmed.match(dateLineRegex)
+    if (!match) continue
+
+    const [, day, month, yearRaw, desc, amountRaw, balanceRaw] = match
+
+    // Normalizar año
+    const year = yearRaw.length === 2 ? 2000 + parseInt(yearRaw) : parseInt(yearRaw)
+
+    // Parsear montos colombianos: "1.234.567,89" → 1234567.89
+    const parseAmount = (s: string) =>
+      parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0
+
+    const amount  = parseAmount(amountRaw)
+    const balance = parseAmount(balanceRaw)
+
+    if (amount <= 0) continue
+
+    // Detectar tipo por descripción
+    const descUpper = desc.toUpperCase()
+    const isIncome =
+      descUpper.includes('ABONO') ||
+      descUpper.includes('CONSIGNAC') ||
+      descUpper.includes('TRANSFERENCIA RECIBIDA') ||
+      descUpper.includes('NOMINA') ||
+      descUpper.includes('PAGO RECIBIDO') ||
+      descUpper.includes('INTERESES') ||
+      descUpper.includes('RENDIMIENTO')
+
+    transactions.push({
+      date: `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`,
+      description: desc.trim(),
+      amount,
+      type: isIncome ? 'income' : 'expense',
+      balance,
+      accountLast4,
+      statementYear,
+    })
+  }
+
+  return transactions
+}
+
+// ─── Función principal ────────────────────────────────────────────
+export async function parseBancolombiaPDF(
+  buffer: ArrayBuffer,
+  password?: string
+): Promise<ParsePDFResult> {
+  const { text, pageCount } = await extractText(buffer, password)
+
+  if (text.trim().length < 100) {
+    throw new Error('PDF_SCANNED_OR_EMPTY')
+  }
+
+  const accountLast4   = extractAccountLast4(text)
+  const statementYear  = extractYear(text)
+  const transactions   = parseTransactions(text, accountLast4, statementYear)
+
+  return {
+    transactions,
+    accountLast4,
+    statementYear,
+    pageCount,
+  }
+}
+
+// ─── Legacy export for text-based parsing (kept for compatibility) ─
+export function parseBancolombiaText(rawText: string): {
+  transactions: Pick<ParsedTransaction, 'date' | 'description' | 'amount' | 'type'>[]
   accountLastFour: string | null
   statementYear: number
   isScanned: boolean
-}
-
-/* ── Amount helpers ────────────────────────────────────────────────────── */
-function parseCOPAmount(raw: string): number {
-  // "1.200.000,50"  →  1200000.50
-  // "-500.000,00"   →  500000.00  (sign handled separately)
-  const clean = raw.replace(/[^\d,]/g, '').replace(',', '.')
-  return parseFloat(clean) || 0
-}
-
-function parseDDMM(dayMonth: string, year: number): string {
-  // "01/03"  →  "2025-03-01"
-  const [d, m] = dayMonth.split('/')
-  if (!d || !m) return `${year}-01-01`
-  return `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
-}
-
-/* ── Income keyword patterns ─────────────────────────────────────────── */
-const INCOME_KEYWORDS = [
-  'ABONO', 'CONSIGNACION', 'NOMINA', 'CREDITO', 'INTERES',
-  'TRANSFERENCIA RECIBIDA', 'PAGO RECIBIDO', 'REINTEGRO',
-  'DEVOLUCION', 'DEPOSITO', 'RENDIMIENTO',
-]
-
-function isIncomeDescription(desc: string): boolean {
-  const u = desc.toUpperCase()
-  return INCOME_KEYWORDS.some(k => u.includes(k))
-}
-
-/* ── CDT / investment keyword patterns ──────────────────────────────── */
-export const CDT_KEYWORDS = ['INVERSION', 'CDT', 'DEPOSITO A TERMINO', 'FONDO']
-
-export function looksLikeCDT(desc: string): boolean {
-  const u = desc.toUpperCase()
-  return CDT_KEYWORDS.some(k => u.includes(k))
-}
-
-/* ── Main parser ─────────────────────────────────────────────────────── */
-export function parseBancolombiaText(rawText: string): PDFParseResult {
+} {
   const text  = rawText ?? ''
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
-
-  /* ── Scanned PDF check ─────────────────────────────────────────────── */
+  const lines = text.split('\n').map((l: string) => l.trim()).filter(Boolean)
   const isScanned = text.length < 300 || lines.length < 10
   if (isScanned) {
     return { transactions: [], accountLastFour: null, statementYear: new Date().getFullYear(), isScanned: true }
   }
-
-  /* ── Account last 4 digits ─────────────────────────────────────────── */
-  let accountLastFour: string | null = null
-  const acctRE = /(?:n[úu]mero|cuenta|no\.?\s*cuenta)[^0-9*]*\**(\d{4})/i
-  const asterRE = /\*{2,4}(\d{4})/
-  const acctM = text.match(acctRE) || text.match(asterRE)
-  if (acctM) accountLastFour = acctM[1]
-
-  /* ── Statement year ────────────────────────────────────────────────── */
-  let statementYear = new Date().getFullYear()
-  const yearM = text.match(/\b(20\d{2})\b/)
-  if (yearM) statementYear = parseInt(yearM[1], 10)
-
-  /* ── Find table header ─────────────────────────────────────────────── */
-  const headerIdx = lines.findIndex(l =>
-    /FECHA/i.test(l) && /DESCRIPCI/i.test(l)
-  )
-
-  const transactions: PDFTransaction[] = []
-
-  /* ── Strategy A: parse lines after the FECHA header ───────────────── */
-  if (headerIdx >= 0) {
-    // Typical Bancolombia row (space-separated after extraction):
-    //   "03/03  COMPRA ESTABLECIMIENTO  SIN SUCURSAL  2345  -250.000,00  4.750.000,00"
-    // We capture: DD/MM at start, everything up to last two COP amounts
-    const rowRE = /^(\d{2}\/\d{2})\s+(.+?)\s+([-]?[\d.]+,\d{2})\s+([\d.]+,\d{2})\s*$/
-
-    for (let i = headerIdx + 1; i < lines.length; i++) {
-      const line = lines[i]
-
-      // Stop at totals / summary lines
-      if (/TOTAL|SALDO FINAL|RESUMEN/i.test(line)) break
-
-      const m = line.match(rowRE)
-      if (!m) continue
-
-      const [, dateStr, rawDesc, rawAmt] = m
-      const isNegative = rawAmt.startsWith('-')
-      const amount     = parseCOPAmount(rawAmt)
-      if (amount <= 0) continue
-
-      const description = rawDesc.replace(/\s{2,}/g, ' ').trim()
-
-      // A positive sign OR income-keyword → income; negative → expense
-      const type: PDFTransaction['type'] =
-        (!isNegative || isIncomeDescription(description)) ? 'income' : 'expense'
-
-      transactions.push({
-        date: parseDDMM(dateStr, statementYear),
-        description,
-        amount,
-        type,
-      })
-    }
+  const accountLastFour = extractAccountLast4(text) || null
+  const statementYear   = extractYear(text)
+  const transactions    = parseTransactions(text, accountLastFour ?? '????', statementYear)
+  return {
+    transactions,
+    accountLastFour,
+    statementYear,
+    isScanned: false,
   }
-
-  /* ── Strategy B: fallback regex over full text ─────────────────────── */
-  if (transactions.length === 0) {
-    // More permissive: date at start, then anything, then a COP amount
-    const fallbackRE = /(\d{2}\/\d{2})\s{1,4}([A-ZÁÉÍÓÚÑ][^\n\r]{5,60?}?)\s+([-]?[\d]{1,3}(?:\.[\d]{3})*,\d{2})/g
-    let fm: RegExpExecArray | null
-    while ((fm = fallbackRE.exec(text)) !== null) {
-      const [, dateStr, rawDesc, rawAmt] = fm
-      const isNegative = rawAmt.startsWith('-')
-      const amount     = parseCOPAmount(rawAmt)
-      if (amount <= 0) continue
-      const description = rawDesc.replace(/\s+/g, ' ').trim()
-      const type: PDFTransaction['type'] =
-        (!isNegative || isIncomeDescription(description)) ? 'income' : 'expense'
-      transactions.push({
-        date: parseDDMM(dateStr, statementYear),
-        description,
-        amount,
-        type,
-      })
-    }
-  }
-
-  // Deduplicate by date+description+amount (extraction sometimes gives doubles)
-  const seen   = new Set<string>()
-  const unique = transactions.filter(t => {
-    const key = `${t.date}|${t.description}|${t.amount}`
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
-
-  return { transactions: unique, accountLastFour, statementYear, isScanned: false }
 }

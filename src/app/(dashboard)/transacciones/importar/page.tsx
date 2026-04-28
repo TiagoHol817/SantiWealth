@@ -326,20 +326,41 @@ export default function ImportarPage() {
   const [showRecurring,   setShowRecurring]   = useState(false)
   const [recurringSugg,   setRecurringSugg]   = useState<RecurringSuggestion[]>([])
 
+  // ── PDF password state ───────────────────────────────────────────────────
+  const [pdfPassword,      setPdfPassword]      = useState('')
+  const [passwordRequired, setPasswordRequired] = useState(false)
+  const [passwordError,    setPasswordError]    = useState('')
+  const currentPDFFile = useRef<File | null>(null)
+
   /* ── process PDF via server ─────────────────────────────────────────── */
-  const processPDF = useCallback(async (file: File) => {
+  const processPDF = useCallback(async (file: File, passwordOverride?: string) => {
     if (file.size > 10 * 1024 * 1024) {
       setError('El archivo no puede superar 10 MB.')
       return
     }
+    currentPDFFile.current = file
     setParsing(true)
     setError('')
+    setPasswordError('')
     try {
       const fd = new FormData()
       fd.append('file', file)
       fd.append('consent', 'true')   // consent text is visibly shown to user above dropzone
+      const pwd = passwordOverride ?? pdfPassword
+      if (pwd) fd.append('password', pwd)
+
       const res  = await fetch('/api/parse-pdf', { method: 'POST', body: fd })
       const data = await res.json()
+
+      // Handle password-specific errors without showing generic error state
+      if (data.error === 'PASSWORD_REQUIRED' || data.error === 'WRONG_PASSWORD') {
+        setPasswordRequired(true)
+        if (data.error === 'WRONG_PASSWORD') {
+          setPasswordError('Contraseña incorrecta. Intenta con tu número de cédula sin puntos.')
+        }
+        return
+      }
+
       if (!res.ok) throw new Error(data.error ?? `Error ${res.status}`)
 
       const txs: PDFTransaction[] = data.transactions ?? []
@@ -348,9 +369,11 @@ export default function ImportarPage() {
         return
       }
 
+      setPasswordRequired(false)
+      setPdfPassword('')
       setBank('bancolombia')
       setSourceKind('pdf')
-      setAccountLastFour(data.accountLastFour ?? null)
+      setAccountLastFour(data.accountLast4 ?? null)
       setRows(txs.map(t => ({
         date:        t.date,
         description: t.description,
@@ -364,7 +387,8 @@ export default function ImportarPage() {
     } finally {
       setParsing(false)
     }
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pdfPassword])
 
   /* ── process CSV client-side ────────────────────────────────────────── */
   const processCSV = useCallback((file: File) => {
@@ -394,6 +418,9 @@ export default function ImportarPage() {
     setRows([])
     setSourceKind(null)
     setAccountLastFour(null)
+    setPasswordRequired(false)
+    setPdfPassword('')
+    setPasswordError('')
 
     if (file.name.toLowerCase().endsWith('.pdf')) {
       processPDF(file)
@@ -547,7 +574,7 @@ export default function ImportarPage() {
         </div>
 
         {/* ── Drop zone ────────────────────────────────────────────────── */}
-        {!rows.length && !done && !parsing && (
+        {!rows.length && !done && !parsing && !passwordRequired && (
           <div
             ref={dropRef}
             onDragOver={e => { e.preventDefault(); setDragging(true) }}
@@ -584,6 +611,9 @@ export default function ImportarPage() {
               ))}
             </div>
             <p style={{ color: '#4b5563', fontSize: '11px' }}>PDF · CSV · OFX · QIF · Máx 10 MB</p>
+            <p className="mt-2 text-xs" style={{ color: 'rgba(229,231,235,0.3)' }}>
+              🔒 Si tu extracto tiene contraseña, la pediremos en el siguiente paso
+            </p>
           </div>
         )}
 
@@ -594,6 +624,74 @@ export default function ImportarPage() {
             <Loader2 size={32} className="animate-spin" style={{ color: '#6366f1', marginBottom: '16px' }} />
             <p className="text-white font-semibold mb-1">Procesando extracto PDF…</p>
             <p style={{ color: '#6b7280', fontSize: '12px' }}>Extrayendo transacciones en memoria</p>
+          </div>
+        )}
+
+        {/* Password panel — shown when PDF is encrypted */}
+        {passwordRequired && !parsing && !rows.length && (
+          <div className="relative overflow-hidden rounded-2xl"
+            style={{ border: '1px solid rgba(99,102,241,0.25)', backgroundColor: '#1a1f2e' }}>
+            {/* breathing purple — visual cue that this is a security step, not an error */}
+            <div className="breathe-purple absolute inset-0 rounded-2xl pointer-events-none" />
+
+            <div className="relative space-y-3 p-5">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg"
+                  style={{ backgroundColor: 'rgba(99,102,241,0.15)' }}>
+                  <span className="text-sm">🔒</span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: '#e5e7eb' }}>
+                    PDF protegido
+                  </p>
+                  <p className="text-xs" style={{ color: 'rgba(229,231,235,0.5)' }}>
+                    Bancolombia protege sus extractos con tu número de cédula
+                  </p>
+                </div>
+              </div>
+
+              <input
+                type="password"
+                value={pdfPassword}
+                onChange={(e) => {
+                  setPdfPassword(e.target.value)
+                  setPasswordError('')
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && pdfPassword && currentPDFFile.current) {
+                    processPDF(currentPDFFile.current, pdfPassword)
+                  }
+                }}
+                placeholder="Número de cédula (sin puntos)"
+                autoComplete="off"
+                className="w-full rounded-xl text-sm focus:outline-none"
+                style={{
+                  backgroundColor: '#0f1117',
+                  border: `1px solid ${passwordError ? 'rgba(239,68,68,0.5)' : 'rgba(99,102,241,0.25)'}`,
+                  color: '#e5e7eb', padding: '10px 14px',
+                }}
+              />
+
+              {passwordError && (
+                <p className="text-xs" style={{ color: '#ef4444' }}>{passwordError}</p>
+              )}
+
+              <p className="text-xs" style={{ color: 'rgba(229,231,235,0.3)' }}>
+                🛡️ La contraseña se usa solo para leer el PDF y nunca se guarda
+              </p>
+
+              <button
+                onClick={() => currentPDFFile.current && processPDF(currentPDFFile.current, pdfPassword)}
+                disabled={!pdfPassword || parsing}
+                className="w-full rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+                style={{
+                  backgroundColor: '#6366f1', color: '#fff',
+                  padding: '10px', opacity: (!pdfPassword || parsing) ? 0.4 : 1,
+                }}
+              >
+                {parsing ? 'Procesando...' : 'Desencriptar y procesar'}
+              </button>
+            </div>
           </div>
         )}
 
