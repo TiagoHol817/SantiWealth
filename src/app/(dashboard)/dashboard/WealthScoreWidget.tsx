@@ -1,7 +1,9 @@
+import Link from 'next/link'
 import type { WealthScoreResult } from '@/lib/services/wealthScore'
 
 interface Props {
   score: WealthScoreResult
+  hasTransactions?: boolean
 }
 
 function PillarBar({ label, score, hint, color }: {
@@ -44,8 +46,48 @@ function RadialScore({ total, color }: { total: number; color: string }) {
   )
 }
 
-export default function WealthScoreWidget({ score }: Props) {
+export default function WealthScoreWidget({ score, hasTransactions = true }: Props) {
   const { total, grade, color, trend, pillars } = score
+
+  if (!hasTransactions) {
+    return (
+      <div className="rounded-2xl p-6 relative overflow-hidden"
+        style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5 blur-3xl"
+          style={{ background: '#6366f1', transform: 'translate(20%,-20%)' }} />
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <p className="text-white font-semibold text-sm">Wealth Score</p>
+            <p style={{ color: '#6b7280', fontSize: '11px' }}>Salud financiera inteligente</p>
+          </div>
+          <span className="px-3 py-1 rounded-full text-xs font-bold"
+            style={{ backgroundColor: '#6366f120', color: '#6366f1', border: '1px solid #6366f140' }}>
+            Sin datos
+          </span>
+        </div>
+        <div className="flex items-center gap-5">
+          <div className="w-[110px] h-[110px] rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ border: '9px solid #0f1117' }}>
+            <span style={{ fontSize: '32px' }}>📊</span>
+          </div>
+          <div>
+            <p className="text-white font-semibold mb-1">Tu Wealth Score aparecerá aquí</p>
+            <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '12px' }}>
+              Registra tus primeras transacciones e ingresos para calcular tu salud financiera.
+            </p>
+            <p style={{ color: '#4b5563', fontSize: '11px', marginBottom: '14px' }}>
+              El score se calcula con tus ingresos, gastos, ahorro e inversiones.
+            </p>
+            <Link href="/transacciones"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all hover:opacity-80"
+              style={{ backgroundColor: '#6366f120', color: '#6366f1', border: '1px solid #6366f140' }}>
+              + Agregar primera transacción
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="rounded-2xl p-5 relative overflow-hidden"

@@ -208,7 +208,7 @@ export default async function DashboardPage() {
       />
 
       {/* ── Wealth Score ─────────────────────────────────────────────────────── */}
-      <WealthScoreWidget score={wealthScore} />
+      <WealthScoreWidget score={wealthScore} hasTransactions={txArr.length > 0} />
 
       {/* ── Resumen del mes ──────────────────────────────────────────────────── */}
       <div
