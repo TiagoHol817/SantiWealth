@@ -1,9 +1,11 @@
-import { createClient } from '@/lib/supabase/server'
-import GoalForm from './GoalForm'
-import UpdateGoalButton from './UpdateGoalButton'
-import HiddenValue from '@/components/HiddenValue'
-import HelpModal from '@/components/help/HelpModal'
-import FeatureGoalButton from './FeatureGoalButton'
+import { createClient }          from '@/lib/supabase/server'
+import GoalForm                   from './GoalForm'
+import UpdateGoalButton           from './UpdateGoalButton'
+import HiddenValue                from '@/components/HiddenValue'
+import HelpModal                  from '@/components/help/HelpModal'
+import FeatureGoalButton          from './FeatureGoalButton'
+import RadialProgressClient       from '@/components/ui/RadialProgressClient'
+import AnimatedBar                from '@/components/ui/AnimatedBar'
 
 const fmtCOP = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n)
@@ -178,7 +180,7 @@ export default async function MetasPage() {
         <div className="absolute top-0 right-0 w-72 h-72 rounded-full opacity-5 blur-3xl"
           style={{ background: '#6366f1', transform: 'translate(20%,-20%)' }} />
         <div className="flex items-center gap-8">
-          <RadialProgress pct={pctGlobal} color="#6366f1" size={140} />
+          <RadialProgressClient pct={pctGlobal} color="#6366f1" size={140} />
           <div className="flex-1">
             <div className="grid grid-cols-4 gap-4 mb-4">
               <div>
@@ -336,7 +338,7 @@ export default async function MetasPage() {
 
                 <div className="flex items-center gap-6">
                   <div className="shrink-0">
-                    <RadialProgress pct={pct} color={color} size={110} />
+                    <RadialProgressClient pct={pct} color={color} size={110} />
                   </div>
 
                   <div className="flex-1">
@@ -388,28 +390,7 @@ export default async function MetasPage() {
                     </div>
 
                     {/* Race-track progress bar */}
-                    <div className="relative mb-1" style={{ height: '10px' }}>
-                      <div className="absolute inset-0 rounded-full overflow-hidden" style={{ backgroundColor: '#0f1117' }}>
-                        <div className="h-full rounded-full transition-all duration-700"
-                          style={{
-                            width: `${pct}%`,
-                            background: pct === 0
-                              ? 'transparent'
-                              : `linear-gradient(90deg, ${progressColor}66, ${progressColor})`,
-                          }} />
-                      </div>
-                      {/* Milestone markers */}
-                      {[25, 50, 75].map(m => (
-                        <div key={m} style={{
-                          position: 'absolute', top: '-3px', left: `${m}%`,
-                          width: '2px', height: '16px',
-                          backgroundColor: pct >= m ? progressColor : '#2a3040',
-                          transform: 'translateX(-50%)',
-                          borderRadius: '1px',
-                          transition: 'background-color 0.5s ease',
-                        }} />
-                      ))}
-                    </div>
+                    <AnimatedBar pct={pct} progressColor={progressColor} />
                     <div className="flex justify-between mb-3" style={{ fontSize: '9px', color: '#4b5563' }}>
                       <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
                     </div>

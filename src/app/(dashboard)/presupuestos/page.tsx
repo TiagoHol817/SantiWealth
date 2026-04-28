@@ -1,8 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
-import PresupuestoForm from './PresupuestoForm'
-import NavegadorMes from './NavegadorMes'
-import HiddenValue from '@/components/HiddenValue'
-import HelpModal from '@/components/help/HelpModal'
+import { createClient }    from '@/lib/supabase/server'
+import PresupuestoForm      from './PresupuestoForm'
+import NavegadorMes         from './NavegadorMes'
+import HiddenValue          from '@/components/HiddenValue'
+import HelpModal            from '@/components/help/HelpModal'
+import HealthGaugeClient    from '@/components/ui/HealthGaugeClient'
+import AnimatedBar           from '@/components/ui/AnimatedBar'
 
 const CATEGORIAS = ['Alimentación','Transporte','Servicios/Suscripciones','Vivienda','Salud','Entretenimiento','Ropa y personal','Otro']
 const ICONOS: Record<string,string> = {
@@ -163,7 +165,7 @@ export default async function PresupuestosPage({
         {/* Health gauge */}
         <div className="col-span-1 rounded-2xl p-5 flex items-center justify-center breathe-amber"
           style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-          <HealthGauge pct={pctTotal} sinDatos={sinDatos} />
+          <HealthGaugeClient pct={pctTotal} sinDatos={sinDatos} />
         </div>
 
         {/* Presupuesto total */}
@@ -357,10 +359,8 @@ export default async function PresupuestosPage({
                     )}
 
                     {/* Progress bar */}
-                    <div className="rounded-full overflow-hidden mb-3"
-                      style={{ backgroundColor: '#0f1117', height: '8px' }}>
-                      <div className="h-full rounded-full"
-                        style={{ width: `${Math.min(100, pct)}%`, backgroundColor: barColor, transition: 'width 0.6s ease' }} />
+                    <div className="mb-3">
+                      <AnimatedBar pct={Math.min(100, pct)} progressColor={barColor} height={8} milestones={[]} />
                     </div>
 
                     <div className="flex justify-between">

@@ -1,6 +1,7 @@
-import Link from 'next/link'
+import Link               from 'next/link'
 import type { WealthScoreResult } from '@/lib/services/wealthScore'
-import { WealthScoreBadge } from '@/components/ui/WealthMessage'
+import { WealthScoreBadge }  from '@/components/ui/WealthMessage'
+import RadialScoreClient     from './RadialScoreClient'
 
 interface Props {
   score: WealthScoreResult
@@ -25,27 +26,6 @@ function PillarBar({ label, score, hint, color }: {
   )
 }
 
-function RadialScore({ total, color }: { total: number; color: string }) {
-  const r    = 42
-  const circ = 2 * Math.PI * r
-  const dash = (Math.min(total, 100) / 100) * circ
-  return (
-    <svg width={110} height={110} viewBox="0 0 100 100" style={{ flexShrink: 0 }}>
-      <circle cx="50" cy="50" r={r} fill="none" stroke="#0f1117" strokeWidth="9" />
-      <circle cx="50" cy="50" r={r} fill="none"
-        stroke={color} strokeWidth="9"
-        strokeDasharray={`${dash} ${circ}`}
-        strokeLinecap="round"
-        transform="rotate(-90 50 50)"
-        style={{ filter: `drop-shadow(0 0 8px ${color}66)`, transition: 'stroke-dasharray 1s ease' }}
-      />
-      <text x="50" y="45" textAnchor="middle" fill={color}
-        fontSize="22" fontWeight="800" fontFamily="Roboto, sans-serif">{total}</text>
-      <text x="50" y="60" textAnchor="middle" fill="#4b5563"
-        fontSize="9" fontFamily="Roboto, sans-serif">/100</text>
-    </svg>
-  )
-}
 
 export default function WealthScoreWidget({ score, hasTransactions = true }: Props) {
   const { total, grade, color, trend, pillars } = score
@@ -111,7 +91,7 @@ export default function WealthScoreWidget({ score, hasTransactions = true }: Pro
       </div>
 
       <div className="flex items-center gap-6">
-        <RadialScore total={total} color={color} />
+        <RadialScoreClient total={total} color={color} />
 
         <div className="flex-1 space-y-3">
           <PillarBar

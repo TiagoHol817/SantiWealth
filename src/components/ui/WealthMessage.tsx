@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { animate, createSpring }        from 'animejs'
 import { getAchievementToast, type CopyModule } from '@/lib/copy'
 
 // ─────────────────────────────────────────────────────────────────
@@ -66,21 +67,41 @@ interface AchievementToastProps {
 
 export function AchievementToast({ event, onClose }: AchievementToastProps) {
   const [message] = useState(() => getAchievementToast(event as never))
-  const [visible, setVisible] = useState(true)
+  const toastRef  = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    const el = toastRef.current
+    if (!el) return
+
+    // Entrada con spring — sube desde abajo con rebote
+    animate(el, {
+      translateY: [40, 0],
+      opacity:    [0, 1],
+      scale:      [0.92, 1],
+      ease:       createSpring({ stiffness: 200, damping: 12 }),
+    })
+
+    // Salida a los 3.5 s
     const t = setTimeout(() => {
-      setVisible(false)
-      setTimeout(() => onClose?.(), 300)
+      animate(el, {
+        translateY: [0, 24],
+        opacity:    [1, 0],
+        scale:      [1, 0.94],
+        duration:   300,
+        ease:       'inQuad',
+        onComplete: () => onClose?.(),
+      })
     }, 3500)
+
     return () => clearTimeout(t)
-  }, [onClose])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div
-      className={`fixed bottom-6 left-1/2 z-50 -translate-x-1/2 transition-all duration-300 ${
-        visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
-      }`}
+      ref={toastRef}
+      className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
+      style={{ opacity: 0 }}
     >
       <div className="flex items-center gap-3 rounded-2xl border border-[#00d4aa]/30 bg-[#1a1f2e] px-5 py-3.5 shadow-xl shadow-black/40">
         <div className="h-2 w-2 animate-pulse rounded-full bg-[#00d4aa]" />

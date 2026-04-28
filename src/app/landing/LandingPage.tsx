@@ -1,39 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
-
-/* ── Scroll-reveal hook ─────────────────────────────────────────────── */
-function useInView() {
-  const ref = useRef<HTMLDivElement>(null)
-  const [inView, setInView] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect() } },
-      { threshold: 0.1 }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-  return { ref, inView }
-}
-
-function FadeIn({ children, delay = 0, className = '' }: {
-  children: React.ReactNode; delay?: number; className?: string
-}) {
-  const { ref, inView } = useInView()
-  return (
-    <div ref={ref} className={className} style={{
-      opacity: inView ? 1 : 0,
-      transform: inView ? 'translateY(0)' : 'translateY(28px)',
-      transition: `opacity 0.65s ease ${delay}ms, transform 0.65s ease ${delay}ms`,
-    }}>
-      {children}
-    </div>
-  )
-}
+import { useState, useEffect } from 'react'
+import Link    from 'next/link'
+import FadeIn  from '@/components/ui/FadeIn'
 
 /* ── Mock UI cards ──────────────────────────────────────────────────── */
 const CARD: React.CSSProperties = {

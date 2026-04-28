@@ -21,6 +21,7 @@ import WealthScoreWidget from './WealthScoreWidget'
 import { computeWealthScore } from '@/lib/services/wealthScore'
 import SmartGreeting from './SmartGreeting'
 import StatementBanner from './StatementBanner'
+import MonthSummary   from './MonthSummary'
 
 async function getPortfolioValues(): Promise<{ stocksUSD: number; cryptoUSD: number }> {
   try {
@@ -221,41 +222,12 @@ export default async function DashboardPage() {
       <WealthScoreWidget score={wealthScore} hasTransactions={txArr.length > 0} />
 
       {/* ── Resumen del mes ──────────────────────────────────────────────────── */}
-      <div
-        className="rounded-2xl p-5"
-        style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-white font-semibold">Resumen de {monthName}</p>
-          <Link
-            href="/transacciones"
-            className="text-xs px-3 py-1 rounded-full transition-all hover:opacity-80"
-            style={{ backgroundColor: '#D4AF3720', color: '#D4AF37', border: '1px solid #D4AF3730' }}
-          >
-            Ver transacciones →
-          </Link>
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: 'Ingresos',     value: ingresosMes, color: ingresosMes > 0 ? '#10b981' : '#9ca3af' },
-            { label: 'Gastos',       value: gastosMes,   color: gastosMes   > 0 ? '#ef4444' : '#9ca3af' },
-            { label: 'Balance neto', value: balanceMes,  color: balanceMes  > 0 ? '#10b981' : balanceMes < 0 ? '#ef4444' : '#9ca3af' },
-          ].map(item => (
-            <div key={item.label}
-              className="rounded-xl p-4"
-              style={{ backgroundColor: '#0f1117' }}>
-              <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-                {item.label}
-              </p>
-              <HiddenValue
-                value={formatCOP(item.value)}
-                className="tabular-nums font-bold"
-                style={{ color: item.color, fontSize: '16px' }}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
+      <MonthSummary
+        ingresos={ingresosMes}
+        gastos={gastosMes}
+        balance={balanceMes}
+        monthName={monthName}
+      />
 
       {/* ── Widgets de distribución con drill-down ───────────────────────────── */}
       <div className="grid grid-cols-3 gap-4">
