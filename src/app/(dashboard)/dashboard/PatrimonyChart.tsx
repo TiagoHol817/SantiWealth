@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, memo } from 'react'
 import {
   LineChart,
   Line,
@@ -30,7 +30,7 @@ interface PatrimonyChartProps {
 type ChartMode = 'net_worth' | 'distribution' | 'comparison'
 type TimeRange = '7d' | '30d' | '90d' | 'all'
 
-export default function PatrimonyChart({ data }: PatrimonyChartProps) {
+function PatrimonyChart({ data }: PatrimonyChartProps) {
   const [mode, setMode] = useState<ChartMode>('net_worth')
   const [timeRange, setTimeRange] = useState<TimeRange>('30d')
 
@@ -379,3 +379,4 @@ export default function PatrimonyChart({ data }: PatrimonyChartProps) {
     </div>
   )
 }
+export default memo(PatrimonyChart)

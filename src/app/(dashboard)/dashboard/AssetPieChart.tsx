@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Sector } from 'recharts'
 import { formatCOP, formatUSD } from '@/lib/services/currency'
 import HiddenValue from '@/components/HiddenValue'
@@ -19,7 +19,7 @@ interface AssetPieChartProps {
   trm: number
 }
 
-export default function AssetPieChart({ items, trm }: AssetPieChartProps) {
+function AssetPieChart({ items, trm }: AssetPieChartProps) {
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined)
   const [showUSD, setShowUSD] = useState(false)
 
@@ -209,3 +209,4 @@ export default function AssetPieChart({ items, trm }: AssetPieChartProps) {
     </div>
   )
 }
+export default memo(AssetPieChart)

@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { useBalance } from '@/context/BalanceContext'
 
 interface Grupo {
@@ -14,7 +14,7 @@ interface Grupo {
 const fmtUSD = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(n)
 
-export default function DonutChartClient({
+function DonutChartClient({
   grupos, total, size = 180, trm
 }: {
   grupos: Grupo[]
@@ -112,3 +112,4 @@ export default function DonutChartClient({
     </div>
   )
 }
+export default memo(DonutChartClient)

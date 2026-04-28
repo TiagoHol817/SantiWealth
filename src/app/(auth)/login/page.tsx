@@ -291,6 +291,19 @@ export default function LoginPage() {
               Continuar con Apple
             </button>
           </div>
+
+          {/* Link to register */}
+          <p style={{ textAlign: 'center', marginTop: '20px', color: '#6b7280', fontSize: '13px' }}>
+            ¿No tienes cuenta?{' '}
+            <Link
+              href="/auth/register"
+              style={{ color: '#D4AF37', textDecoration: 'none', fontWeight: 500 }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#e5c84d' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#D4AF37' }}
+            >
+              Regístrate
+            </Link>
+          </p>
         </div>
       </div>
 

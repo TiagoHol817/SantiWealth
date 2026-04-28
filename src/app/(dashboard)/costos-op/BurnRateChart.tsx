@@ -1,4 +1,5 @@
 'use client'
+import { memo } from 'react'
 import { useBalance } from '@/context/BalanceContext'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer } from 'recharts'
 
@@ -21,7 +22,7 @@ function CustomTooltip({ active, payload, label }: any) {
   )
 }
 
-export default function BurnRateChart({ data, promedio }: { data: Mes[]; promedio: number }) {
+function BurnRateChart({ data, promedio }: { data: Mes[]; promedio: number }) {
   const { visible } = useBalance()
   const max = Math.max(...data.map(d => d.total), promedio) * 1.2
 
@@ -73,3 +74,4 @@ export default function BurnRateChart({ data, promedio }: { data: Mes[]; promedi
     </div>
   )
 }
+export default memo(BurnRateChart)

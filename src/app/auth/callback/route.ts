@@ -25,10 +25,22 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const { data: { user } } = await supabase.auth.exchangeCodeForSession(code)
+    const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (error) {
+      console.error('[auth/callback] PKCE exchange failed:', error.message)
+      return NextResponse.redirect(new URL('/login?error=auth', request.url))
+    }
 
     if (user) {
-      // Check if user has completed onboarding
+      // Upsert user_settings so new OAuth users always have a row
+      await supabase
+        .from('user_settings')
+        .upsert(
+          { user_id: user.id, onboarding_completed: false },
+          { onConflict: 'user_id', ignoreDuplicates: true }
+        )
+
       const { data: settings } = await supabase
         .from('user_settings')
         .select('onboarding_completed')
@@ -41,6 +53,5 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Existing user or unknown state → go to intended destination
   return NextResponse.redirect(new URL(next, request.url))
 }

@@ -46,11 +46,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
+  // ── Security headers on every response ──────────────────────────────────
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+
   return response
 }
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon\\.ico|auth/callback|api/auth|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Exclude static assets, Next internals, and BOTH auth callback paths
+    '/((?!_next/static|_next/image|favicon\\.ico|auth/callback|api/auth/callback|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
