@@ -20,6 +20,7 @@ import FeaturedGoalWidget from './FeaturedGoalWidget'
 import WealthScoreWidget from './WealthScoreWidget'
 import { computeWealthScore } from '@/lib/services/wealthScore'
 import SmartGreeting from './SmartGreeting'
+import StatementBanner from './StatementBanner'
 
 async function getPortfolioValues(): Promise<{ stocksUSD: number; cryptoUSD: number }> {
   try {
@@ -172,6 +173,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top left, rgba(16,185,129,0.04) 0%, transparent 60%)' }}>
+
+      {/* ── Statement import reminder ────────────────────────────────────────── */}
+      <StatementBanner />
 
       {/* ── Encabezado ──────────────────────────────────────────────────────── */}
       <div className="flex items-end justify-between">

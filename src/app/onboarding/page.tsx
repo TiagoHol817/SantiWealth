@@ -426,6 +426,18 @@ function StepDone({ name, data, countdown }: { name: string; data: WizardData; c
   const total    = data.accounts.reduce((s, a) => s + (Number(a.balance) || 0), 0)
   const hasGoal  = data.goalName.trim() && Number(data.goalAmount) > 0
   const accCount = data.accounts.length
+  const [extractoChoice, setExtractoChoice] = useState<'now' | 'later' | null>(null)
+
+  function handleSubirAhora() {
+    try { localStorage.setItem('statement_imported', 'false') } catch {}
+    setExtractoChoice('now')
+    window.location.href = '/transacciones/importar'
+  }
+
+  function handleRecordarDespues() {
+    try { localStorage.setItem('remind_statement_upload', 'true') } catch {}
+    setExtractoChoice('later')
+  }
 
   return (
     <div style={{ textAlign: 'center', padding: '12px 0' }}>
@@ -466,6 +478,52 @@ function StepDone({ name, data, countdown }: { name: string; data: WizardData; c
           </div>
         )}
       </div>
+
+      {/* ── Extracto prompt ─────────────────────── */}
+      {extractoChoice === null && (
+        <div style={{
+          backgroundColor: '#0d1220', border: '1px solid rgba(99,102,241,0.2)',
+          borderRadius: '14px', padding: '18px 20px', marginBottom: '20px', textAlign: 'left',
+        }}>
+          <p style={{ color: '#e5e7eb', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>
+            📄 ¿Tienes tu extracto bancario a mano?
+          </p>
+          <p style={{ color: '#6b7280', fontSize: '12px', lineHeight: 1.65, marginBottom: '14px' }}>
+            Sube tu PDF de Bancolombia y WealthHost detectará automáticamente tus gastos,
+            ingresos y costos recurrentes.
+          </p>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={handleSubirAhora}
+              style={{
+                flex: 1, padding: '10px', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+                backgroundColor: '#6366f1', color: '#fff', border: 'none', cursor: 'pointer',
+              }}
+            >
+              Subir extracto ahora
+            </button>
+            <button
+              type="button"
+              onClick={handleRecordarDespues}
+              style={{
+                padding: '10px 14px', borderRadius: '10px', fontSize: '13px',
+                backgroundColor: 'transparent', color: '#6b7280',
+                border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer',
+              }}
+            >
+              Recordarme después
+            </button>
+          </div>
+        </div>
+      )}
+
+      {extractoChoice === 'later' && (
+        <p style={{ color: '#6b7280', fontSize: '12px', marginBottom: '20px' }}>
+          👍 Te recordaremos en el dashboard. Puedes importarlo cuando quieras desde{' '}
+          <span style={{ color: '#6366f1' }}>Transacciones → Importar</span>.
+        </p>
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#4b5563', fontSize: '13px' }}>
         <div style={{

@@ -2,6 +2,9 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
 
+  // pdf-parse must run as native Node.js (not bundled) to avoid test-file errors
+  serverExternalPackages: ['pdf-parse'],
+
   // Silencia el warning de Turbopack
   turbopack: {},
 
