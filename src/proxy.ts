@@ -27,6 +27,7 @@ export async function proxy(request: NextRequest) {
 
   // Public routes — allow without auth
   const publicRoutes = [
+    '/',
     '/login',
     '/auth/register',
     '/auth/callback',
