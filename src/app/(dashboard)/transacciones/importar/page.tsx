@@ -200,31 +200,43 @@ export default function ImportarPage() {
     if (!selectedRows.length) return
     setImporting(true)
     setProgress(0)
-    let ok = 0
+    setError('')
 
-    for (let i = 0; i < selectedRows.length; i++) {
-      const r = selectedRows[i]
-      try {
-        await fetch('/api/save-transaction', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+    try {
+      // Animate progress bar while the single request is in flight
+      const ticker = setInterval(() => {
+        setProgress(prev => (prev < 85 ? prev + 5 : prev))
+      }, 120)
+
+      const res = await fetch('/api/import-transactions', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          rows: selectedRows.map(r => ({
             type:        'expense',
             amount:      r.amount,
             category:    r.category,
             description: r.description,
             date:        r.date,
-          }),
-        })
-        ok++
-      } catch {}
-      setProgress(Math.round(((i + 1) / selectedRows.length) * 100))
-    }
+          })),
+        }),
+      })
 
-    setImporting(false)
-    setDone(true)
-    if (ok > 0) {
+      clearInterval(ticker)
+      setProgress(100)
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? `Error ${res.status}`)
+      }
+
+      setImporting(false)
+      setDone(true)
       setTimeout(() => router.push('/transacciones'), 2000)
+    } catch (err: unknown) {
+      setImporting(false)
+      setProgress(0)
+      setError(err instanceof Error ? err.message : 'No se pudo completar la importación. Inténtalo de nuevo.')
     }
   }
 
