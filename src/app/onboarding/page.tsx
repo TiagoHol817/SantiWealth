@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { completeOnboarding } from './actions'
 import type { User } from '@supabase/supabase-js'
+import { useAchievementToast } from '@/components/ui/WealthMessage'
 
 /* ─── Types ─────────────────────────────────────── */
 type Currency = 'COP' | 'USD'
@@ -538,7 +539,8 @@ function StepDone({ name, data, countdown }: { name: string; data: WizardData; c
 
 /* ─── Main wizard ────────────────────────────────── */
 export default function OnboardingPage() {
-  const router = useRouter()
+  const router                      = useRouter()
+  const { trigger, ToastContainer } = useAchievementToast()
   const [user, setUser]           = useState<User | null>(null)
   const [step, setStep]           = useState<Step>(1)
   const [saving, setSaving]       = useState(false)
@@ -616,6 +618,7 @@ export default function OnboardingPage() {
       console.error('[onboarding] Non-critical save failed:', err)
     }
 
+    trigger('onboarding_complete')
     setStep('done')
   }
 
@@ -727,6 +730,7 @@ export default function OnboardingPage() {
           100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
         }
       `}</style>
+      <ToastContainer />
     </>
   )
 }

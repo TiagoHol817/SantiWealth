@@ -265,33 +265,36 @@ export default async function PresupuestosPage({
 
       {/* Sin presupuesto — aspirational empty state */}
       {categoriasConData.length === 0 ? (
-        <div className="rounded-2xl overflow-hidden relative shimmer-border"
-          style={{ background: 'linear-gradient(135deg, #0f1117 0%, #1a1f2e 60%, #0d1526 100%)', border: '1px solid #2a3040' }}>
+        <div className="rounded-2xl overflow-hidden relative breathe-purple"
+          style={{ background: 'linear-gradient(135deg, #0f1117 0%, #1a1f2e 60%, #0d1526 100%)', border: '1px solid #6366f130' }}>
           <div className="absolute top-0 left-1/2 w-64 h-64 rounded-full opacity-[0.06] blur-3xl pointer-events-none"
             style={{ background: '#6366f1', transform: 'translate(-50%, -30%)' }} />
           <div className="relative px-8 py-12 text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5"
               style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)' }}>
-              <span style={{ fontSize: '28px' }}>🎯</span>
+              <span style={{ fontSize: '28px' }}>🏆</span>
             </div>
 
-            <p className="text-white font-bold text-xl mb-3">
-              ¿Sabías que las personas que usan presupuestos ahorran en promedio <span style={{ color: '#6366f1' }}>3× más</span>?
+            <p className="text-white font-bold text-xl mb-2">
+              Un presupuesto no te limita. Te da libertad.
             </p>
-            <p style={{ color: '#6b7280', fontSize: '14px', maxWidth: '400px', margin: '0 auto 28px', lineHeight: 1.6 }}>
-              Un presupuesto mensual te da control total sobre en qué gastas cada peso.
-              {Object.keys(limitesPrev).length > 0 && (
-                <> También puedes copiar el presupuesto de <strong style={{ color: '#6366f1' }}>{nombreMesPrev}</strong> con un clic.</>
-              )}
+            <p style={{ color: '#6b7280', fontSize: '14px', maxWidth: '400px', margin: '0 auto 6px', lineHeight: 1.6 }}>
+              Los que se adelantan a sus gastos nunca quedan cortos.
             </p>
-
-            <PresupuestoForm
-              limites={limites}
-              budgetId={budget?.id}
-              mes={mes}
-              year={year}
-              limitesAnterior={limitesPrev}
-            />
+            {Object.keys(limitesPrev).length > 0 && (
+              <p style={{ color: '#6b7280', fontSize: '13px', maxWidth: '400px', margin: '0 auto 22px', lineHeight: 1.5 }}>
+                Puedes copiar el presupuesto de <strong style={{ color: '#6366f1' }}>{nombreMesPrev}</strong> con un clic.
+              </p>
+            )}
+            <div style={{ marginTop: '24px' }}>
+              <PresupuestoForm
+                limites={limites}
+                budgetId={budget?.id}
+                mes={mes}
+                year={year}
+                limitesAnterior={limitesPrev}
+              />
+            </div>
           </div>
         </div>
       ) : (

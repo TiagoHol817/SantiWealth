@@ -584,22 +584,28 @@ function HowItWorksSection() {
 /* ── Pricing ────────────────────────────────────────────────────────── */
 const PLANS = [
   {
+    name: 'Inicio',
+    tagline: 'Para los que están empezando a ver el panorama',
     badge: 'Gratis para siempre', price: '$0', priceSub: null,
     accent: '#00d4aa', featured: false,
     features: ['3 cuentas bancarias', 'Entrada manual de datos', 'CSV (5 importaciones/mes)', 'Dashboard básico', '1 meta financiera'],
     cta: 'Empezar gratis',
   },
   {
+    name: 'Pro',
+    tagline: 'Para los que van en serio con su patrimonio',
     badge: 'Más popular', price: '$19.900 COP/mes', priceSub: '~$5 USD · Menos que un café',
     accent: '#6366f1', featured: true,
     features: ['Cuentas ilimitadas', 'CSV/OFX ilimitado', 'Entrada por voz', 'IA categoriza todo', 'Reportes PDF', 'Inversiones tiempo real', 'Metas ilimitadas'],
-    cta: 'Empezar Pro →',
+    cta: 'Quiero el control total',
   },
   {
-    badge: 'Para serios', price: '$39.900 COP/mes', priceSub: null,
+    name: 'Premium',
+    tagline: 'Para los que multiplican y no dejan nada al azar',
+    badge: 'Para los que ganan en grande', price: '$39.900 COP/mes', priceSub: null,
     accent: '#f59e0b', featured: false,
     features: ['Todo de Pro +', 'Email parsing automático', 'Crypto tracking avanzado', 'CDTs y renta fija', 'Alertas inteligentes IA', 'Asistente financiero IA'],
-    cta: 'Empezar Premium',
+    cta: 'Activar poder máximo',
   },
 ]
 
@@ -627,11 +633,13 @@ function PricingSection() {
                   border: `1px solid ${plan.featured ? 'rgba(99,102,241,0.35)' : 'rgba(255,255,255,0.07)'}`,
                   borderRadius: '20px', padding: '28px',
                 }}>
-                <div style={{ marginBottom: '20px' }}>
+                <div style={{ marginBottom: '12px' }}>
                   <span style={{ backgroundColor: plan.accent + '20', color: plan.accent, padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>
                     {plan.badge}
                   </span>
                 </div>
+                <p style={{ color: '#fff', fontSize: '20px', fontWeight: 800, letterSpacing: '-0.01em', marginBottom: '2px' }}>{plan.name}</p>
+                <p style={{ color: '#6b7280', fontSize: '12px', marginBottom: '12px', lineHeight: 1.4 }}>{plan.tagline}</p>
                 <p style={{ color: '#fff', fontSize: '22px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '4px' }}>{plan.price}</p>
                 <div style={{ height: '20px', marginBottom: '20px' }}>
                   {plan.priceSub && <p style={{ color: '#6b7280', fontSize: '12px' }}>{plan.priceSub}</p>}

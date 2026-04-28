@@ -152,6 +152,19 @@ export default function HelpModal({ moduleId, autoOpen = true }: Props) {
               ))}
             </div>
 
+            {/* Stat callout */}
+            {content.stat && (
+              <div className="px-7 pt-2 pb-1">
+                <div
+                  className="flex items-start gap-3 rounded-xl px-4 py-3"
+                  style={{ backgroundColor: '#00d4aa0d', border: '1px solid #00d4aa33' }}
+                >
+                  <span style={{ fontSize: '14px', lineHeight: 1, marginTop: '2px' }}>💡</span>
+                  <p style={{ color: '#00d4aa', fontSize: '12px', lineHeight: '1.6' }}>{content.stat}</p>
+                </div>
+              </div>
+            )}
+
             {/* CTA button */}
             <div className="px-7 pt-4 pb-5">
               <button

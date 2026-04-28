@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { X, Plus, Pencil, Pin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/context/ToastContext'
+import { useAchievementToast } from '@/components/ui/WealthMessage'
 
 const ICONOS  = ['🎯','🏠','🚗','✈️','💰','📈','🎓','💍','🏖️','💻','🏗️','📦']
 const COLORES = ['#D4AF37','#6366f1','#f59e0b','#ef4444','#3b82f6','#ec4899']
@@ -35,8 +36,9 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
     contribution_amount:   String(editGoal?.contribution_amount ?? ''),
     contribution_freq:     editGoal?.contribution_freq     ?? 'mensual',
   })
-  const router    = useRouter()
-  const { toast } = useToast()
+  const router                      = useRouter()
+  const { toast }                   = useToast()
+  const { trigger, ToastContainer } = useAchievementToast()
 
   const set = (k: string, v: string | boolean) => setForm(f => ({ ...f, [k]: v }))
 
@@ -88,6 +90,7 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
         const { error } = await supabase.from('investment_goals').insert({ ...payload, user_id: user!.id })
         if (error) throw error
         toast.success('Meta creada', `${form.name} fue creada exitosamente.`)
+        trigger('goal_created')
       }
 
       setOpen(false)
@@ -338,6 +341,7 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
           </div>
         </div>
       </div>
+      <ToastContainer />
     </>
   )
 }

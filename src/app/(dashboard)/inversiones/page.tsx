@@ -204,11 +204,10 @@ export default async function InversionesPage({
             </div>
 
             <h2 className="text-white font-bold text-2xl mb-3 tracking-tight">
-              Empieza a construir tu portafolio
+              Tu dinero puede trabajar mientras tú descansas
             </h2>
             <p style={{ color: '#9ca3af', fontSize: '15px', maxWidth: '480px', margin: '0 auto 32px' }}>
-              Registra tus acciones, ETFs y criptos. Visualiza tu patrimonio total en tiempo real,
-              en COP y USD, con métricas de rendimiento.
+              Quienes multiplican lo registran todo. Empieza con lo que tienes — acciones, ETFs, cripto, CDTs o finca raíz.
             </p>
 
             {/* Feature cards */}

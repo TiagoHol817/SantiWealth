@@ -255,10 +255,10 @@ export default async function MetasPage() {
 
           <div className="relative px-8 py-12 text-center">
             <p className="text-white font-bold text-2xl mb-3 tracking-tight">
-              Tu carrera financiera empieza aquí.
+              Los que ganan en grande empezaron con una cifra en mente
             </p>
             <p style={{ color: '#6b7280', fontSize: '14px', maxWidth: '400px', margin: '0 auto 28px', lineHeight: 1.6 }}>
-              Define tu primera meta y empieza a correr. SantiWealth calculará cuánto ahorrar cada mes para llegar a tiempo.
+              ¿Cuál es la tuya? Ponla aquí y la app trabaja contigo para llegar.
             </p>
             <GoalForm />
           </div>
@@ -283,7 +283,17 @@ export default async function MetasPage() {
             const completada = pct >= 100
             const falta      = Math.max(0, target - current)
             const color      = goal.color ?? '#10b981'
-            const goalAnimClass = completada ? 'flash-gold-once' : goalIndex === 0 ? 'breathe-purple' : ''
+            const goalAnimClass = completada
+              ? 'flash-gold-once'
+              : pct <= 30 ? 'breathe-amber'
+              : pct <= 70 ? 'breathe-purple'
+              : 'breathe-green'
+
+            const progressColor = completada
+              ? '#D4AF37'
+              : pct <= 30 ? '#f59e0b'
+              : pct <= 70 ? '#6366f1'
+              : '#10b981'
 
             const contribAmt  = Number(goal.contribution_amount) || 0
             const contribFreq = goal.contribution_freq ?? 'mensual'
@@ -385,7 +395,7 @@ export default async function MetasPage() {
                             width: `${pct}%`,
                             background: pct === 0
                               ? 'transparent'
-                              : `linear-gradient(90deg, ${color}66, ${color})`,
+                              : `linear-gradient(90deg, ${progressColor}66, ${progressColor})`,
                           }} />
                       </div>
                       {/* Milestone markers */}
@@ -393,7 +403,7 @@ export default async function MetasPage() {
                         <div key={m} style={{
                           position: 'absolute', top: '-3px', left: `${m}%`,
                           width: '2px', height: '16px',
-                          backgroundColor: pct >= m ? color : '#2a3040',
+                          backgroundColor: pct >= m ? progressColor : '#2a3040',
                           transform: 'translateX(-50%)',
                           borderRadius: '1px',
                           transition: 'background-color 0.5s ease',

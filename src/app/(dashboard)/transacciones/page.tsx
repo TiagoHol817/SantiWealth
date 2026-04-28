@@ -147,12 +147,15 @@ export default async function TransaccionesPage({
 
       {/* Empty state — no transactions at all */}
       {(transactions ?? []).length === 0 && (
-        <div className="rounded-2xl p-16 text-center mb-6"
-          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-          <p className="text-5xl mb-4">📊</p>
-          <p className="text-white font-semibold text-lg mb-2">Aún no tienes transacciones registradas.</p>
-          <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '24px' }}>
-            Importa tu extracto bancario o agrega tu primer movimiento.
+        <div className="rounded-2xl p-16 text-center mb-6 breathe-green"
+          style={{ backgroundColor: '#1a1f2e', border: '1px solid #10b98130' }}>
+          <div className="mb-6 h-16 w-16 rounded-2xl mx-auto flex items-center justify-center"
+            style={{ backgroundColor: '#10b98110', border: '1px solid #10b98130' }}>
+            <div className="h-3 w-3 rounded-full bg-[#10b981]/50 animate-pulse" />
+          </div>
+          <p className="text-white font-semibold text-lg mb-2">Aquí vive el mapa de tu dinero</p>
+          <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '24px', maxWidth: '360px', margin: '0 auto 24px' }}>
+            Los que saben adónde va cada peso, saben cómo multiplicarlo.
           </p>
           <div className="flex items-center justify-center gap-3">
             <TransaccionForm accounts={accounts} />

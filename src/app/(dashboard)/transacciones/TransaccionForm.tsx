@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/context/ToastContext'
+import { useAchievementToast } from '@/components/ui/WealthMessage'
 
 const CATEGORIAS_GASTO   = ['Alimentación','Transporte','Vivienda','Servicios/Suscripciones','Salud','Entretenimiento','Ropa y personal','Educación','Otro']
 const CATEGORIAS_INGRESO = ['Salario','Freelance','Inversiones','Arriendo','Otro']
@@ -26,8 +27,9 @@ export default function TransaccionForm({ accounts }: { accounts: any[] }) {
     date:        new Date().toISOString().split('T')[0],
     account_id:  accounts[0]?.id ?? ''
   })
-  const router    = useRouter()
-  const { toast } = useToast()
+  const router                        = useRouter()
+  const { toast }                     = useToast()
+  const { trigger, ToastContainer }   = useAchievementToast()
 
   const set  = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
   const cats = form.type === 'income'       ? CATEGORIAS_INGRESO
@@ -60,6 +62,7 @@ export default function TransaccionForm({ accounts }: { accounts: any[] }) {
         `${TIPO_LABEL[form.type]} registrado`,
         `$${monto.toLocaleString('es-CO')} en ${cuenta?.name ?? 'cuenta'}`
       )
+      trigger(form.type === 'income' ? 'income_added' : 'transaction_added')
 
       setOpen(false)
       setForm(f => ({ ...f, amount: '', description: '' }))
@@ -165,6 +168,7 @@ export default function TransaccionForm({ accounts }: { accounts: any[] }) {
           {saving ? 'Guardando...' : 'Guardar transacción'}
         </button>
       </div>
+      <ToastContainer />
     </>
   )
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { WealthScoreResult } from '@/lib/services/wealthScore'
+import { WealthScoreBadge } from '@/components/ui/WealthMessage'
 
 interface Props {
   score: WealthScoreResult
@@ -139,6 +140,9 @@ export default function WealthScoreWidget({ score, hasTransactions = true }: Pro
         style={{ backgroundColor: color + '12', border: `1px solid ${color}25` }}>
         <p style={{ color: '#9ca3af', fontSize: '12px' }}>{trend}</p>
       </div>
+
+      {/* Motivational badge */}
+      <WealthScoreBadge score={total} className="mt-3" />
     </div>
   )
 }

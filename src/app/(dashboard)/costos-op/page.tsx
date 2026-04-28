@@ -102,7 +102,6 @@ export default async function CostosOpPage() {
         </div>
         <div className="flex items-center gap-3">
           <HelpModal moduleId="costos-op" />
-          <CostosForm costs={costs ?? []} />
         </div>
       </div>
 
@@ -269,72 +268,8 @@ export default async function CostosOpPage() {
         </div>
       )}
 
-      {/* Lista completa */}
-      <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-        <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #2a3040' }}>
-          <p className="text-white font-semibold">Lista de costos</p>
-          <div className="flex items-center gap-3">
-            {inactivos.length > 0 && (
-              <span style={{ color: '#6b7280', fontSize: '12px' }}>{inactivos.length} inactivos</span>
-            )}
-            <span style={{ color: '#6b7280', fontSize: '12px' }}>{costs?.length ?? 0} registros</span>
-          </div>
-        </div>
-
-        {!costs?.length ? (
-          /* Aspirational empty state */
-          <div className="px-8 py-14 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5"
-              style={{ backgroundColor: '#f59e0b15', border: '1px solid #f59e0b25' }}>
-              <span style={{ fontSize: '26px' }}>🔍</span>
-            </div>
-            <p className="text-white font-bold text-lg mb-2">
-              El 73% de las personas no sabe exactamente cuánto paga en suscripciones.
-            </p>
-            <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>
-              ¿Sabes tú?
-            </p>
-            <CostosForm costs={[]} />
-          </div>
-        ) : costs.map((cost, i) => {
-          const color      = COLORES[cost.category] ?? '#6b7280'
-          const costoAnual = Number(cost.amount) * 12
-          return (
-            <div key={cost.id}
-              className="flex items-center justify-between px-6 py-4 transition-all hover:bg-white/[0.02] group"
-              style={{ borderBottom: i < costs.length - 1 ? '1px solid #1e2535' : 'none', opacity: cost.active ? 1 : 0.45 }}>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-transform group-hover:scale-110"
-                  style={{ backgroundColor: color + '15' }}>
-                  {ICONOS[cost.category] ?? '📦'}
-                </div>
-                <div>
-                  <p className="text-white text-sm font-medium">{cost.name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: color + '15', color }}>
-                      {cost.category}
-                    </span>
-                    {!cost.active && (
-                      <span className="text-xs px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: '#1e2535', color: '#6b7280' }}>
-                        Inactivo
-                      </span>
-                    )}
-                    {cost.active && (
-                      <span style={{ color: '#4b5563', fontSize: '11px' }}>
-                        {fmtCOP(costoAnual)}/año
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <HiddenValue value={fmtCOP(Number(cost.amount))} className="tabular-nums font-semibold"
-                style={{ color: '#ef4444', fontSize: '15px' }} />
-            </div>
-          )
-        })}
-      </div>
+      {/* Lista de costos — handled by CostosForm (includes add/edit/delete + empty state) */}
+      <CostosForm costs={costs ?? []} />
     </div>
   )
 }

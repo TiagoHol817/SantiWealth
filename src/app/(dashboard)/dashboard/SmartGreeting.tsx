@@ -2,12 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Clock } from 'lucide-react'
-
-function getGreeting(h: number): string {
-  if (h >= 5  && h < 12) return 'Buenos días'
-  if (h >= 12 && h < 19) return 'Buenas tardes'
-  return 'Buenas noches'
-}
+import { getGreeting } from '@/lib/copy'
 
 function formatTime(date: Date, tz: string): string {
   return new Intl.DateTimeFormat('es-CO', {
@@ -37,40 +32,40 @@ interface Props {
   subtitle?: string
 }
 
-export default function SmartGreeting({ userName, subtitle = 'Resumen de tu patrimonio' }: Props) {
-  const [mounted,  setMounted]  = useState(false)
-  const [timeStr,  setTimeStr]  = useState('')
-  const [tzLabel,  setTzLabel]  = useState('')
-  const [greeting, setGreeting] = useState('Hola')
+export default function SmartGreeting({ userName, subtitle }: Props) {
+  const [mounted,           setMounted]           = useState(false)
+  const [timeStr,           setTimeStr]           = useState('')
+  const [tzLabel,           setTzLabel]           = useState('')
+  const [motivationalLine,  setMotivationalLine]  = useState('Resumen de tu patrimonio')
 
   useEffect(() => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
     function update() {
-      const now      = new Date()
-      const localH   = parseInt(
-        new Intl.DateTimeFormat('en', { hour: 'numeric', hour12: false, timeZone: tz }).format(now),
-        10
-      )
-      setGreeting(getGreeting(localH))
+      const now = new Date()
       setTimeStr(formatTime(now, tz))
       setTzLabel(getTzLabel(tz))
     }
 
     setMounted(true)
+    // Generate motivational greeting once on mount (random — don't regenerate every minute)
+    setMotivationalLine(subtitle ?? getGreeting(userName))
     update()
     const id = setInterval(update, 60_000)
     return () => clearInterval(id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
     <div>
       <h1 className="text-3xl font-bold tracking-tight text-white" style={{ lineHeight: 1.2 }}>
-        {mounted ? greeting : 'Hola'},{' '}
+        {mounted ? 'Hola' : 'Hola'},{' '}
         <span style={{ color: '#D4AF37', fontWeight: 600 }}>{userName}</span>
         <span style={{ color: '#D4AF37' }}>.</span>
       </h1>
-      <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '5px' }}>{subtitle}</p>
+      <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '5px' }}>
+        {mounted ? motivationalLine : 'Resumen de tu patrimonio'}
+      </p>
       <div className="flex items-center gap-1.5 mt-2" style={{ minHeight: '18px' }}>
         {mounted && (
           <>

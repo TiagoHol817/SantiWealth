@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/context/ToastContext'
+import { useAchievementToast } from '@/components/ui/WealthMessage'
 
 const CATEGORIAS = ['Arriendo', 'Servicios públicos', 'Internet/Celular', 'Suscripciones', 'Alimentación', 'Transporte', 'Otro']
 
@@ -30,8 +31,9 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
   const [editId, setEditId]       = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
   const [form, setForm]           = useState({ name: '', category: 'Arriendo', amount: '', frequency: 'monthly' })
-  const router    = useRouter()
-  const { toast } = useToast()
+  const router                      = useRouter()
+  const { toast }                   = useToast()
+  const { trigger, ToastContainer } = useAchievementToast()
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
@@ -72,6 +74,7 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
         })
         if (error) throw error
         toast.success('Costo agregado', `${form.name} · ${fmtCOP(Number(form.amount))}/mes`)
+        trigger('investment_added')
       }
 
       setMode('list')
@@ -158,9 +161,12 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
     )
   }
 
+  const isEmpty = costs.length === 0
+
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+      <div className={`rounded-2xl overflow-hidden${isEmpty ? ' breathe-teal' : ''}`}
+        style={{ backgroundColor: '#1a1f2e', border: `1px solid ${isEmpty ? '#00d4aa25' : '#2a3040'}` }}>
         <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #2a3040' }}>
           <p className="text-white font-semibold">Lista de costos</p>
           <button onClick={abrirAgregar}
@@ -169,6 +175,21 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
             + Agregar costo
           </button>
         </div>
+
+        {isEmpty && (
+          <div className="px-8 py-12 text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5 mx-auto"
+              style={{ backgroundColor: '#00d4aa10', border: '1px solid #00d4aa25' }}>
+              <span style={{ fontSize: '26px' }}>💎</span>
+            </div>
+            <p className="text-white font-bold text-lg mb-2">
+              Conoce el costo real de tu estilo de vida
+            </p>
+            <p style={{ color: '#6b7280', fontSize: '14px' }}>
+              Quienes tienen visión saben exactamente qué necesitan para operar.
+            </p>
+          </div>
+        )}
 
         {costs.length === 0 ? (
           <div className="px-6 py-16 text-center">
@@ -227,6 +248,7 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
           )
         })}
       </div>
+      <ToastContainer />
     </div>
   )
 }

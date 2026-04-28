@@ -6,6 +6,7 @@ import { ArrowLeft, Upload, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-
 import { createClient } from '@/lib/supabase/client'
 import { detectRecurringCosts, type RecurringSuggestion } from '@/lib/detectRecurring'
 import type { PDFTransaction } from '@/lib/parsePDF'
+import { useAchievementToast } from '@/components/ui/WealthMessage'
 
 /* ── Types ──────────────────────────────────────────────────────────── */
 type TxType = 'income' | 'expense'
@@ -306,7 +307,8 @@ function RecurringModal({
 
 /* ── Main component ─────────────────────────────────────────────────── */
 export default function ImportarPage() {
-  const router   = useRouter()
+  const router                      = useRouter()
+  const { trigger, ToastContainer } = useAchievementToast()
   const dropRef  = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -468,6 +470,7 @@ export default function ImportarPage() {
 
       // Mark statement as imported (dismisses dashboard banner)
       try { localStorage.setItem('statement_imported', 'true') } catch {}
+      trigger('csv_imported')
 
       // Detect recurring costs from imported expense rows
       const expenseRows = selectedRows.filter(r => r.type === 'expense')
@@ -786,6 +789,7 @@ export default function ImportarPage() {
           </>
         )}
       </div>
+      <ToastContainer />
     </>
   )
 }

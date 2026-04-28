@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/context/ToastContext'
+import { useAchievementToast } from '@/components/ui/WealthMessage'
 import { Settings, X, Copy, Check } from 'lucide-react'
 
 const CATEGORIAS = [
@@ -32,8 +33,9 @@ export default function PresupuestoForm({ limites, budgetId, mes, year, limitesA
   const [form, setForm]           = useState<Record<string, string>>(
     Object.fromEntries(CATEGORIAS.map(c => [c, limites[c] ? String(limites[c]) : '']))
   )
-  const router    = useRouter()
-  const { toast } = useToast()
+  const router                      = useRouter()
+  const { toast }                   = useToast()
+  const { trigger, ToastContainer } = useAchievementToast()
 
   const totalPresupuesto = CATEGORIAS.reduce((s, c) => s + (Number(form[c]) || 0), 0)
 
@@ -78,6 +80,7 @@ export default function PresupuestoForm({ limites, budgetId, mes, year, limitesA
         })
         if (error) throw error
         toast.success('Presupuesto creado', `${Object.keys(nuevosLimites).length} categorías · ${fmtCOP(totalPresupuesto)}`)
+        trigger('budget_created')
       }
 
       setAbierto(false)
@@ -108,9 +111,9 @@ export default function PresupuestoForm({ limites, budgetId, mes, year, limitesA
   return (
     <>
       <div className="fixed inset-0 z-40" style={{ backgroundColor: '#00000090' }} onClick={() => setAbierto(false)} />
-      <div className="fixed z-50 rounded-2xl w-full shadow-2xl overflow-y-auto"
+      <div className="fixed z-50 rounded-2xl w-full shadow-2xl overflow-y-auto breathe-purple"
         style={{
-          backgroundColor: '#1a1f2e', border: '1px solid #2a3040',
+          backgroundColor: '#1a1f2e', border: '1px solid #6366f140',
           top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           maxWidth: '560px', maxHeight: '90vh', padding: '1.5rem',
         }}>
@@ -122,7 +125,7 @@ export default function PresupuestoForm({ limites, budgetId, mes, year, limitesA
               {budgetId ? 'Editar presupuesto' : 'Nuevo presupuesto'}
             </h3>
             <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '2px' }}>
-              Configura tus límites de gasto por categoría
+              Un presupuesto no te limita. Te da libertad.
             </p>
           </div>
           <button onClick={() => setAbierto(false)}
@@ -216,6 +219,7 @@ export default function PresupuestoForm({ limites, budgetId, mes, year, limitesA
           </button>
         </div>
       </div>
+      <ToastContainer />
     </>
   )
 }

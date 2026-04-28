@@ -90,7 +90,7 @@ export default async function IngresosPage() {
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Ingresos</h1>
           <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
-            Tracker de fuentes de ingreso — {nombreMes}
+            Quienes conocen sus números, negocian mejor — {nombreMes}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -241,16 +241,19 @@ export default async function IngresosPage() {
 
       {/* Estado vacío */}
       {sinIngresos && (
-        <div className="rounded-2xl p-12 text-center" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-          <p className="text-5xl mb-4">💰</p>
-          <p className="text-white font-semibold text-lg mb-2">Aún no hay ingresos registrados</p>
-          <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '20px' }}>
-            Ve a Transacciones, crea una nueva con tipo <strong style={{ color: '#10b981' }}>"Ingreso"</strong> y elige la fuente en el campo categoría.
+        <div className="rounded-2xl p-12 text-center breathe-green" style={{ backgroundColor: '#1a1f2e', border: '1px solid #10b98130' }}>
+          <div className="mb-5 h-14 w-14 rounded-2xl mx-auto flex items-center justify-center"
+            style={{ backgroundColor: '#10b98110', border: '1px solid #10b98130' }}>
+            <div className="h-3 w-3 rounded-full bg-[#10b981]/50 animate-pulse" />
+          </div>
+          <p className="text-white font-semibold text-lg mb-2">¿Sabes realmente cuánto generas al mes?</p>
+          <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '20px', maxWidth: '360px', margin: '0 auto 20px' }}>
+            Quienes conocen sus números negocian mejor y viven sin límites.
           </p>
           <Link href="/transacciones"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
-            style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117' }}>
-            Registrar primer ingreso →
+            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#0f1117' }}>
+            Registrar fuente de ingreso →
           </Link>
         </div>
       )}
