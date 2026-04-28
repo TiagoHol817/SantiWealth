@@ -1,3 +1,9 @@
+/**
+ * proxy.ts — legacy utility (NOT used as Next.js middleware).
+ * Middleware is handled by src/middleware.ts.
+ * Kept here for reference; the `config` export has been intentionally removed
+ * to prevent Next.js from treating this file as a middleware bundle.
+ */
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -14,7 +20,6 @@ const BLOCKED = [
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // ── 1. Bloquear rutas de internals ───────────────────────
   if (BLOCKED.some(p => pathname.startsWith(p))) {
     return new NextResponse(null, { status: 404 })
   }
@@ -26,9 +31,7 @@ export async function proxy(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
+        getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
@@ -44,7 +47,6 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // ── 2. Proteger rutas autenticadas ────────────────────────
   const isProtected = PROTECTED.some(r =>
     pathname === r || pathname.startsWith(r + '/')
   )
@@ -55,25 +57,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // ── 3. Redirigir /login si ya hay sesión ─────────────────
   if (pathname === '/login' && user) {
     const dashUrl = request.nextUrl.clone()
     dashUrl.pathname = '/dashboard'
     return NextResponse.redirect(dashUrl)
   }
 
-  // ── 4. Security headers en cada respuesta ────────────────
-  supabaseResponse.headers.set('X-Frame-Options', 'DENY')
-  supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff')
-  supabaseResponse.headers.set('X-XSS-Protection', '1; mode=block')
-  supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  supabaseResponse.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-
   return supabaseResponse
 }
-
-export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
-}
+// NOTE: No `config` export — this file is NOT Next.js middleware.
