@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import QuickAddFAB from '@/components/QuickAddFAB'
 import { createClient } from '@/lib/supabase/server'
 import HiddenValue from '@/components/HiddenValue'
 import BalanceToggle from './BalanceToggle'
@@ -399,6 +400,38 @@ export default async function DashboardPage() {
         totalStocks={totalBrokers}
         totalCrypto={totalCrypto}
       />
+
+      {/* ── Welcome card when no accounts ─────────────────────────────────────── */}
+      {(!accounts || accounts.filter(a => a.type !== 'liability').length === 0) && (
+        <div className="rounded-2xl p-10 text-center relative overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%)', border: '1px solid #2a3040' }}>
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5 blur-3xl"
+            style={{ background: '#00d4aa', transform: 'translate(20%,-20%)' }} />
+          <p className="text-4xl mb-4">👋</p>
+          <p className="text-white font-bold text-xl mb-2">¡Bienvenido a SantiWealth!</p>
+          <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '24px', maxWidth: '400px', margin: '0 auto 24px' }}>
+            Empieza agregando tus cuentas bancarias o importando tu extracto. En minutos tendrás tu patrimonio actualizado.
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <Link
+              href="/transacciones"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
+              style={{ backgroundColor: '#00d4aa', color: '#0f1117' }}
+            >
+              + Agregar primera cuenta
+            </Link>
+            <Link
+              href="/transacciones/importar"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+              style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#9ca3af' }}
+            >
+              Importar CSV
+            </Link>
+          </div>
+        </div>
+      )}
+
+      <QuickAddFAB />
     </div>
   )
 }

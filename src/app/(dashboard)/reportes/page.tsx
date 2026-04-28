@@ -166,6 +166,18 @@ export default async function ReportesPage({
         </div>
       </div>
 
+      {/* Empty state — no transactions yet */}
+      {(txPeriodo?.length ?? 0) === 0 && cashflowArr.length === 0 && (
+        <div className="rounded-2xl p-16 text-center"
+          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+          <p className="text-5xl mb-4">📋</p>
+          <p className="text-white font-semibold text-lg mb-2">Aún no hay datos suficientes para generar reportes.</p>
+          <p style={{ color: '#6b7280', fontSize: '13px' }}>
+            Cuando registres transacciones, aquí verás tu análisis completo.
+          </p>
+        </div>
+      )}
+
       {/* Banner didáctico de período activo */}
       <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
         style={{ backgroundColor: '#6366f115', border: '1px solid #6366f130' }}>

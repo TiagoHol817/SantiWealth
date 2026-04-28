@@ -4,6 +4,8 @@ import FiltrosMes from './FiltrosMes'
 import EditarTransaccion from './EditarTransaccion'
 import ResumenPresupuesto from './ResumenPresupuesto'
 import HelpModal from '@/components/help/HelpModal'
+import QuickAddFAB from '@/components/QuickAddFAB'
+import Link from 'next/link'
 
 const fmtCOP = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n)
@@ -77,11 +79,40 @@ export default async function TransaccionesPage({
         </div>
         <div className="flex items-center gap-3">
           <HelpModal moduleId="transacciones" />
+          <Link
+            href="/transacciones/importar"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+            style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#9ca3af' }}
+          >
+            Importar CSV
+          </Link>
           <TransaccionForm accounts={accounts} />
         </div>
       </div>
 
       <ResumenPresupuesto />
+
+      {/* Empty state — no transactions at all */}
+      {(transactions ?? []).length === 0 && (
+        <div className="rounded-2xl p-16 text-center mb-6"
+          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+          <p className="text-5xl mb-4">📊</p>
+          <p className="text-white font-semibold text-lg mb-2">Aún no tienes transacciones registradas.</p>
+          <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '24px' }}>
+            Importa tu extracto bancario o agrega tu primer movimiento.
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <TransaccionForm accounts={accounts} />
+            <Link
+              href="/transacciones/importar"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+              style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#9ca3af' }}
+            >
+              Importar CSV
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-4 mb-6">
@@ -126,7 +157,7 @@ export default async function TransaccionesPage({
       <FiltrosMes />
 
       {/* Tabla de transacciones */}
-      <div className="rounded-xl overflow-hidden"
+      <div className="rounded-xl overflow-hidden table-scroll"
         style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
 
         {/* Header */}
@@ -204,6 +235,8 @@ export default async function TransaccionesPage({
           })
         )}
       </div>
+
+      <QuickAddFAB />
     </div>
   )
 }

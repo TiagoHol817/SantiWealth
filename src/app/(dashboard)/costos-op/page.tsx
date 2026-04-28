@@ -217,9 +217,14 @@ export default async function CostosOpPage() {
         </div>
         {!costs?.length ? (
           <div className="px-6 py-16 text-center">
-            <p className="text-4xl mb-4">💸</p>
-            <p className="text-white font-medium mb-2">Sin costos registrados</p>
-            <p style={{ color: '#6b7280', fontSize: '13px' }}>Agrega tu primer costo fijo</p>
+            <p className="text-4xl mb-4">🔄</p>
+            <p className="text-white font-medium mb-2">No tienes costos fijos registrados.</p>
+            <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '20px' }}>
+              Agrega tus gastos recurrentes y nunca te tomen por sorpresa.
+            </p>
+            <p style={{ color: '#6b7280', fontSize: '12px' }}>
+              Usa el botón <strong style={{ color: '#10b981' }}>+ Gestionar costos</strong> en la parte superior para agregar tu primer costo.
+            </p>
           </div>
         ) : costs.map((cost, i) => {
           const color = COLORES[cost.category] ?? '#6b7280'

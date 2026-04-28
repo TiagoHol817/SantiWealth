@@ -208,16 +208,23 @@ export default async function PresupuestosPage({
       {categoriasConData.length === 0 ? (
         <div className="rounded-2xl p-16 text-center"
           style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-          <p className="text-5xl mb-4">💰</p>
-          <p className="text-white font-semibold text-lg mb-2">Sin presupuesto para {nombreMes}</p>
+          <p className="text-5xl mb-4">🎯</p>
+          <p className="text-white font-semibold text-lg mb-2">Aún no tienes presupuestos.</p>
           <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '24px' }}>
-            Configura tus límites de gasto por categoría para empezar a controlar tus finanzas.
+            Crea tu primer presupuesto y controla en qué se va tu dinero.
           </p>
           {Object.keys(limitesPrev).length > 0 && (
-            <p style={{ color: '#6366f1', fontSize: '13px' }}>
+            <p style={{ color: '#6366f1', fontSize: '13px', marginBottom: '20px' }}>
               💡 Puedes copiar el presupuesto de {nombreMesPrev} con un click desde "Configurar presupuesto"
             </p>
           )}
+          <PresupuestoForm
+            limites={limites}
+            budgetId={budget?.id}
+            mes={mes}
+            year={year}
+            limitesAnterior={limitesPrev}
+          />
         </div>
       ) : (
         <>

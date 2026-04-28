@@ -173,9 +173,12 @@ export default async function MetasPage() {
       {!goals || goals.length === 0 ? (
         <div className="rounded-2xl p-16 text-center"
           style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-          <p className="text-5xl mb-4">🎯</p>
-          <p className="text-white font-semibold text-lg mb-2">No hay metas aún</p>
-          <p style={{ color: '#6b7280', fontSize: '13px' }}>Crea tu primera meta financiera arriba</p>
+          <p className="text-5xl mb-4">🏆</p>
+          <p className="text-white font-semibold text-lg mb-2">Define tu primera meta financiera.</p>
+          <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '24px' }}>
+            SantiWealth te ayuda a llegar ahí paso a paso.
+          </p>
+          <GoalForm />
         </div>
       ) : (
         <div className="space-y-4">

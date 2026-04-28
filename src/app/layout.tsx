@@ -11,8 +11,18 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "WealtHost",
-  description: "Personal Wealth Management System",
+  title: "SantiWealth — Finanzas personales inteligentes",
+  description: "Controla tu dinero, inversiones y metas con IA. Gratis para empezar. Hecho para Colombia.",
+  metadataBase: new URL('https://wealthhost-nu.vercel.app'),
+  alternates: { canonical: '/' },
+  openGraph: {
+    title: "SantiWealth — Finanzas personales inteligentes",
+    description: "Controla tu dinero, inversiones y metas con IA. Gratis para empezar. Hecho para Colombia.",
+    url: 'https://wealthhost-nu.vercel.app',
+    siteName: 'SantiWealth',
+    locale: 'es_CO',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({
