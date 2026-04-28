@@ -1,29 +1,7 @@
-/**
- * proxy.ts — legacy utility (NOT used as Next.js middleware).
- * Middleware is handled by src/middleware.ts.
- * Kept here for reference; the `config` export has been intentionally removed
- * to prevent Next.js from treating this file as a middleware bundle.
- */
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PROTECTED = [
-  '/dashboard', '/transacciones', '/inversiones', '/presupuestos',
-  '/metas', '/costos-op', '/ingresos', '/reportes', '/ayuda',
-]
-
-const BLOCKED = [
-  '/.env', '/.git', '/node_modules', '/prisma',
-  '/__nextjs_original-stack-frame', '/api/debug',
-]
-
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
-  if (BLOCKED.some(p => pathname.startsWith(p))) {
-    return new NextResponse(null, { status: 404 })
-  }
-
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -33,9 +11,7 @@ export async function proxy(request: NextRequest) {
       cookies: {
         getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
@@ -47,22 +23,46 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const isProtected = PROTECTED.some(r =>
-    pathname === r || pathname.startsWith(r + '/')
+  const { pathname } = request.nextUrl
+
+  // Public routes — allow without auth
+  const publicRoutes = [
+    '/login',
+    '/auth/register',
+    '/auth/callback',
+    '/api/auth/callback',
+    '/api/auth/',
+  ]
+  const isPublic = publicRoutes.some(r => pathname.startsWith(r))
+
+  const isStatic =
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon') ||
+    /\.(ico|png|jpg|jpeg|svg|woff2|ttf|otf|eot)$/.test(pathname)
+
+  if (!isPublic && !isStatic && !user) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  if (user && pathname === '/login') {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  // Security headers
+  supabaseResponse.headers.set('X-Frame-Options', 'DENY')
+  supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff')
+  supabaseResponse.headers.set('X-XSS-Protection', '1; mode=block')
+  supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  supabaseResponse.headers.set(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=()'
   )
-
-  if (isProtected && !user) {
-    const loginUrl = request.nextUrl.clone()
-    loginUrl.pathname = '/login'
-    return NextResponse.redirect(loginUrl)
-  }
-
-  if (pathname === '/login' && user) {
-    const dashUrl = request.nextUrl.clone()
-    dashUrl.pathname = '/dashboard'
-    return NextResponse.redirect(dashUrl)
-  }
 
   return supabaseResponse
 }
-// NOTE: No `config` export — this file is NOT Next.js middleware.
+
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+}

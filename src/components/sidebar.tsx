@@ -20,16 +20,16 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { href: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard },
-  { href: '/transacciones', label: 'Transacciones', icon: ArrowLeftRight  },
-  { href: '/inversiones',   label: 'Inversiones',   icon: TrendingUp      },
-  { href: '/presupuestos',  label: 'Presupuestos',  icon: PieChart        },
-  { href: '/metas',         label: 'Metas',         icon: Target          },
-  { href: '/costos-op',     label: 'Costos Op.',    icon: Receipt         },
-  { href: '/ingresos',      label: 'Ingresos',      icon: Wallet          },
-  { href: '/reportes',      label: 'Reportes',      icon: BarChart3       },
-  { href: '/ayuda',         label: 'Ayuda',         icon: HelpCircle      },
-  { href: '/settings',      label: 'Configuración', icon: Settings2       },
+  { href: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard, tooltip: 'Tu resumen financiero' },
+  { href: '/transacciones', label: 'Transacciones', icon: ArrowLeftRight,  tooltip: 'Ingresos y gastos'     },
+  { href: '/inversiones',   label: 'Inversiones',   icon: TrendingUp,      tooltip: 'Bolsa, cripto y CDTs'  },
+  { href: '/presupuestos',  label: 'Presupuestos',  icon: PieChart,        tooltip: 'Controla tu gasto'     },
+  { href: '/metas',         label: 'Metas',         icon: Target,          tooltip: 'Tus objetivos financieros' },
+  { href: '/costos-op',     label: 'Costos fijos',  icon: Receipt,         tooltip: 'Gastos recurrentes'    },
+  { href: '/ingresos',      label: 'Ingresos',      icon: Wallet,          tooltip: 'Fuentes de ingreso'    },
+  { href: '/reportes',      label: 'Reportes',      icon: BarChart3,       tooltip: 'Análisis y estadísticas' },
+  { href: '/ayuda',         label: 'Ayuda',         icon: HelpCircle,      tooltip: 'Centro de ayuda'       },
+  { href: '/settings',      label: 'Ajustes',       icon: Settings2,       tooltip: 'Configuración'         },
 ]
 
 type CDTAlert    = { id: string; name: string; dias: number; capital: number; vencimiento: string }
@@ -38,9 +38,11 @@ type BudAlert    = { categoria: string; pct: number; gastado: number; limite: nu
 type GoalAlert   = { id: string; name: string; pct: number; icon: string; falta: number }
 type WeekSummary = { total: number; top: { cat: string; monto: number }[]; dias: number } | null
 
-function NavTooltip({ label, isCollapsed, children }: { label: string; isCollapsed: boolean; children: React.ReactNode }) {
+function NavTooltip({ label, tooltip, isCollapsed, children }: { label: string; tooltip?: string; isCollapsed: boolean; children: React.ReactNode }) {
   const [show, setShow] = useState(false)
-  if (!isCollapsed) return <>{children}</>
+  // When expanded: show tooltip description under the label on hover
+  // When collapsed: show label as tooltip to the right
+  const tooltipText = isCollapsed ? label : (tooltip ?? label)
   return (
     <div
       className="relative"
@@ -51,7 +53,11 @@ function NavTooltip({ label, isCollapsed, children }: { label: string; isCollaps
       {show && (
         <div
           className="pointer-events-none absolute"
-          style={{ left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: '10px', zIndex: 200 }}
+          style={
+            isCollapsed
+              ? { left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: '10px', zIndex: 200 }
+              : { left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: '8px', zIndex: 200 }
+          }
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{
@@ -71,7 +77,7 @@ function NavTooltip({ label, isCollapsed, children }: { label: string; isCollaps
               fontWeight: 500,
               boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
             }}>
-              {label}
+              {tooltipText}
             </div>
           </div>
         </div>
@@ -236,7 +242,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           </div>
           <div>
             <WealtHostBrand size="sm" />
-            <p style={{ color: '#4b5563', fontSize: '10px', margin: 0 }}>Personal Finance</p>
+            <p style={{ color: '#4b5563', fontSize: '10px', margin: 0 }}>Finanzas personales</p>
           </div>
         </div>
 
@@ -544,7 +550,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           const active = pathname === item.href || pathname.startsWith(item.href + '/')
           const Icon   = item.icon
           return (
-            <NavTooltip key={item.href} label={item.label} isCollapsed={isCollapsed}>
+            <NavTooltip key={item.href} label={item.label} tooltip={item.tooltip} isCollapsed={isCollapsed}>
               <Link
                 href={item.href}
                 className="flex items-center rounded-xl text-sm font-medium transition-all duration-200 relative"

@@ -124,7 +124,7 @@ export default function LoginPage() {
               <WealtHostBrand size="xl" />
             </div>
             <p style={{ color: '#6b7280', fontSize: '13px', letterSpacing: '0.01em' }}>
-              Plataforma de gestión de patrimonio
+              Toma el control de tu dinero
             </p>
           </div>
 
@@ -250,7 +250,7 @@ export default function LoginPage() {
           {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '24px 0' }}>
             <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255,255,255,0.06)' }} />
-            <span style={{ color: '#4b5563', fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>o continúa con</span>
+            <span style={{ color: '#4b5563', fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>O ingresa con</span>
             <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255,255,255,0.06)' }} />
           </div>
 
@@ -294,14 +294,14 @@ export default function LoginPage() {
 
           {/* Link to register */}
           <p style={{ textAlign: 'center', marginTop: '20px', color: '#6b7280', fontSize: '13px' }}>
-            ¿No tienes cuenta?{' '}
+            ¿Eres nuevo?{' '}
             <Link
               href="/auth/register"
               style={{ color: '#D4AF37', textDecoration: 'none', fontWeight: 500 }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#e5c84d' }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#D4AF37' }}
             >
-              Regístrate
+              Crea tu cuenta gratis
             </Link>
           </p>
         </div>

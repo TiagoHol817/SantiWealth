@@ -227,8 +227,11 @@ export default function RegisterPage() {
               </div>
               <WealtHostBrand size="xl" />
             </div>
-            <p style={{ color: '#6b7280', fontSize: '13px', letterSpacing: '0.01em' }}>
-              Crea tu cuenta gratuita
+            <p style={{ color: '#e5e7eb', fontSize: '17px', fontWeight: 700, marginBottom: '4px' }}>
+              Empieza gratis hoy
+            </p>
+            <p style={{ color: '#6b7280', fontSize: '12px', letterSpacing: '0.01em' }}>
+              Sin tarjeta de crédito. Cancela cuando quieras.
             </p>
           </div>
 
@@ -247,18 +250,25 @@ export default function RegisterPage() {
                 ✉️
               </div>
               <h2 style={{ color: '#ffffff', fontSize: '18px', fontWeight: 700, marginBottom: '10px' }}>
-                ¡Revisa tu correo!
+                ¡Ya casi estás!
               </h2>
               <p style={{ color: '#9ca3af', fontSize: '13px', lineHeight: 1.6, marginBottom: '8px' }}>
-                Enviamos un enlace de confirmación a
+                Revisa tu correo — te enviamos un link para activar tu cuenta a
               </p>
-              <p style={{ color: '#D4AF37', fontSize: '14px', fontWeight: 600, marginBottom: '20px' }}>
+              <p style={{ color: '#D4AF37', fontSize: '14px', fontWeight: 600, marginBottom: '16px' }}>
                 {email}
               </p>
-              <p style={{ color: '#6b7280', fontSize: '12px', lineHeight: 1.6 }}>
-                Haz clic en el enlace del correo para activar tu cuenta y comenzar a usar WealtHost.
-              </p>
-              <div style={{ marginTop: '28px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <div
+                style={{
+                  backgroundColor: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.15)',
+                  borderRadius: '10px', padding: '12px 16px', marginBottom: '20px',
+                }}
+              >
+                <p style={{ color: '#9ca3af', fontSize: '12px', lineHeight: 1.7 }}>
+                  💡 Si no ves el correo en 2 minutos, revisa tu carpeta de <strong style={{ color: '#e5e7eb' }}>spam</strong> o correo no deseado.
+                </p>
+              </div>
+              <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                 <Link
                   href="/login"
                   style={{
