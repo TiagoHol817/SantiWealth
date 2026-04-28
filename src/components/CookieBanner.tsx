@@ -77,10 +77,10 @@ export default function CookieBanner() {
           {/* Text */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ color: '#e5e7eb', fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>
-              Tu privacidad, tu control
+              Tu dinero, tus reglas 🔒
             </p>
             <p style={{ color: '#6b7280', fontSize: '13px', lineHeight: 1.6 }}>
-              Utilizamos cookies esenciales para el funcionamiento de la app y cookies funcionales para recordar tus preferencias.{' '}
+              Usamos cookies esenciales para que la app funcione y cookies funcionales para recordar tus preferencias. Tus datos financieros nunca se venden ni se comparten.{' '}
               <Link href="/cookies" style={{ color: '#D4AF37', textDecoration: 'none' }}>
                 Política de cookies
               </Link>
@@ -142,7 +142,7 @@ export default function CookieBanner() {
               {/* Essential — always on */}
               <ConsentRow
                 label="Cookies esenciales"
-                description="Necesarias para la autenticación y seguridad de la sesión. No se pueden desactivar."
+                description="Indispensables para tu seguridad. Manejan tu sesión y autenticación. No se pueden desactivar — son lo que te mantiene protegido."
                 checked={true}
                 locked={true}
                 onChange={() => {}}
@@ -150,7 +150,7 @@ export default function CookieBanner() {
               {/* Functional */}
               <ConsentRow
                 label="Cookies funcionales"
-                description="Recuerdan tus preferencias de interfaz (menú, densidad, tema). Mejoran tu experiencia."
+                description="Recuerdan tus preferencias de vista y configuración para que cada vez que entres, WealthHost se sienta como tuyo."
                 checked={prefs.functional}
                 locked={false}
                 onChange={v => setPrefs(p => ({ ...p, functional: v }))}

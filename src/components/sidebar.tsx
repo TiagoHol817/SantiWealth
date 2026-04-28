@@ -8,7 +8,7 @@ import { useBalance } from '@/context/BalanceContext'
 import {
   LayoutDashboard, ArrowLeftRight, TrendingUp,
   PieChart, Target, Receipt, LogOut,
-  Eye, EyeOff, Bell, X, BarChart3, Wallet, HelpCircle,
+  Eye, EyeOff, Bell, X, BarChart3, Wallet,
   Sun, Moon, PanelLeftClose, PanelLeftOpen, Settings2,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
@@ -28,7 +28,6 @@ const navItems = [
   { href: '/costos-op',     label: 'Costos fijos',  icon: Receipt,         tooltip: 'Gastos recurrentes'    },
   { href: '/ingresos',      label: 'Ingresos',      icon: Wallet,          tooltip: 'Fuentes de ingreso'    },
   { href: '/reportes',      label: 'Reportes',      icon: BarChart3,       tooltip: 'Análisis y estadísticas' },
-  { href: '/ayuda',         label: 'Ayuda',         icon: HelpCircle,      tooltip: 'Centro de ayuda'       },
   { href: '/settings',      label: 'Ajustes',       icon: Settings2,       tooltip: 'Configuración'         },
 ]
 
