@@ -188,18 +188,54 @@ export default async function InversionesPage({
 
       {/* ══ TAB: PORTAFOLIO ══════════════════════════════════════════════════ */}
       {activeTab === 'portafolio' && rows.length === 0 && (
-        <div className="rounded-2xl p-16 text-center"
-          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-          <p className="text-5xl mb-4">📈</p>
-          <p className="text-white font-semibold text-lg mb-2">Tu portafolio de inversiones está vacío.</p>
-          <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '24px' }}>
-            Registra tus inversiones y ve cómo crece tu patrimonio.
-          </p>
-          <a href="mailto:?subject=Agregar inversión en SantiWealth"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #818cf8)', color: 'white' }}>
-            + Agregar inversión
-          </a>
+        <div className="rounded-2xl overflow-hidden relative"
+          style={{ background: 'linear-gradient(135deg, #0f1117 0%, #1a1f2e 50%, #0d1526 100%)', border: '1px solid #2a3040' }}>
+          {/* Glow blobs */}
+          <div className="absolute top-0 left-1/2 w-96 h-96 rounded-full opacity-[0.07] blur-3xl pointer-events-none"
+            style={{ background: '#6366f1', transform: 'translate(-50%, -40%)' }} />
+          <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full opacity-[0.05] blur-3xl pointer-events-none"
+            style={{ background: '#818cf8', transform: 'translate(30%, 30%)' }} />
+
+          <div className="relative px-8 py-14 text-center">
+            {/* Icon */}
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-6"
+              style={{ background: 'linear-gradient(135deg, #6366f115, #818cf825)', border: '1px solid #6366f130' }}>
+              <span style={{ fontSize: '36px' }}>📈</span>
+            </div>
+
+            <h2 className="text-white font-bold text-2xl mb-3 tracking-tight">
+              Empieza a construir tu portafolio
+            </h2>
+            <p style={{ color: '#9ca3af', fontSize: '15px', maxWidth: '480px', margin: '0 auto 32px' }}>
+              Registra tus acciones, ETFs y criptos. Visualiza tu patrimonio total en tiempo real,
+              en COP y USD, con métricas de rendimiento.
+            </p>
+
+            {/* Feature cards */}
+            <div className="grid grid-cols-3 gap-4 mb-10 text-left">
+              {[
+                { icon: '📊', title: 'Portafolio en vivo', desc: 'Precios actualizados de Yahoo Finance cada minuto' },
+                { icon: '💱', title: 'Doble moneda', desc: 'Todo convertido a COP y USD con TRM del día' },
+                { icon: '🎯', title: 'Camino a $100K USD', desc: 'Rastrea tu avance hacia la meta de patrimonio neto' },
+              ].map(card => (
+                <div key={card.title} className="rounded-xl p-4"
+                  style={{ backgroundColor: '#ffffff06', border: '1px solid #ffffff0a' }}>
+                  <p style={{ fontSize: '22px', marginBottom: '8px' }}>{card.icon}</p>
+                  <p className="text-white text-sm font-semibold mb-1">{card.title}</p>
+                  <p style={{ color: '#6b7280', fontSize: '12px', lineHeight: 1.5 }}>{card.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <a href="/inversiones/agregar"
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 hover:scale-105"
+              style={{ background: 'linear-gradient(135deg, #6366f1, #818cf8)', color: 'white', boxShadow: '0 0 32px #6366f140' }}>
+              + Agregar primera inversión
+            </a>
+            <p style={{ color: '#4b5563', fontSize: '12px', marginTop: '16px' }}>
+              Soporta acciones, ETFs, CDTs, cripto y fondos de inversión
+            </p>
+          </div>
         </div>
       )}
 

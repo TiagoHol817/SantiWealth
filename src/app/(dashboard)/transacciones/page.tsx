@@ -3,6 +3,7 @@ import TransaccionForm from './TransaccionForm'
 import FiltrosMes from './FiltrosMes'
 import EditarTransaccion from './EditarTransaccion'
 import ResumenPresupuesto from './ResumenPresupuesto'
+import TransaccionesChart from './TransaccionesChart'
 import HelpModal from '@/components/help/HelpModal'
 import QuickAddFAB from '@/components/QuickAddFAB'
 import Link from 'next/link'
@@ -14,6 +15,20 @@ const TYPE_ICON: Record<string, { icon: string; bg: string; color: string }> = {
   expense:      { icon: '↓', bg: '#2d1515', color: '#ef4444' },
   income:       { icon: '↑', bg: '#0a2d1f', color: '#10b981' },
   debt_payment: { icon: '⚡', bg: '#2d2010', color: '#f59e0b' },
+}
+
+function formatDateHeader(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00')
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  const sameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+
+  if (sameDay(d, today))     return 'Hoy'
+  if (sameDay(d, yesterday)) return 'Ayer'
+  return d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
 export default async function TransaccionesPage({
@@ -37,10 +52,40 @@ export default async function TransaccionesPage({
     return 0
   })
 
+  // Fetch last 6 months for chart + current transactions
+  const now = new Date()
+  const hace6Meses = new Date(now)
+  hace6Meses.setMonth(hace6Meses.getMonth() - 5)
+  const desde = `${hace6Meses.getFullYear()}-${String(hace6Meses.getMonth() + 1).padStart(2, '0')}-01`
+
   const { data: transactions } = await supabase
     .from('transactions')
     .select('id, user_id, account_id, type, amount, category, description, date, accounts!transactions_account_id_fkey(name)')
     .order('date', { ascending: false })
+
+  const { data: txChart } = await supabase
+    .from('transactions')
+    .select('date, amount, type')
+    .gte('date', desde)
+
+  // Build 6-month chart data
+  const chartMap: Record<string, { ingresos: number; gastos: number }> = {}
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    chartMap[key] = { ingresos: 0, gastos: 0 }
+  }
+  txChart?.forEach(t => {
+    const key = t.date.slice(0, 7)
+    if (!chartMap[key]) return
+    if (t.type === 'income')   chartMap[key].ingresos += Number(t.amount)
+    if (t.type === 'expense')  chartMap[key].gastos   += Number(t.amount)
+  })
+  const chartData = Object.entries(chartMap).map(([mes, vals]) => ({
+    mes,
+    label: new Date(mes + '-15').toLocaleDateString('es-CO', { month: 'short', year: '2-digit' }),
+    ...vals,
+  }))
 
   const mes          = params.mes        ?? new Date().toISOString().slice(0, 7)
   const cuentaFiltro = params.cuenta     ?? 'todas'
@@ -69,6 +114,14 @@ export default async function TransaccionesPage({
   filtradas.filter(t => t.type === 'expense').forEach(t => {
     porCategoria[t.category] = (porCategoria[t.category] ?? 0) + Number(t.amount)
   })
+
+  // Group filtered transactions by date
+  const byDate: Record<string, typeof filtradas> = {}
+  filtradas.forEach(t => {
+    if (!byDate[t.date]) byDate[t.date] = []
+    byDate[t.date].push(t)
+  })
+  const dateGroups = Object.entries(byDate).sort(([a], [b]) => b.localeCompare(a))
 
   return (
     <div style={{ color: '#e5e7eb' }}>
@@ -132,6 +185,11 @@ export default async function TransaccionesPage({
         ))}
       </div>
 
+      {/* Evolución mensual chart */}
+      {(transactions ?? []).length > 0 && (
+        <TransaccionesChart data={chartData} />
+      )}
+
       {/* Gastos por categoría */}
       {Object.keys(porCategoria).length > 0 && (
         <div className="rounded-xl p-5 mb-6"
@@ -181,58 +239,71 @@ export default async function TransaccionesPage({
             </p>
           </div>
         ) : (
-          filtradas.map((t, i) => {
-            const cfg = TYPE_ICON[t.type] ?? TYPE_ICON.expense
-            return (
-              <div
-                key={t.id}
-                className="flex items-center justify-between px-6 py-4 group transition-all hover:bg-white/[0.02]"
-                style={{ borderBottom: i < filtradas.length - 1 ? '1px solid #1e2535' : 'none' }}
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                    style={{ backgroundColor: cfg.bg, color: cfg.color }}>
-                    {cfg.icon}
-                  </div>
-                  <div>
-                    <p className="text-white text-sm font-medium">
-                      {t.description || t.category}
-                    </p>
-                    <p style={{ color: '#6b7280', fontSize: '12px' }}>
-                      <span style={{
-                        display: 'inline-block', padding: '1px 6px', borderRadius: '4px', marginRight: '6px',
-                        backgroundColor: cfg.bg, color: cfg.color, fontSize: '10px', fontWeight: '500'
-                      }}>
-                        {t.type === 'income' ? 'Ingreso' : t.type === 'debt_payment' ? 'Deuda' : 'Gasto'}
-                      </span>
-                      {t.category} · {(t.accounts as any)?.name} ·{' '}
-                      {new Date(t.date + 'T12:00:00').toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <p
-                    className="tabular-nums font-semibold"
-                    style={{ color: cfg.color, fontSize: '15px' }}>
-                    {t.type === 'expense' || t.type === 'debt_payment' ? '-' : '+'}
-                    {fmtCOP(Number(t.amount))}
-                  </p>
-                  <EditarTransaccion
-                    id={t.id}
-                    amount={Number(t.amount)}
-                    description={t.description ?? ''}
-                    category={t.category}
-                    date={t.date}
-                    accounts={accounts}
-                    accountId={t.account_id}
-                    type={t.type}
-                  />
-                </div>
+          dateGroups.map(([date, txs]) => (
+            <div key={date}>
+              {/* Date header */}
+              <div className="px-6 py-2 flex items-center justify-between"
+                style={{ backgroundColor: '#0f1117', borderBottom: '1px solid #1e2535' }}>
+                <span style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  {formatDateHeader(date)}
+                </span>
+                <span style={{ color: '#4b5563', fontSize: '11px' }}>
+                  {fmtCOP(txs.reduce((s, t) => s + (t.type !== 'income' ? -1 : 1) * Number(t.amount), 0))}
+                </span>
               </div>
-            )
-          })
+              {txs.map((t, i) => {
+                const cfg = TYPE_ICON[t.type] ?? TYPE_ICON.expense
+                return (
+                  <div
+                    key={t.id}
+                    className="flex items-center justify-between px-6 py-4 group transition-all hover:bg-white/[0.02]"
+                    style={{ borderBottom: i < txs.length - 1 ? '1px solid #1e2535' : 'none' }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                        style={{ backgroundColor: cfg.bg, color: cfg.color }}>
+                        {cfg.icon}
+                      </div>
+                      <div>
+                        <p className="text-white text-sm font-medium">
+                          {t.description || t.category}
+                        </p>
+                        <p style={{ color: '#6b7280', fontSize: '12px' }}>
+                          <span style={{
+                            display: 'inline-block', padding: '1px 6px', borderRadius: '4px', marginRight: '6px',
+                            backgroundColor: cfg.bg, color: cfg.color, fontSize: '10px', fontWeight: '500'
+                          }}>
+                            {t.type === 'income' ? 'Ingreso' : t.type === 'debt_payment' ? 'Deuda' : 'Gasto'}
+                          </span>
+                          {t.category} · {(t.accounts as any)?.name}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <p
+                        className="tabular-nums font-semibold"
+                        style={{ color: cfg.color, fontSize: '15px' }}>
+                        {t.type === 'expense' || t.type === 'debt_payment' ? '-' : '+'}
+                        {fmtCOP(Number(t.amount))}
+                      </p>
+                      <EditarTransaccion
+                        id={t.id}
+                        amount={Number(t.amount)}
+                        description={t.description ?? ''}
+                        category={t.category}
+                        date={t.date}
+                        accounts={accounts}
+                        accountId={t.account_id}
+                        type={t.type}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ))
         )}
       </div>
 

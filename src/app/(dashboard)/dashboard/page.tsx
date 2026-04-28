@@ -227,9 +227,9 @@ export default async function DashboardPage() {
         </div>
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: 'Ingresos',     value: ingresosMes, color: '#10b981' },
-            { label: 'Gastos',       value: gastosMes,   color: '#ef4444' },
-            { label: 'Balance neto', value: balanceMes,  color: balanceMes >= 0 ? '#10b981' : '#ef4444' },
+            { label: 'Ingresos',     value: ingresosMes, color: ingresosMes > 0 ? '#10b981' : '#9ca3af' },
+            { label: 'Gastos',       value: gastosMes,   color: gastosMes   > 0 ? '#ef4444' : '#9ca3af' },
+            { label: 'Balance neto', value: balanceMes,  color: balanceMes  > 0 ? '#10b981' : balanceMes < 0 ? '#ef4444' : '#9ca3af' },
           ].map(item => (
             <div key={item.label}
               className="rounded-xl p-4"
