@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Globe } from 'lucide-react'
@@ -46,6 +46,19 @@ export default function LoginPage() {
   const [lang, setLang]             = useState<'es' | 'en'>('es')
   const [showLang, setShowLang]     = useState(false)
 
+  // Read ?error= from URL (redirected from OAuth callback)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const urlErr = params.get('error')
+    if (urlErr) {
+      setError(
+        urlErr === 'no_code'
+          ? 'El inicio de sesión fue cancelado. Intenta de nuevo.'
+          : 'Hubo un problema al iniciar sesión con Google. Intenta de nuevo.'
+      )
+    }
+  }, [])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -73,14 +86,22 @@ export default function LoginPage() {
   }
 
   async function handleOAuth(provider: 'google' | 'apple') {
-  const supabase = createClient()
-  await supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-    },
-  })
-}
+    const supabase = createClient()
+    // Always use the fixed production URL — never window.location.origin,
+    // which would capture a Vercel preview deployment URL and cause
+    // DEPLOYMENT_NOT_FOUND after that preview is superseded.
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wealthhost-nu.vercel.app'
+    await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${siteUrl}/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    })
+  }
 
   return (
     <div

@@ -4,18 +4,36 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {
-  const requestUrl = new URL(request.url)
-  const code = requestUrl.searchParams.get('code')
-  const next = requestUrl.searchParams.get('next') ?? '/dashboard'
+  const requestUrl  = new URL(request.url)
+  const code        = requestUrl.searchParams.get('code')
+  const next        = requestUrl.searchParams.get('next') ?? '/dashboard'
+  const oauthError  = requestUrl.searchParams.get('error')
+  const oauthDesc   = requestUrl.searchParams.get('error_description')
 
-  if (code) {
+  // Always redirect to the fixed production URL — never build a URL from
+  // request.url, which can be a Vercel preview deployment domain.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wealthhost-nu.vercel.app'
+
+  if (oauthError) {
+    console.error('[api/auth/callback] OAuth error:', oauthError, oauthDesc)
+    return NextResponse.redirect(
+      `${siteUrl}/login?error=${encodeURIComponent(oauthDesc ?? oauthError)}`
+    )
+  }
+
+  if (!code) {
+    console.error('[api/auth/callback] No code received')
+    return NextResponse.redirect(`${siteUrl}/login?error=no_code`)
+  }
+
+  try {
     const cookieStore = await cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() { return cookieStore.getAll() },
+          getAll()            { return cookieStore.getAll() },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
@@ -28,12 +46,14 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (error) {
-      console.error('[auth/callback] PKCE exchange failed:', error.message)
-      return NextResponse.redirect(new URL('/login?error=auth', request.url))
+      console.error('[api/auth/callback] PKCE exchange failed:', error.message)
+      return NextResponse.redirect(
+        `${siteUrl}/login?error=${encodeURIComponent(error.message)}`
+      )
     }
 
     if (user) {
-      // Upsert user_settings row so onboarding check never 404s for new OAuth users
+      // Ensure every OAuth user has a user_settings row
       await supabase
         .from('user_settings')
         .upsert(
@@ -48,10 +68,14 @@ export async function GET(request: NextRequest) {
         .maybeSingle()
 
       if (!settings?.onboarding_completed) {
-        return NextResponse.redirect(new URL('/onboarding', request.url))
+        return NextResponse.redirect(`${siteUrl}/onboarding`)
       }
     }
-  }
 
-  return NextResponse.redirect(new URL(next, request.url))
+    return NextResponse.redirect(`${siteUrl}${next}`)
+
+  } catch (err) {
+    console.error('[api/auth/callback] Unexpected error:', err)
+    return NextResponse.redirect(`${siteUrl}/login?error=unexpected`)
+  }
 }

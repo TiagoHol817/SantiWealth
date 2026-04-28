@@ -29,8 +29,10 @@ export async function proxy(request: NextRequest) {
   const publicRoutes = [
     '/',
     '/login',
+    '/auth/login',
     '/auth/register',
     '/auth/callback',
+    '/auth/confirm',
     '/api/auth/callback',
     '/api/auth/',
   ]
