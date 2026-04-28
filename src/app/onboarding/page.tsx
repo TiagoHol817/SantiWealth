@@ -285,9 +285,10 @@ function StepDone({ name }: { name: string }) {
 /* ─── Main wizard ────────────────────────────────── */
 export default function OnboardingPage() {
   const router = useRouter()
-  const [user, setUser]       = useState<User | null>(null)
-  const [step, setStep]       = useState<Step>(1)
-  const [saving, setSaving]   = useState(false)
+  const [user, setUser]         = useState<User | null>(null)
+  const [step, setStep]         = useState<Step>(1)
+  const [saving, setSaving]     = useState(false)
+  const [saveError, setSaveError] = useState(false)
   const [zeroSelected, setZeroSelected] = useState(false)
   const [data, setData]       = useState<WizardData>({
     currency:    'COP',
@@ -316,12 +317,20 @@ export default function OnboardingPage() {
   async function handleFinish() {
     if (!user) return
     setSaving(true)
+    setSaveError(false)
 
+    // 1 — Mark onboarding done — CRITICAL: must succeed before redirect
     try {
-      // 1 — Mark onboarding done via Server Action (runs revalidatePath to bust layout cache)
       await completeOnboarding({ base_currency: data.currency, country: data.country })
+    } catch (err) {
+      console.error('[onboarding] completeOnboarding failed:', err)
+      setSaving(false)
+      setSaveError(true)
+      return // Do NOT redirect — loop prevention
+    }
 
-      // 2 — Create initial bank account if balance provided (client-side, needs auth cookie)
+    // 2 — Non-critical inserts: account + goal. Failures here don't block the user.
+    try {
       const supabase = createClient()
       const initialBalance = Number(data.initialBank)
       if (initialBalance > 0) {
@@ -333,7 +342,6 @@ export default function OnboardingPage() {
         })
       }
 
-      // 3 — Create initial goal if name + amount provided
       const goalAmount = Number(data.goalAmount)
       if (data.goalName.trim() && goalAmount > 0) {
         await supabase.from('investment_goals').insert({
@@ -348,12 +356,12 @@ export default function OnboardingPage() {
         })
       }
     } catch (err) {
-      console.error('Onboarding save error:', err)
-      // Still proceed — non-critical inserts should not block the user
+      console.error('[onboarding] Non-critical save failed (account/goal):', err)
+      // Intentional: don't block — user can add accounts and goals later
     }
 
+    // 3 — Success: show done screen then hard-navigate (forces layout server re-run)
     setStep('done')
-    // Hard navigation forces the dashboard layout to re-run as a fresh server component
     setTimeout(() => { window.location.href = '/dashboard' }, 2200)
   }
 
@@ -447,6 +455,13 @@ export default function OnboardingPage() {
               </button>
             )}
           </div>
+        )}
+
+        {/* Save error */}
+        {saveError && (
+          <p style={{ textAlign: 'center', marginTop: '12px', color: '#ef4444', fontSize: '13px' }}>
+            No se pudo guardar. Por favor intenta de nuevo.
+          </p>
         )}
 
         {/* Skip link for step 3 */}
