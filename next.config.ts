@@ -2,8 +2,9 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
 
-  // pdf-parse must run as native Node.js (not bundled) to avoid test-file errors
-  serverExternalPackages: ['pdfjs-dist'],
+  // pdfjs-dist v4 is pure ESM — it cannot be externalized (serverExternalPackages)
+  // because Node's require() cannot load ESM modules. Removing it lets Next.js/webpack
+  // bundle it, which handles ESM imports correctly on the server side.
 
   // Silencia el warning de Turbopack
   turbopack: {},
