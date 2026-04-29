@@ -131,15 +131,31 @@ function parseTransactionsByPosition(
     if (!dateItem) continue
 
     const [day, month] = dateItem.str.trim().split('/')
+    if (parseInt(day) > 31 || parseInt(month) > 12) continue
+
     const monthNum = parseInt(month)
     const year = (fromYear !== toYear && monthNum === 12) ? fromYear : toYear
 
-    // Valor: x entre 420–535, puede ser negativo
+    // Descripción: x entre 60–420, ordenar por x y unir
+    const descItems = rowItems
+      .filter(i => i.x >= 60 && i.x < 420)
+      .sort((a, b) => a.x - b.x)
+      .map(i => i.str.trim())
+      .filter(Boolean)
+    const description = descItems.join(' ').trim()
+
+    if (!description) continue
+    // Filtrar filas de encabezado / totales
+    if (description.length > 150) continue
+    if (description.includes('HASTA:') || description.includes('ESTADO DE CUENTA')) continue
+
+    // Valor: x entre 420–535, puede ser negativo o empezar con punto (.05)
     const valueItem = rowItems.find(
       i =>
         i.x >= 420 && i.x <= 535 &&
-        /^-?[\d,]*\.?\d+$/.test(i.str.trim()) &&
-        i.str.trim() !== '.'
+        /^-?\.?\d[\d,]*\.?\d*$/.test(i.str.trim()) &&
+        i.str.trim() !== '.'  &&
+        i.str.trim() !== '.00'
     )
     if (!valueItem) continue
 
@@ -154,20 +170,9 @@ function parseTransactionsByPosition(
       ? parseFloat(balanceItem.str.replace(/,/g, ''))
       : 0
 
-    // Descripción: x entre 60–420, ordenar por x y unir
-    const description = rowItems
-      .filter(i => i.x >= 60 && i.x < 420)
-      .sort((a, b) => a.x - b.x)
-      .map(i => i.str.trim())
-      .filter(Boolean)
-      .join(' ')
-      .trim()
-
-    if (!description) continue
-
-    const descUpper = description.toUpperCase()
-    const isIncome  =
-      value > 0              ||
+    const descUpper  = description.toUpperCase()
+    const isIncome   =
+      value > 0                    ||
       descUpper.includes('ABONO')  ||
       descUpper.includes('CONSIG') ||
       descUpper.includes('INTERES')
