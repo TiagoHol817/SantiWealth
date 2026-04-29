@@ -295,16 +295,17 @@ function RecurringModal({
   async function handleAdd(s: RecurringSuggestion) {
     setSaving(s.normalizedKey)
     try {
-      await supabase.from('operational_costs').insert({
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('No autenticado')
+      const { error } = await supabase.from('operational_costs').insert({
         name:      s.description.slice(0, 80),
-        cost_type: 'subscription',
         amount:    s.amount,
-        currency:  'COP',
         frequency: 'monthly',
         category:  s.category,
-        vendor:    s.description.slice(0, 80),
-        is_active: true,
+        active:    true,
+        user_id:   user.id,
       })
+      if (error) throw error
       setAdded(prev => new Set([...prev, s.normalizedKey]))
     } catch (e) {
       console.error('[recurring-add]', e)

@@ -15,6 +15,10 @@ const ICONOS: Record<string,string> = {
 const fmtCOP = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n)
 
+function lastDayOfMonth(year: number, month: number): string {
+  return new Date(year, month, 0).toISOString().split('T')[0]
+}
+
 function getBarColor(pct: number, excedido: boolean): string {
   if (excedido) return '#ef4444'
   if (pct > 80)  return '#f59e0b'
@@ -96,7 +100,7 @@ export default async function PresupuestosPage({
   // ── Gastos mes actual ─────────────────────────────────────────────────────
   const { data: txActual } = await supabase
     .from('transactions').select('category, amount, type')
-    .eq('type','expense').gte('date',`${mesStr}-01`).lte('date',`${mesStr}-31`)
+    .eq('type','expense').gte('date',`${mesStr}-01`).lte('date', lastDayOfMonth(year, mes))
 
   const gastos: Record<string,number> = {}
   txActual?.forEach(t => { gastos[t.category] = (gastos[t.category] ?? 0) + Number(t.amount) })
@@ -104,7 +108,7 @@ export default async function PresupuestosPage({
   // ── Gastos mes anterior ───────────────────────────────────────────────────
   const { data: txPrev } = await supabase
     .from('transactions').select('category, amount, type')
-    .eq('type','expense').gte('date',`${mesStrPrev}-01`).lte('date',`${mesStrPrev}-31`)
+    .eq('type','expense').gte('date',`${mesStrPrev}-01`).lte('date', lastDayOfMonth(yearPrev, mesPrev))
 
   const gastosPrev: Record<string,number> = {}
   txPrev?.forEach(t => { gastosPrev[t.category] = (gastosPrev[t.category] ?? 0) + Number(t.amount) })

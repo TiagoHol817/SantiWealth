@@ -3,6 +3,11 @@ import { useState } from 'react'
 import { FileText, X, Download, Check } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
+function lastDayOfMonth(yearMonth: string): string {
+  const [y, m] = yearMonth.split('-').map(Number)
+  return new Date(y, m, 0).toISOString().split('T')[0]
+}
+
 const SECCIONES = [
   { id: 'patrimonio',    label: 'Patrimonio',          icon: '💰' },
   { id: 'inversiones',   label: 'Inversiones',          icon: '📈' },
@@ -220,7 +225,7 @@ export default function ReportePDF({ patrimonio }: { patrimonio: PatrimonioData 
         const { data: budget } = await supabase.from('budgets').select('*').eq('month',mesNum).eq('year',yearNum).single()
         const limites: Record<string,number> = budget?.notes ? JSON.parse(budget.notes) : {}
         const { data: txs } = await supabase.from('transactions').select('category,amount').eq('type','expense')
-          .gte('date',`${mes}-01`).lte('date',`${mes}-31`)
+          .gte('date',`${mes}-01`).lte('date', lastDayOfMonth(mes))
         const gastos: Record<string,number> = {}
         txs?.forEach(t => { gastos[t.category] = (gastos[t.category]??0)+Number(t.amount) })
         const cats  = [...new Set([...Object.keys(limites),...Object.keys(gastos)])]
@@ -308,7 +313,7 @@ export default function ReportePDF({ patrimonio }: { patrimonio: PatrimonioData 
         const { data: txs } = await supabase
           .from('transactions')
           .select('type,amount,category,description,date,accounts!transactions_account_id_fkey(name)')
-          .gte('date',`${mes}-01`).lte('date',`${mes}-31`)
+          .gte('date',`${mes}-01`).lte('date', lastDayOfMonth(mes))
           .order('date',{ascending:false})
         const ingresos = (txs??[]).filter(t=>t.type==='income').reduce((s,t)=>s+Number(t.amount),0)
         const gastosTx = (txs??[]).filter(t=>t.type==='expense').reduce((s,t)=>s+Number(t.amount),0)
