@@ -136,6 +136,47 @@ function extractAccountLast4(text: string): string {
   return '????'
 }
 
+// ─── Transaction type classifier ─────────────────────────────────────────────
+
+type TxType = 'income' | 'expense' | 'transfer' | 'investment_return'
+
+function classifyTransaction(description: string, signedAmount: number): TxType {
+  const d = description.toUpperCase()
+
+  // Comisiones bancarias → gasto real aunque vengan positivas en el texto
+  if (d.includes('COMISION')) return 'expense'
+
+  // Impuesto 4x1000
+  if (d.includes('IMPTO GOBIERNO 4X1000')) return 'expense'
+
+  // Transferencias internas (no son ingreso ni gasto real)
+  if (
+    d.includes('TRANSFERENCIA CTA SUC VIRTUAL') ||
+    d.includes('CONSIGNACION CORRESPONSAL CB')  ||
+    d.includes('CONSIG NACIONAL EFECTIVO')
+  ) return 'transfer'
+
+  // Devolución de capital CDT al vencer (no es ingreso real)
+  if (d.includes('CANCELA INV VIRT') || d.includes('CANCELACION INV')) {
+    return 'investment_return'
+  }
+
+  // Apertura CDT → dinero que SALE (gasto)
+  if (d.includes('APERTURA INV VIRTUAL') || d.includes('APERTURA INV VIRT')) {
+    return 'expense'
+  }
+
+  // Intereses de inversión → ingreso real
+  if (
+    d.includes('INTERES INV VIRT')        ||
+    d.includes('ABONO INTERESES AHORROS') ||
+    d.includes('AJUSTE INTERESES')
+  ) return 'income'
+
+  // Fallback: signo del monto
+  return signedAmount < 0 ? 'expense' : 'income'
+}
+
 // ─── Parser por coordenadas ───────────────────────────────────────────────────
 
 function parseTransactionsByPosition(
@@ -203,18 +244,11 @@ function parseTransactionsByPosition(
     )
     const balance = balanceItem ? parseColombianAmount(balanceItem.str) : 0
 
-    const descUpper  = description.toUpperCase()
-    const isIncome   =
-      value > 0                    ||
-      descUpper.includes('ABONO')  ||
-      descUpper.includes('CONSIG') ||
-      descUpper.includes('INTERES')
-
     transactions.push({
       date:         `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`,
       description,
       amount:       Math.abs(value),
-      type:         value < 0 ? 'expense' : 'income',
+      type:         classifyTransaction(description, value),
       balance,
       accountLast4,
       statementYear: year,

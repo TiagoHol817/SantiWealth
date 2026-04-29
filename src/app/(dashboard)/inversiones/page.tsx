@@ -110,24 +110,65 @@ export default async function InversionesPage({
     }
   })
 
-  // ── CDTs ──────────────────────────────────────────────────────────────────
-  const { data: cdtAccounts } = await supabase
-    .from('accounts').select('*').eq('type', 'other').ilike('name', '%CDT%')
+  // ── CDTs (manual via accounts + importados via cdts table) ──────────────────
+  const [{ data: cdtAccounts }, { data: cdtsImported }] = await Promise.all([
+    supabase.from('accounts').select('*').eq('type', 'other').ilike('name', '%CDT%'),
+    supabase.from('cdts').select('*').order('start_date', { ascending: false }),
+  ])
 
   const today = new Date()
-  const cdts  = (cdtAccounts ?? []).map(a => {
+
+  // Normalize accounts-based CDTs (manual)
+  const cdtsFromAccounts = (cdtAccounts ?? []).map(a => {
     const meta         = typeof a.notes === 'string' ? JSON.parse(a.notes) : (a.notes ?? {})
     const vencimiento  = new Date(meta.vencimiento)
     const apertura     = new Date(meta.apertura)
     const diasRestantes = Math.ceil((vencimiento.getTime() - today.getTime()) / 86400000)
-    const diasTotales  = Math.ceil((vencimiento.getTime() - apertura.getTime()) / 86400000)
-    const progreso     = Math.min(100, Math.round(((diasTotales - diasRestantes) / diasTotales) * 100))
+    const diasTotales  = Math.max(1, Math.ceil((vencimiento.getTime() - apertura.getTime()) / 86400000))
+    const progreso     = Math.min(100, Math.max(0, Math.round(((diasTotales - diasRestantes) / diasTotales) * 100)))
     const capital      = Number(a.current_balance) || 0
-    const rendTotal    = capital * (meta.tasa_ea / 100) * (diasTotales / 365)
-    const rendActual   = capital * (meta.tasa_ea / 100) * ((diasTotales - Math.max(0, diasRestantes)) / 365)
-    return { ...a, meta, diasRestantes, diasTotales, progreso, capital, rendTotal, rendActual,
-      vencido: diasRestantes <= 0, urgente: diasRestantes > 0 && diasRestantes <= 15 }
-  }).sort((a, b) => a.diasRestantes - b.diasRestantes)
+    const rendTotal    = capital * ((meta.tasa_ea ?? 0) / 100) * (diasTotales / 365)
+    const rendActual   = capital * ((meta.tasa_ea ?? 0) / 100) * ((diasTotales - Math.max(0, diasRestantes)) / 365)
+    return {
+      id: a.id, name: a.name, meta, diasRestantes, diasTotales, progreso,
+      capital, rendTotal, rendActual,
+      vencido: diasRestantes <= 0, urgente: diasRestantes > 0 && diasRestantes <= 15,
+      source: 'account' as const,
+    }
+  })
+
+  // Normalize imported CDTs from cdts table
+  const cdtsFromTable = (cdtsImported ?? []).map(c => {
+    const endDate    = c.end_date ?? c.start_date
+    const apertura   = new Date(c.start_date)
+    const vencim     = new Date(endDate)
+    const diasRestantes = Math.ceil((vencim.getTime() - today.getTime()) / 86400000)
+    const diasTotales   = Math.max(1, Math.ceil((vencim.getTime() - apertura.getTime()) / 86400000))
+    const progreso   = Math.min(100, Math.max(0, Math.round(((diasTotales - diasRestantes) / diasTotales) * 100)))
+    const capital    = Number(c.capital)
+    const tasaEa     = Number(c.interest_rate ?? 0)
+    const rendTotal  = capital * (tasaEa / 100) * (diasTotales / 365)
+    const rendActual = capital * (tasaEa / 100) * ((diasTotales - Math.max(0, diasRestantes)) / 365)
+    const meta = {
+      apertura:        c.start_date,
+      vencimiento:     endDate,
+      tasa_ea:         tasaEa,
+      tasa_nominal:    tasaEa,
+      plazo_dias:      c.term_days ?? diasTotales,
+      interes_periodo: Number(c.interest_earned ?? 0),
+    }
+    return {
+      id: c.id as string,
+      name: `${c.bank}${c.investment_id ? ' #' + String(c.investment_id).slice(-6) : ' (importado)'}`,
+      meta, diasRestantes, diasTotales, progreso,
+      capital, rendTotal, rendActual,
+      vencido: diasRestantes <= 0, urgente: diasRestantes > 0 && diasRestantes <= 15,
+      source: 'cdts' as const,
+    }
+  })
+
+  const cdts = [...cdtsFromAccounts, ...cdtsFromTable]
+    .sort((a, b) => a.diasRestantes - b.diasRestantes)
 
   const totalCapitalCDT = cdts.reduce((s, c) => s + c.capital, 0)
   const totalRendCDT    = cdts.reduce((s, c) => s + c.rendTotal, 0)
@@ -155,6 +196,11 @@ export default async function InversionesPage({
           </div>
           <div className="flex items-center gap-3">
             <HelpModal moduleId="inversiones" />
+            <a href="/inversiones/importar"
+              className="px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+              style={{ backgroundColor: '#1a1f2e', border: '1px solid #f59e0b40', color: '#f59e0b' }}>
+              ← Importar CDT
+            </a>
             <a href="/inversiones"
               className="px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
               style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#10b981' }}>
@@ -406,7 +452,7 @@ export default async function InversionesPage({
             <p style={{ color: '#6b7280', fontSize: '13px' }}>
               {cdts.length} CDT{cdts.length !== 1 ? 's' : ''} activo{cdts.length !== 1 ? 's' : ''}
             </p>
-            <CDTUploader cdts={cdts.map(c => ({ id: c.id, name: c.name, notes: c.meta, current_balance: c.capital }))} />
+            <CDTUploader cdts={cdtsFromAccounts.map(c => ({ id: c.id, name: c.name, notes: c.meta, current_balance: c.capital }))} />
           </div>
 
           {/* KPIs CDTs */}
@@ -430,12 +476,12 @@ export default async function InversionesPage({
           </div>
 
           {/* Alerta próximo vencimiento */}
-          {proximoVenc !== undefined && proximoVenc <= 30 && (
+          {proximoVenc !== undefined && proximoVenc.diasRestantes <= 30 && (
             <div className="rounded-2xl px-5 py-4 flex items-center gap-3"
-              style={{ backgroundColor: proximoVenc <= 7 ? '#2d1515' : '#2d1f0a', border: `1px solid ${proximoVenc <= 7 ? '#ef444440' : '#f59e0b40'}` }}>
-              <span style={{ fontSize: '20px' }}>{proximoVenc <= 7 ? '🚨' : '⚠️'}</span>
-              <p style={{ color: proximoVenc <= 7 ? '#ef4444' : '#f59e0b', fontSize: '13px', fontWeight: '600' }}>
-                Próximo vencimiento en {proximoVenc} días — {cdts[0]?.name}
+              style={{ backgroundColor: proximoVenc.diasRestantes <= 7 ? '#2d1515' : '#2d1f0a', border: `1px solid ${proximoVenc.diasRestantes <= 7 ? '#ef444440' : '#f59e0b40'}` }}>
+              <span style={{ fontSize: '20px' }}>{proximoVenc.diasRestantes <= 7 ? '🚨' : '⚠️'}</span>
+              <p style={{ color: proximoVenc.diasRestantes <= 7 ? '#ef4444' : '#f59e0b', fontSize: '13px', fontWeight: '600' }}>
+                Próximo vencimiento en {proximoVenc.diasRestantes} días — {proximoVenc.name}
               </p>
             </div>
           )}

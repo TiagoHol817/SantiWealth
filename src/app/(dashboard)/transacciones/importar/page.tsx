@@ -6,9 +6,11 @@ import { ArrowLeft, Upload, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-
 import { createClient } from '@/lib/supabase/client'
 import { detectRecurringCosts, type RecurringSuggestion } from '@/lib/detectRecurring'
 import { useAchievementToast } from '@/components/ui/WealthMessage'
+import { loadCategoryRules, categorizeTransaction } from '@/lib/categorizeTransaction'
+import type { CDTData } from '@/lib/parseCDTClient'
 
 /* ── Types ──────────────────────────────────────────────────────────── */
-type TxType = 'income' | 'expense'
+type TxType = 'income' | 'expense' | 'transfer' | 'investment_return'
 
 type ParsedRow = {
   date:        string
@@ -86,6 +88,43 @@ function guessCategory(description: string): string {
     if (kws.some(k => d.includes(k))) return cat
   }
   return 'Otro'
+}
+
+const ALL_CATEGORIES = [...Object.keys(CATEGORY_MAP), 'Inversiones', 'Bancario', 'Otro']
+
+// Extracts CDT records from investment-category transactions (CANCELA/INTERES INV VIRT)
+function extractCDTsFromInvestmentRows(rows: ParsedRow[]): CDTData[] {
+  const map = new Map<string, { capital?: number; interest_earned?: number; date?: string }>()
+
+  for (const row of rows) {
+    const m = /INV[\s_]VIRT[\s_](\d+)/i.exec(row.description)
+    if (!m) continue
+    const id  = m[1]
+    const rec = map.get(id) ?? {}
+    if (/CANCELA/i.test(row.description)) {
+      rec.capital = row.amount
+      rec.date    = rec.date ?? row.date
+    } else if (/INTERES/i.test(row.description)) {
+      rec.interest_earned = row.amount
+      rec.date            = rec.date ?? row.date
+    }
+    map.set(id, rec)
+  }
+
+  return Array.from(map.entries())
+    .filter(([, v]) => v.capital != null)
+    .map(([id, v]) => ({
+      investment_id:   id,
+      bank:            'Bancolombia',
+      capital:         v.capital!,
+      interest_rate:   null,
+      term_days:       null,
+      start_date:      v.date ?? new Date().toISOString().split('T')[0],
+      end_date:        v.date ?? null,
+      interest_earned: v.interest_earned ?? 0,
+      status:          'matured' as const,
+      raw_text:        '',
+    }))
 }
 
 function parseRows(raw: string[][], bank: BankFormat): ParsedRow[] {
@@ -325,6 +364,9 @@ export default function ImportarPage() {
   const [accountType,     setAccountType]     = useState<string>('Cuenta de Ahorros')
   const [showRecurring,   setShowRecurring]   = useState(false)
   const [recurringSugg,   setRecurringSugg]   = useState<RecurringSuggestion[]>([])
+  const [showInvestmentBanner,  setShowInvestmentBanner]  = useState(false)
+  const [investmentCDTs,        setInvestmentCDTs]        = useState<CDTData[]>([])
+  const [registeringInvestments, setRegisteringInvestments] = useState(false)
   const [imageFile,             setImageFile]             = useState<File | null>(null)
   const [showImageInstructions, setShowImageInstructions] = useState(false)
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set())
@@ -364,6 +406,7 @@ export default function ImportarPage() {
         return
       }
 
+      const rules = await loadCategoryRules()
       setPasswordRequired(false)
       setPdfPassword('')
       setBank('bancolombia')
@@ -375,7 +418,7 @@ export default function ImportarPage() {
         description: t.description,
         amount:      t.amount,
         type:        t.type,
-        category:    guessCategory(t.description),
+        category:    categorizeTransaction(t.description, rules),
         include:     true,
       })))
     } catch (err: unknown) {
@@ -402,7 +445,8 @@ export default function ImportarPage() {
   }, [pdfPassword])
 
   /* ── process CSV client-side ────────────────────────────────────────── */
-  const processCSV = useCallback((file: File) => {
+  const processCSV = useCallback(async (file: File) => {
+    const rules  = await loadCategoryRules()
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
@@ -412,7 +456,10 @@ export default function ImportarPage() {
         const detected = detectBank(raw[0])
         setBank(detected)
         setSourceKind('csv')
-        setRows(parseRows(raw, detected))
+        setRows(parseRows(raw, detected).map(row => ({
+          ...row,
+          category: categorizeTransaction(row.description, rules),
+        })))
       } catch {
         setError('No se pudo procesar el archivo. Verifica que sea un CSV válido.')
       }
@@ -465,10 +512,13 @@ export default function ImportarPage() {
   const toggleRow  = (i: number) =>
     setRows(prev => prev.map((r, idx) => idx === i ? { ...r, include: !r.include } : r))
 
+  const TX_TYPE_CYCLE: TxType[] = ['income', 'expense', 'transfer', 'investment_return']
   const toggleType = (i: number) =>
-    setRows(prev => prev.map((r, idx) =>
-      idx === i ? { ...r, type: r.type === 'income' ? 'expense' : 'income' } : r
-    ))
+    setRows(prev => prev.map((r, idx) => {
+      if (idx !== i) return r
+      const next = TX_TYPE_CYCLE[(TX_TYPE_CYCLE.indexOf(r.type) + 1) % TX_TYPE_CYCLE.length]
+      return { ...r, type: next }
+    }))
 
   const selectedRows = rows.filter(r => r.include)
 
@@ -535,6 +585,15 @@ export default function ImportarPage() {
         }
       }
 
+      // Detect CDT movements (CANCELA/INTERES INV VIRT) → offer to register in Inversiones
+      const invRows  = selectedRows.filter(r => r.category === 'Inversiones')
+      const cdtItems = extractCDTsFromInvestmentRows(invRows)
+      if (cdtItems.length > 0) {
+        setInvestmentCDTs(cdtItems)
+        setShowInvestmentBanner(true)
+        return   // Don't auto-redirect yet; wait for user decision
+      }
+
       setTimeout(() => router.push('/transacciones'), 2000)
     } catch (err: unknown) {
       setImporting(false)
@@ -582,6 +641,79 @@ export default function ImportarPage() {
   /* ── render ─────────────────────────────────────────────────────────── */
   return (
     <>
+      {/* ── Investment detection modal ───────────────────────────────────── */}
+      {done && showInvestmentBanner && !showRecurring && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
+          <div className="rounded-2xl w-full max-w-md overflow-hidden"
+            style={{ backgroundColor: '#1a1f2e', border: '1px solid #f59e0b40' }}>
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+                  style={{ backgroundColor: '#f59e0b20' }}>📈</div>
+                <div>
+                  <p className="text-white font-semibold">
+                    CDT{investmentCDTs.length !== 1 ? 's' : ''} detectado{investmentCDTs.length !== 1 ? 's' : ''}
+                  </p>
+                  <p style={{ color: '#6b7280', fontSize: '12px' }}>
+                    {investmentCDTs.length} movimiento{investmentCDTs.length !== 1 ? 's' : ''} de inversión en el extracto
+                  </p>
+                </div>
+              </div>
+              <p style={{ color: '#9ca3af', fontSize: '13px', lineHeight: 1.7, marginBottom: '20px' }}>
+                Se detectaron <strong style={{ color: '#f59e0b' }}>
+                  {investmentCDTs.length} CDT{investmentCDTs.length !== 1 ? 's' : ''}
+                </strong> a partir de los movimientos de inversión.
+                ¿Quieres registrarlos también en el módulo de Inversiones?
+              </p>
+              <div className="space-y-2 mb-5">
+                {investmentCDTs.map(c => (
+                  <div key={c.investment_id} className="rounded-xl px-4 py-3 flex items-center justify-between"
+                    style={{ backgroundColor: '#0f1117', border: '1px solid #1e2535' }}>
+                    <span style={{ color: '#9ca3af', fontSize: '12px', fontFamily: 'monospace' }}>
+                      {c.bank} #{c.investment_id?.slice(-6)}
+                    </span>
+                    <span className="tabular-nums font-semibold" style={{ color: '#f59e0b', fontSize: '13px' }}>
+                      {fmtCOP(c.capital)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="px-6 pb-6 flex gap-3">
+              <button
+                onClick={() => { setShowInvestmentBanner(false); router.push('/transacciones') }}
+                className="flex-1 py-2 rounded-xl text-sm hover:opacity-80 transition-opacity"
+                style={{ backgroundColor: '#0f1117', color: '#6b7280', border: '1px solid #2a3040' }}>
+                No, gracias
+              </button>
+              <button
+                onClick={async () => {
+                  setRegisteringInvestments(true)
+                  try {
+                    await fetch('/api/cdts', {
+                      method:  'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body:    JSON.stringify(investmentCDTs),
+                    })
+                  } catch { /* non-blocking */ }
+                  setRegisteringInvestments(false)
+                  setShowInvestmentBanner(false)
+                  router.push('/inversiones?tab=renta-fija')
+                }}
+                disabled={registeringInvestments}
+                className="flex-1 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
+                style={{
+                  background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)',
+                  color: '#0f1117', opacity: registeringInvestments ? 0.7 : 1,
+                }}>
+                {registeringInvestments ? 'Registrando…' : 'Sí, registrar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Recurring suggestions modal */}
       {showRecurring && (
         <RecurringModal
@@ -852,7 +984,19 @@ export default function ImportarPage() {
             <div className="flex items-center justify-between mb-3">
               <p style={{ color: '#9ca3af', fontSize: '13px' }}>
                 <strong style={{ color: '#e5e7eb' }}>{selectedRows.length}</strong> de {rows.length} seleccionadas
-                {' · '}<strong style={{ color: '#10b981' }}>{fmtCOP(selectedRows.reduce((s,r) => s+r.amount, 0))}</strong> total
+                {' · '}
+                <strong style={{ color: '#10b981' }}>
+                  ↑ {fmtCOP(selectedRows.filter(r => r.type === 'income').reduce((s,r) => s+r.amount, 0))}
+                </strong>
+                {' · '}
+                <strong style={{ color: '#ef4444' }}>
+                  ↓ {fmtCOP(selectedRows.filter(r => r.type === 'expense').reduce((s,r) => s+r.amount, 0))}
+                </strong>
+                {selectedRows.some(r => r.type === 'transfer' || r.type === 'investment_return') && (
+                  <span style={{ color: '#6b7280' }}>
+                    {' · '}{selectedRows.filter(r => r.type === 'transfer' || r.type === 'investment_return').length} mov. neutros
+                  </span>
+                )}
               </p>
               <div className="flex gap-2">
                 <button
@@ -977,11 +1121,27 @@ export default function ImportarPage() {
                                   <td style={{ padding: '10px 14px' }} onClick={e => { e.stopPropagation(); toggleType(flatIdx) }}>
                                     <span style={{
                                       padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
-                                      backgroundColor: row.type === 'income' ? '#10b98120' : '#ef444420',
-                                      color:           row.type === 'income' ? '#10b981'   : '#ef4444',
-                                      border:          `1px solid ${row.type === 'income' ? '#10b98130' : '#ef444430'}`,
+                                      backgroundColor:
+                                        row.type === 'income'            ? '#10b98120' :
+                                        row.type === 'expense'           ? '#ef444420' :
+                                        row.type === 'transfer'          ? '#6b728020' :
+                                                                           '#6366f120',
+                                      color:
+                                        row.type === 'income'            ? '#10b981' :
+                                        row.type === 'expense'           ? '#ef4444' :
+                                        row.type === 'transfer'          ? '#9ca3af' :
+                                                                           '#818cf8',
+                                      border: `1px solid ${
+                                        row.type === 'income'            ? '#10b98130' :
+                                        row.type === 'expense'           ? '#ef444430' :
+                                        row.type === 'transfer'          ? '#6b728030' :
+                                                                           '#6366f130'
+                                      }`,
                                     }}>
-                                      {row.type === 'income' ? '↑ Ingreso' : '↓ Gasto'}
+                                      {row.type === 'income'            ? '↑ Ingreso'     :
+                                       row.type === 'expense'           ? '↓ Gasto'       :
+                                       row.type === 'transfer'          ? '⇄ Transferencia' :
+                                                                          '◎ Inversión'}
                                     </span>
                                   </td>
                                   <td style={{ padding: '10px 14px' }} onClick={e => e.stopPropagation()}>
@@ -990,14 +1150,14 @@ export default function ImportarPage() {
                                       value={row.category}
                                       onChange={e => setRows(prev => prev.map((r, idx) => idx === flatIdx ? { ...r, category: e.target.value } : r))}
                                     >
-                                      {Object.keys(CATEGORY_MAP).concat(['Otro']).map(c => (
+                                      {ALL_CATEGORIES.map(c => (
                                         <option key={c} value={c}>{c}</option>
                                       ))}
                                     </select>
                                   </td>
                                   <td style={{ padding: '10px 14px', textAlign: 'right' }}>
                                     <span className="tabular-nums font-semibold"
-                                      style={{ color: row.type === 'income' ? '#10b981' : '#ef4444' }}>
+                                      style={{ color: row.type === 'income' ? '#10b981' : row.type === 'expense' ? '#ef4444' : row.type === 'transfer' ? '#9ca3af' : '#818cf8' }}>
                                       {fmtCOP(row.amount)}
                                     </span>
                                   </td>
