@@ -17,6 +17,8 @@ export async function parsePDFInBrowser(
   file: File,
   password?: string
 ): Promise<{ transactions: ParsedTransaction[]; accountLast4: string; pageCount: number }> {
+  console.warn('parsePDFInBrowser called, file size:', file.size)
+
   // Importar pdfjs-dist dinámicamente — no afecta el bundle inicial
   const pdfjs = await import('pdfjs-dist')
 
@@ -68,9 +70,7 @@ export async function parsePDFInBrowser(
   }
 
   // ── DIAGNÓSTICO TEMPORAL — eliminar después ──────────────────────────
-  console.log('=== TEXTO EXTRAÍDO DEL PDF ===')
-  console.log(fullText.substring(0, 3000))
-  console.log('=== FIN TEXTO ===')
+  console.warn('=== PDF TEXT SAMPLE ===', fullText.substring(0, 3000))
   // ────────────────────────────────────────────────────────────────────
 
   const accountLast4  = extractAccountLast4(fullText)
