@@ -324,6 +324,8 @@ export default function ImportarPage() {
   const [accountLastFour, setAccountLastFour] = useState<string | null>(null)
   const [showRecurring,   setShowRecurring]   = useState(false)
   const [recurringSugg,   setRecurringSugg]   = useState<RecurringSuggestion[]>([])
+  const [imageFile,             setImageFile]             = useState<File | null>(null)
+  const [showImageInstructions, setShowImageInstructions] = useState(false)
 
   // ── PDF password state ───────────────────────────────────────────────────
   const [pdfPassword,      setPdfPassword]      = useState('')
@@ -419,12 +421,22 @@ export default function ImportarPage() {
     setPasswordRequired(false)
     setPdfPassword('')
     setPasswordError('')
+    setShowImageInstructions(false)
+    setImageFile(null)
 
-    if (file.name.toLowerCase().endsWith('.pdf')) {
-      processPDF(file)
-    } else {
-      processCSV(file)
+    const isPDF   = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+    const isImage = file.type.startsWith('image/')
+
+    if (isImage) {
+      setImageFile(file)
+      setShowImageInstructions(true)
+      return
     }
+    if (isPDF) {
+      processPDF(file)
+      return
+    }
+    processCSV(file)
   }, [processPDF, processCSV])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -572,7 +584,7 @@ export default function ImportarPage() {
         </div>
 
         {/* ── Drop zone ────────────────────────────────────────────────── */}
-        {!rows.length && !done && !parsing && !passwordRequired && (
+        {!rows.length && !done && !parsing && !passwordRequired && !showImageInstructions && (
           <div
             ref={dropRef}
             onDragOver={e => { e.preventDefault(); setDragging(true) }}
@@ -589,7 +601,7 @@ export default function ImportarPage() {
             <input
               ref={inputRef}
               type="file"
-              accept=".csv,.ofx,.qif,.txt,.pdf"
+              accept="application/pdf,text/csv,.csv,.ofx,.qif,image/png,image/jpeg,image/jpg,image/webp"
               className="hidden"
               onChange={handleFileInput}
             />
@@ -601,14 +613,14 @@ export default function ImportarPage() {
               o haz clic para seleccionar un archivo
             </p>
             <div className="flex gap-2 flex-wrap justify-center mb-4">
-              {['Bancolombia PDF', 'Davivienda', 'Nequi', 'Nu', 'CSV Genérico'].map(b => (
+              {['Bancolombia PDF', 'Davivienda', 'Nequi', 'Nu', 'CSV Genérico', 'Captura'].map(b => (
                 <span key={b} className="px-3 py-1 rounded-full text-xs"
                   style={{ backgroundColor: '#0f1117', border: '1px solid #2a3040', color: '#6b7280' }}>
                   {b}
                 </span>
               ))}
             </div>
-            <p style={{ color: '#4b5563', fontSize: '11px' }}>PDF · CSV · OFX · QIF · Máx 10 MB</p>
+            <p style={{ color: '#4b5563', fontSize: '11px' }}>PDF · CSV · OFX · QIF · Imagen (captura) · Máx 10 MB</p>
             <p className="mt-2 text-xs" style={{ color: 'rgba(229,231,235,0.3)' }}>
               🔒 Si tu extracto tiene contraseña, la pediremos en el siguiente paso
             </p>
@@ -622,6 +634,44 @@ export default function ImportarPage() {
             <Loader2 size={32} className="animate-spin" style={{ color: '#6366f1', marginBottom: '16px' }} />
             <p className="text-white font-semibold mb-1">Procesando extracto PDF…</p>
             <p style={{ color: '#6b7280', fontSize: '12px' }}>Extrayendo transacciones en memoria</p>
+          </div>
+        )}
+
+        {/* Image instructions panel */}
+        {showImageInstructions && imageFile && (
+          <div className="relative overflow-hidden rounded-2xl"
+            style={{ border: '1px solid rgba(99,102,241,0.25)', backgroundColor: '#1a1f2e' }}>
+            <div className="breathe-purple absolute inset-0 rounded-2xl pointer-events-none" />
+            <div className="relative space-y-3 p-5">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📸</span>
+                <p className="text-sm font-semibold" style={{ color: '#e5e7eb' }}>
+                  Captura recibida
+                </p>
+              </div>
+              <p className="text-sm leading-relaxed" style={{ color: 'rgba(229,231,235,0.6)' }}>
+                El procesamiento automático de imágenes estará disponible próximamente.
+                Por ahora puedes ingresar tus transacciones manualmente o usar tu extracto en PDF o CSV.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowImageInstructions(false); setImageFile(null) }}
+                  className="rounded-xl px-4 py-2 text-xs hover:opacity-80 transition-opacity"
+                  style={{ border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(229,231,235,0.6)', backgroundColor: 'transparent' }}
+                >
+                  Subir otro formato
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push('/transacciones')}
+                  className="rounded-xl px-4 py-2 text-xs font-semibold hover:opacity-90 transition-opacity"
+                  style={{ backgroundColor: '#6366f1', color: '#fff' }}
+                >
+                  Ingresar manualmente
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
