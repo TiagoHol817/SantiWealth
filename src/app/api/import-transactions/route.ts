@@ -128,6 +128,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Ninguna fila válida para importar' }, { status: 400 })
   }
 
+  console.log('[import-transactions] amounts sample:',
+    rows.slice(0, 3).map(r => ({
+      description: (r as Record<string, unknown>).description,
+      amount:      (r as Record<string, unknown>).amount,
+    }))
+  )
+
   const { error } = await supabase.from('transactions').insert(rows)
 
   if (error) {
@@ -148,6 +155,8 @@ export async function POST(req: NextRequest) {
         ? Number(body.last_balance)
         : null
 
+  console.log('[import-transactions] final balance:', closingBalance)
+
   if (accountId && closingBalance != null) {
     await supabase
       .from('accounts')
@@ -155,6 +164,8 @@ export async function POST(req: NextRequest) {
       .eq('id', accountId)
       .eq('user_id', user.id)
   }
+
+  console.log('[import-transactions] account updated:', accountId)
 
   return NextResponse.json({ success: true, count: rows.length, account_id: accountId })
 }

@@ -97,6 +97,13 @@ export async function parsePDFInBrowser(
   const transactions  = parseTransactionsByPosition(allItems, accountLast4, toYear, fromYear)
   const accountBalance = extractAccountBalance(fullText)
 
+  const suspiciousAmounts = transactions.filter(t => t.amount > 50_000_000)
+  if (suspiciousAmounts.length > 3) {
+    console.warn('[parsePDF] WARNING: múltiples transacciones > $50M, posible error de parsing:',
+      suspiciousAmounts.slice(0, 3).map(t => ({ desc: t.description, amount: t.amount }))
+    )
+  }
+
   return {
     transactions,
     accountLast4,
