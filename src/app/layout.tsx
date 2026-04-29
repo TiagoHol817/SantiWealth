@@ -13,12 +13,12 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: "SantiWealth — Finanzas personales inteligentes",
   description: "Controla tu dinero, inversiones y metas con IA. Gratis para empezar. Hecho para Colombia.",
-  metadataBase: new URL('https://wealthhost-nu.vercel.app'),
+  metadataBase: new URL('https://wealthost-nu.vercel.app'),
   alternates: { canonical: '/' },
   openGraph: {
     title: "SantiWealth — Finanzas personales inteligentes",
     description: "Controla tu dinero, inversiones y metas con IA. Gratis para empezar. Hecho para Colombia.",
-    url: 'https://wealthhost-nu.vercel.app',
+    url: 'https://wealthost-nu.vercel.app',
     siteName: 'SantiWealth',
     locale: 'es_CO',
     type: 'website',

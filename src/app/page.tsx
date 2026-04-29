@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   openGraph: {
     title:       'WealthHost — Tu patrimonio, bajo control',
     description: 'Finanzas personales inteligentes para Colombia.',
-    url:         'https://wealthhost-nu.vercel.app',
+    url:         'https://wealthost-nu.vercel.app',
     siteName:    'WealthHost',
     locale:      'es_CO',
     type:        'website',
@@ -28,7 +28,7 @@ interface Props {
 
 export default async function Home({ searchParams }: Props) {
   const params  = await searchParams
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wealthhost-nu.vercel.app'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wealthost-nu.vercel.app'
 
   // If Supabase sent back an OAuth error, forward it to the login page
   if (params.error) {

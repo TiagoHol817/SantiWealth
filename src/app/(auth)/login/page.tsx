@@ -90,7 +90,7 @@ export default function LoginPage() {
     // Always use the fixed production URL — never window.location.origin,
     // which would capture a Vercel preview deployment URL and cause
     // DEPLOYMENT_NOT_FOUND after that preview is superseded.
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wealthhost-nu.vercel.app'
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wealthost-nu.vercel.app'
     await supabase.auth.signInWithOAuth({
       provider,
       options: {

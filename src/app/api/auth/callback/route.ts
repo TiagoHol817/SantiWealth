@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
   // Always redirect to the fixed production URL — never build from request.url,
   // which can be a Vercel preview deployment domain.
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wealthhost-nu.vercel.app'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wealthost-nu.vercel.app'
 
   if (oauthError) {
     console.error('[api/auth/callback] OAuth error:', oauthError, oauthDesc)

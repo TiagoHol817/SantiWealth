@@ -51,7 +51,7 @@ export async function proxy(request: NextRequest) {
 
   // Always use the fixed production URL — never request.url, which can resolve
   // to a Vercel preview deployment hash that no longer exists.
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wealthhost-nu.vercel.app'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wealthost-nu.vercel.app'
 
   const publicRoutes = ['/login', '/landing']
   const isPublic = publicRoutes.some(r => pathname.startsWith(r))

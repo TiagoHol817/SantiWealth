@@ -164,7 +164,7 @@ export default function RegisterPage() {
   // ── Google OAuth ───────────────────────────────────────────────────────────
   async function handleGoogle() {
     const supabase = createClient()
-    const siteUrl  = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wealthhost-nu.vercel.app'
+    const siteUrl  = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wealthost-nu.vercel.app'
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
