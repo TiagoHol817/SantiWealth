@@ -90,7 +90,25 @@ function guessCategory(description: string): string {
   return 'Otro'
 }
 
-const ALL_CATEGORIES = [...Object.keys(CATEGORY_MAP), 'Inversiones', 'Bancario', 'Otro']
+const CATEGORY_ICONS: Record<string, string> = {
+  'Alimentación':            '🍽️',
+  'Transferencias':          '💸',
+  'Servicios/Suscripciones': '📱',
+  'Transporte':              '🚗',
+  'Salud':                   '💊',
+  'Compras':                 '🛍️',
+  'Inversiones':             '📈',
+  'Bancario':                '🏦',
+  'Vivienda':                '🏠',
+  'Ingresos':                '💰',
+  'Intereses':               '💹',
+  'Otro':                    '❓',
+}
+
+const ALL_CATEGORIES = [
+  'Alimentación', 'Transporte', 'Servicios/Suscripciones', 'Vivienda', 'Salud',
+  'Compras', 'Inversiones', 'Bancario', 'Ingresos', 'Intereses', 'Transferencias', 'Otro',
+]
 
 // Extracts CDT records from investment-category transactions (CANCELA/INTERES INV VIRT)
 function extractCDTsFromInvestmentRows(rows: ParsedRow[]): CDTData[] {
@@ -183,6 +201,81 @@ const BANK_LABELS: Record<BankFormat, string> = {
 
 const fmtCOP = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n)
+
+/* ── Count-up animation hook ─────────────────────────────────────────── */
+function useCountUp(target: number, duration = 800, enabled = false): number {
+  const [val, setVal] = useState(0)
+  useEffect(() => {
+    if (!enabled) return
+    setVal(0)
+    if (target === 0) return
+    const start = Date.now()
+    const tick = () => {
+      const p = Math.min((Date.now() - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - p, 3)
+      setVal(Math.round(target * eased))
+      if (p < 1) requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, enabled])
+  return val
+}
+
+/* ── Import summary card ─────────────────────────────────────────────── */
+function ImportSummary({
+  rows, accountLast4, accountType, bank,
+}: {
+  rows: ParsedRow[]
+  accountLast4: string | null
+  accountType: string
+  bank: BankFormat | null
+}) {
+  const income   = rows.filter(r => r.type === 'income').reduce((s, r) => s + r.amount, 0)
+  const expenses = rows.filter(r => r.type === 'expense').reduce((s, r) => s + r.amount, 0)
+  const net      = income - expenses
+
+  const incomeAnim   = useCountUp(income,            900, true)
+  const expensesAnim = useCountUp(expenses,          900, true)
+  const netAnim      = useCountUp(Math.abs(net),     900, true)
+  const countAnim    = useCountUp(rows.length,       600, true)
+
+  const dates    = rows.map(r => r.date).sort()
+  const first    = dates[0]?.slice(0, 7) ?? ''
+  const last     = dates[dates.length - 1]?.slice(0, 7) ?? ''
+  const MONTHS   = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+  const fmtM     = (ym: string) => { const [y, m] = ym.split('-'); return `${MONTHS[parseInt(m)-1]} ${y}` }
+  const period   = !first ? '—' : first === last ? fmtM(first) : `${fmtM(first)} – ${fmtM(last)}`
+  const bankName = bank === 'bancolombia' ? 'Bancolombia' : bank === 'davivienda' ? 'Davivienda' :
+                   bank === 'nequi' ? 'Nequi' : bank === 'nu' ? 'Nu' : 'Banco'
+
+  const metrics = [
+    { label: 'Total ingresos', value: fmtCOP(incomeAnim),                                  color: '#00d4aa' },
+    { label: 'Total gastos',   value: fmtCOP(expensesAnim),                                color: '#ef4444' },
+    { label: 'Balance',        value: (net < 0 ? '-' : '') + fmtCOP(netAnim),              color: net >= 0 ? '#00d4aa' : '#ef4444' },
+    { label: 'Transacciones',  value: String(countAnim),                                   color: '#6366f1' },
+  ]
+
+  return (
+    <div className="glass-card rounded-2xl p-5 mb-5">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '10px' }}>
+        {metrics.map(m => (
+          <div key={m.label} style={{ backgroundColor: '#0f1117', borderRadius: '14px', padding: '14px 16px', border: '1px solid rgba(255,255,255,0.04)' }}>
+            <p style={{ color: 'rgba(229,231,235,0.45)', fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+              {m.label}
+            </p>
+            <p className="tabular-nums font-bold" style={{ color: m.color, fontSize: '15px', lineHeight: 1 }}>
+              {m.value}
+            </p>
+          </div>
+        ))}
+      </div>
+      <p style={{ marginTop: '12px', color: 'rgba(229,231,235,0.35)', fontSize: '11px' }}>
+        Período: {period} · {bankName}{accountLast4 ? ` ****${accountLast4}` : ''} · {accountType}
+      </p>
+    </div>
+  )
+}
 
 /* ── Recurring modal ─────────────────────────────────────────────────── */
 function RecurringModal({
@@ -528,7 +621,10 @@ export default function ImportarPage() {
       return { ...r, type: next }
     }))
 
-  const selectedRows = rows.filter(r => r.include)
+  const selectedRows     = rows.filter(r => r.include)
+  const selectedIncome   = selectedRows.filter(r => r.type === 'income').reduce((s,r) => s+r.amount, 0)
+  const selectedExpenses = selectedRows.filter(r => r.type === 'expense').reduce((s,r) => s+r.amount, 0)
+  const selectedNet      = selectedIncome - selectedExpenses
 
   /* ── import ─────────────────────────────────────────────────────────── */
   async function importar() {
@@ -748,9 +844,9 @@ export default function ImportarPage() {
             <ArrowLeft size={14} /> Volver
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Importar transacciones</h1>
+            <h1 className="text-2xl font-bold text-white tracking-tight">Importa tu historial financiero</h1>
             <p style={{ color: '#6b7280', fontSize: '13px', marginTop: '2px' }}>
-              Sube tu extracto bancario en formato PDF, CSV, OFX o QIF
+              Los que conocen sus números toman mejores decisiones. Sube tu extracto y WealthHost hace el resto.
             </p>
           </div>
         </div>
@@ -938,13 +1034,33 @@ export default function ImportarPage() {
 
         {/* Success */}
         {done && !showRecurring && (
-          <div className="rounded-2xl p-12 text-center"
-            style={{ backgroundColor: '#1a1f2e', border: '1px solid #10b98140' }}>
-            <CheckCircle size={48} style={{ color: '#10b981', margin: '0 auto 16px' }} />
-            <p className="text-white font-bold text-xl mb-2">¡Importación completada!</p>
-            <p style={{ color: '#6b7280', fontSize: '13px' }}>
-              {selectedRows.length} transacciones importadas. Redirigiendo…
-            </p>
+          <div className="relative overflow-hidden rounded-2xl p-10 text-center"
+            style={{ border: '1px solid rgba(0,212,170,0.2)' }}>
+            <div className="breathe-green absolute inset-0 rounded-2xl pointer-events-none" />
+            <div className="relative">
+              <div style={{ fontSize: '40px', marginBottom: '12px' }}>🎉</div>
+              <p className="text-white font-bold text-xl mb-2">
+                ¡{selectedRows.length} transacciones importadas!
+              </p>
+              <p style={{ color: 'rgba(229,231,235,0.5)', fontSize: '13px', lineHeight: 1.7, marginBottom: '20px' }}>
+                Tu historial financiero ya está en WealthHost.<br />
+                Los que conocen sus números, deciden mejor.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="px-5 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
+                  style={{ background: 'linear-gradient(135deg,#D4AF37 0%,#b8922a 100%)', color: '#0f1117' }}>
+                  Ver mi dashboard
+                </button>
+                <button
+                  onClick={() => router.push('/transacciones')}
+                  className="px-5 py-2 rounded-xl text-sm hover:opacity-80 transition-opacity"
+                  style={{ backgroundColor: '#1a1f2e', color: '#9ca3af', border: '1px solid #2a3040' }}>
+                  Ver transacciones
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -979,54 +1095,18 @@ export default function ImportarPage() {
               </button>
             </div>
 
-            {/* Account masked info */}
-            {accountLastFour && (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl mb-4"
-                style={{ backgroundColor: '#1a1f2e', border: '1px solid #6366f130' }}>
-                <span style={{ fontSize: '14px' }}>🏦</span>
-                <p style={{ color: '#9ca3af', fontSize: '12px' }}>
-                  Bancolombia <strong style={{ color: '#6366f1' }}>****{accountLastFour}</strong>
-                  {' · '}{accountType}
-                </p>
-              </div>
-            )}
+            {/* Smart summary */}
+            <ImportSummary
+              rows={rows}
+              accountLast4={accountLastFour}
+              accountType={accountType}
+              bank={bank}
+            />
 
-            {/* Select all */}
-            <div className="flex items-center justify-between mb-3">
-              <p style={{ color: '#9ca3af', fontSize: '13px' }}>
-                <strong style={{ color: '#e5e7eb' }}>{selectedRows.length}</strong> de {rows.length} seleccionadas
-                {' · '}
-                <strong style={{ color: '#10b981' }}>
-                  ↑ {fmtCOP(selectedRows.filter(r => r.type === 'income').reduce((s,r) => s+r.amount, 0))}
-                </strong>
-                {' · '}
-                <strong style={{ color: '#ef4444' }}>
-                  ↓ {fmtCOP(selectedRows.filter(r => r.type === 'expense').reduce((s,r) => s+r.amount, 0))}
-                </strong>
-                {' · '}
-                <span style={{ color: '#6b7280' }}>
-                  = {(() => {
-                    const net = selectedRows.filter(r => r.type === 'income').reduce((s,r) => s+r.amount, 0)
-                              - selectedRows.filter(r => r.type === 'expense').reduce((s,r) => s+r.amount, 0)
-                    return <span style={{ color: net >= 0 ? '#10b981' : '#ef4444' }}>{net < 0 ? '-' : ''}{fmtCOP(Math.abs(net))}</span>
-                  })()}
-                </span>
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setRows(prev => prev.map(r => ({ ...r, include: true })))}
-                  className="px-3 py-1 rounded-lg text-xs"
-                  style={{ backgroundColor: '#10b98115', color: '#10b981', border: '1px solid #10b98130' }}>
-                  Todas
-                </button>
-                <button
-                  onClick={() => setRows(prev => prev.map(r => ({ ...r, include: false })))}
-                  className="px-3 py-1 rounded-lg text-xs"
-                  style={{ backgroundColor: '#0f1117', color: '#6b7280', border: '1px solid #2a3040' }}>
-                  Ninguna
-                </button>
-              </div>
-            </div>
+            {/* Month count hint */}
+            <p style={{ color: 'rgba(229,231,235,0.4)', fontSize: '12px', marginBottom: '10px' }}>
+              <strong style={{ color: '#e5e7eb' }}>{selectedRows.length}</strong> de {rows.length} seleccionadas — ajusta tipo o categoría por fila antes de importar
+            </p>
 
             {/* Grouped by month */}
             <div className="mb-6" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1129,8 +1209,10 @@ export default function ImportarPage() {
                                     </div>
                                   </td>
                                   <td style={{ padding: '10px 14px', color: '#9ca3af' }}>{row.date}</td>
-                                  <td style={{ padding: '10px 14px', color: '#e5e7eb', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {row.description || '—'}
+                                  <td style={{ padding: '10px 14px', color: '#e5e7eb', maxWidth: '200px' }}>
+                                    <span title={row.description} style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {row.description.length > 35 ? row.description.slice(0, 35) + '…' : row.description || '—'}
+                                    </span>
                                   </td>
                                   <td style={{ padding: '10px 14px' }} onClick={e => { e.stopPropagation(); toggleType(flatIdx) }}>
                                     <span style={{
@@ -1149,7 +1231,7 @@ export default function ImportarPage() {
                                       onChange={e => setRows(prev => prev.map((r, idx) => idx === flatIdx ? { ...r, category: e.target.value } : r))}
                                     >
                                       {ALL_CATEGORIES.map(c => (
-                                        <option key={c} value={c}>{c}</option>
+                                        <option key={c} value={c}>{CATEGORY_ICONS[c] ?? ''} {c}</option>
                                       ))}
                                     </select>
                                   </td>
@@ -1171,35 +1253,61 @@ export default function ImportarPage() {
               })}
             </div>
 
-            {/* Progress bar */}
-            {importing && (
-              <div className="mb-4">
-                <div className="flex justify-between mb-2">
-                  <p style={{ color: '#9ca3af', fontSize: '12px' }}>Importando transacciones…</p>
-                  <p style={{ color: '#10b981', fontSize: '12px' }}>{progress}%</p>
-                </div>
-                <div className="rounded-full overflow-hidden" style={{ height: '6px', backgroundColor: '#0f1117' }}>
+            {/* Sticky action bar */}
+            <div style={{
+              position: 'sticky', bottom: 0, zIndex: 10, marginTop: '8px',
+              backgroundColor: 'rgba(15,17,23,0.92)',
+              backdropFilter: 'blur(12px)',
+              borderTop: '1px solid rgba(255,255,255,0.06)',
+              padding: '10px 0',
+            }}>
+              {importing && (
+                <div className="rounded-full overflow-hidden mb-3" style={{ height: '3px', backgroundColor: '#1a1f2e' }}>
                   <div className="h-full rounded-full transition-all"
-                    style={{ width: `${progress}%`, backgroundColor: '#10b981' }} />
+                    style={{ width: `${progress}%`, background: 'linear-gradient(90deg,#6366f1,#00d4aa)' }} />
+                </div>
+              )}
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div style={{ fontSize: '13px' }}>
+                  <span style={{ color: 'rgba(229,231,235,0.55)' }}>
+                    {selectedRows.length} de {rows.length} seleccionadas
+                  </span>
+                  {selectedRows.length > 0 && (
+                    <span style={{ marginLeft: '12px', color: selectedNet >= 0 ? '#00d4aa' : '#ef4444', fontWeight: 600 }}>
+                      = {selectedNet < 0 ? '-' : ''}{fmtCOP(Math.abs(selectedNet))}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setRows(prev => prev.map(r => ({ ...r, include: true })))}
+                    style={{ padding: '8px 14px', borderRadius: '10px', fontSize: '12px', border: '1px solid #2a3040', backgroundColor: 'transparent', color: '#9ca3af', cursor: 'pointer' }}>
+                    Todas
+                  </button>
+                  <button
+                    onClick={() => setRows(prev => prev.map(r => ({ ...r, include: false })))}
+                    style={{ padding: '8px 14px', borderRadius: '10px', fontSize: '12px', border: '1px solid #2a3040', backgroundColor: 'transparent', color: '#9ca3af', cursor: 'pointer' }}>
+                    Ninguna
+                  </button>
+                  <button
+                    onClick={importar}
+                    disabled={importing || selectedRows.length === 0}
+                    className="flex items-center gap-2"
+                    style={{
+                      padding: '8px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, border: 'none',
+                      background: (importing || selectedRows.length === 0)
+                        ? '#2a3040'
+                        : 'linear-gradient(135deg,#D4AF37 0%,#b8922a 100%)',
+                      color: (importing || selectedRows.length === 0) ? '#6b7280' : '#0f1117',
+                      cursor: (importing || selectedRows.length === 0) ? 'not-allowed' : 'pointer',
+                    }}>
+                    {importing
+                      ? <><Loader2 size={14} className="animate-spin" /> {progress}%</>
+                      : `Importar ${selectedRows.length} →`}
+                  </button>
                 </div>
               </div>
-            )}
-
-            {/* Import button */}
-            <button
-              onClick={importar}
-              disabled={importing || selectedRows.length === 0}
-              className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-opacity"
-              style={{
-                background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)',
-                color: '#0f1117',
-                opacity: (importing || selectedRows.length === 0) ? 0.5 : 1,
-              }}
-            >
-              {importing
-                ? <><Loader2 size={16} className="animate-spin" /> Importando {progress}%…</>
-                : `Importar ${selectedRows.length} transacción${selectedRows.length !== 1 ? 'es' : ''}`}
-            </button>
+            </div>
           </>
         )}
       </div>
