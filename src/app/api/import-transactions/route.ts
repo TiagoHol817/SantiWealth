@@ -135,12 +135,42 @@ export async function POST(req: NextRequest) {
     }))
   )
 
-  const { error } = await supabase.from('transactions').insert(rows)
+  /* ── Dedup: skip rows already in DB (same user+date+description+amount) ── */
+  const dates = rows.map(r => (r as Record<string, unknown>).date as string)
+  const minDate = dates.reduce((a, b) => (a < b ? a : b))
+  const maxDate = dates.reduce((a, b) => (a > b ? a : b))
+
+  const { data: existing } = await supabase
+    .from('transactions')
+    .select('date, description, amount')
+    .eq('user_id', user.id)
+    .gte('date', minDate)
+    .lte('date', maxDate)
+
+  const existingKeys = new Set(
+    (existing ?? []).map(e => `${e.date}|${e.description}|${e.amount}`)
+  )
+
+  const newRows = rows.filter(r => {
+    const rec = r as Record<string, unknown>
+    const key = `${rec.date}|${rec.description}|${rec.amount}`
+    return !existingKeys.has(key)
+  })
+
+  console.log('[import-transactions] dedup:', rows.length, '→', newRows.length, 'new rows')
+
+  if (newRows.length === 0) {
+    return NextResponse.json({ success: true, count: 0, account_id: accountId, skipped: rows.length })
+  }
+
+  const { error } = await supabase.from('transactions').insert(newRows)
 
   if (error) {
     console.error('[import-transactions]', error.message)
     return NextResponse.json({ error: 'No se pudieron guardar las transacciones' }, { status: 500 })
   }
+
+  console.log('[import-transactions] inserted:', newRows.length)
 
   /* ── Update account balance from last transaction's running balance ───── */
   // Use the balance column of the last transaction (by date) as the closing
@@ -176,5 +206,5 @@ export async function POST(req: NextRequest) {
 
   console.log('[import-transactions] account updated:', accountId)
 
-  return NextResponse.json({ success: true, count: rows.length, account_id: accountId })
+  return NextResponse.json({ success: true, count: newRows.length, account_id: accountId })
 }
