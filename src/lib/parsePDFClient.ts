@@ -71,6 +71,7 @@ export async function parsePDFInBrowser(
 
   // ── DIAGNÓSTICO TEMPORAL — eliminar después ──────────────────────────
   console.warn('=== PDF TEXT SAMPLE ===', fullText.substring(0, 3000))
+  console.warn('DEBUG PDF ITEMS:', await debugPDFItems(file, password))
   // ────────────────────────────────────────────────────────────────────
 
   const accountLast4  = extractAccountLast4(fullText)
@@ -83,6 +84,34 @@ export async function parsePDFInBrowser(
     pageCount: pdf.numPages,
   }
 }
+
+// ─── DIAGNÓSTICO TEMPORAL — eliminar después ────────────────────────────────
+async function debugPDFItems(file: File, password?: string): Promise<string> {
+  const pdfjs      = await import('pdfjs-dist')
+  const arrayBuffer = await file.arrayBuffer()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pdf: any = await pdfjs.getDocument({
+    data: new Uint8Array(arrayBuffer),
+    password: password ?? '',
+  }).promise
+
+  let out = ''
+  for (let i = 1; i <= Math.min(pdf.numPages, 3); i++) {
+    const page    = await pdf.getPage(i)
+    const content = await page.getTextContent()
+    out += `\n--- PÁGINA ${i} ---\n`
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content.items.forEach((item: any) => {
+      if (item.str && item.str.trim()) {
+        const x = item.transform?.[4]?.toFixed(0) ?? '?'
+        const y = item.transform?.[5]?.toFixed(0) ?? '?'
+        out += `[${x},${y}] "${item.str}"\n`
+      }
+    })
+  }
+  return out
+}
+// ────────────────────────────────────────────────────────────────────────────
 
 // ─── Helpers (duplicados de parsePDF.ts para evitar import server-side) ──────
 
