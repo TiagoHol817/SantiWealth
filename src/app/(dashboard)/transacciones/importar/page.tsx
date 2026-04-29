@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { ArrowLeft, Upload, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { detectRecurringCosts, type RecurringSuggestion } from '@/lib/detectRecurring'
-import type { PDFTransaction } from '@/lib/parsePDF'
 import { useAchievementToast } from '@/components/ui/WealthMessage'
 
 /* ── Types ──────────────────────────────────────────────────────────── */
@@ -332,7 +331,7 @@ export default function ImportarPage() {
   const [passwordError,    setPasswordError]    = useState('')
   const currentPDFFile = useRef<File | null>(null)
 
-  /* ── process PDF via server ─────────────────────────────────────────── */
+  /* ── process PDF in browser (client-side, pdfjs-dist) ──────────────── */
   const processPDF = useCallback(async (file: File, passwordOverride?: string) => {
     if (file.size > 10 * 1024 * 1024) {
       setError('El archivo no puede superar 10 MB.')
@@ -343,27 +342,11 @@ export default function ImportarPage() {
     setError('')
     setPasswordError('')
     try {
-      const fd = new FormData()
-      fd.append('file', file)
-      fd.append('consent', 'true')   // consent text is visibly shown to user above dropzone
-      const pwd = passwordOverride ?? pdfPassword
-      if (pwd) fd.append('password', pwd)
+      const { parsePDFInBrowser } = await import('@/lib/parsePDFClient')
+      const pwd    = passwordOverride ?? pdfPassword
+      const result = await parsePDFInBrowser(file, pwd || undefined)
 
-      const res  = await fetch('/api/parse-pdf', { method: 'POST', body: fd })
-      const data = await res.json()
-
-      // Handle password-specific errors without showing generic error state
-      if (data.error === 'PASSWORD_REQUIRED' || data.error === 'WRONG_PASSWORD') {
-        setPasswordRequired(true)
-        if (data.error === 'WRONG_PASSWORD') {
-          setPasswordError('Contraseña incorrecta. Intenta con tu número de cédula sin puntos.')
-        }
-        return
-      }
-
-      if (!res.ok) throw new Error(data.error ?? `Error ${res.status}`)
-
-      const txs: PDFTransaction[] = data.transactions ?? []
+      const txs = result.transactions
       if (txs.length === 0) {
         setError('No se encontraron transacciones en este PDF. Asegúrate de que sea un extracto digital (no escaneado).')
         return
@@ -373,7 +356,7 @@ export default function ImportarPage() {
       setPdfPassword('')
       setBank('bancolombia')
       setSourceKind('pdf')
-      setAccountLastFour(data.accountLast4 ?? null)
+      setAccountLastFour(result.accountLast4 ?? null)
       setRows(txs.map(t => ({
         date:        t.date,
         description: t.description,
@@ -382,8 +365,23 @@ export default function ImportarPage() {
         category:    guessCategory(t.description),
         include:     true,
       })))
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo procesar el PDF.')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : ''
+
+      if (msg === 'PASSWORD_REQUIRED') {
+        setPasswordRequired(true)
+        return
+      }
+      if (msg === 'WRONG_PASSWORD') {
+        setPasswordRequired(true)
+        setPasswordError('Contraseña incorrecta. Intenta con tu número de cédula sin puntos.')
+        return
+      }
+      if (msg === 'PDF_SCANNED_OR_EMPTY') {
+        setError('El PDF parece estar escaneado. Descarga el extracto digital desde la app de Bancolombia.')
+        return
+      }
+      setError('No se pudo procesar el PDF. Intenta de nuevo.')
     } finally {
       setParsing(false)
     }

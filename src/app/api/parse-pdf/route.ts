@@ -1,5 +1,7 @@
 // src/app/api/parse-pdf/route.ts
-// Recibe PDF + contraseña opcional, retorna transacciones parseadas
+// DEPRECATED — el procesamiento de PDF se movió al cliente (src/lib/parsePDFClient.ts)
+// El PDF ahora se procesa en el browser del usuario con pdfjs-dist via dynamic import.
+// Esta ruta se mantiene como fallback pero ya no es llamada por el frontend.
 // La contraseña NUNCA se loguea ni persiste
 
 import { NextRequest, NextResponse } from 'next/server'
