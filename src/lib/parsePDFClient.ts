@@ -106,6 +106,27 @@ export async function parsePDFInBrowser(
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+// Parsea montos Bancolombia: "473,961.60" → 473961.60, "-0.05" → -0.05
+// La coma es separador de miles, el punto es separador decimal.
+// Cuando hay múltiples puntos todos menos el último son miles (ej: "1.200.000,00"
+// no aplica aquí, pero se maneja por si acaso).
+function parseColombianAmount(str: string): number {
+  const trimmed    = str.trim()
+  const isNegative = trimmed.startsWith('-')
+  const clean      = trimmed.replace(/[^0-9.]/g, '') // quita todo salvo dígitos y punto
+  const parts      = clean.split('.')
+  let value: number
+  if (parts.length > 2) {
+    // Múltiples puntos: todos menos el último son separadores de miles
+    const intPart = parts.slice(0, -1).join('')
+    const decPart = parts[parts.length - 1]
+    value = parseFloat(`${intPart}.${decPart}`)
+  } else {
+    value = parseFloat(clean)
+  }
+  return isNegative ? -value : value
+}
+
 function extractAccountLast4(text: string): string {
   // Formato Bancolombia: "NÚMERO   91235437584" → últimos 4 = "7584"
   const m = text.match(/N[ÚU]MERO\s+\d*(\d{4})/)
@@ -173,16 +194,14 @@ function parseTransactionsByPosition(
     )
     if (!valueItem) continue
 
-    const value = parseFloat(valueItem.str.trim().replace(/,/g, ''))
+    const value = parseColombianAmount(valueItem.str)
     if (isNaN(value) || value === 0) continue
 
     // Saldo: x > 530
     const balanceItem = rowItems.find(
       i => i.x > 530 && /^[\d,]+\.\d+$/.test(i.str.trim())
     )
-    const balance = balanceItem
-      ? parseFloat(balanceItem.str.replace(/,/g, ''))
-      : 0
+    const balance = balanceItem ? parseColombianAmount(balanceItem.str) : 0
 
     const descUpper  = description.toUpperCase()
     const isIncome   =
