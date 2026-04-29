@@ -174,10 +174,12 @@ function autoCategory(d: string): string {
 
   if (d.includes('COMPRA EN EXITO')   || d.includes('COMPRA EN CARULLA') ||
       d.includes('COMPRA EN D1')      || d.includes('COMPRA EN ARA')     ||
-      d.includes('JUAN VALDEZ')       || d.includes('RAPPI'))             return 'Alimentación'
+      d.includes('JUAN VALDEZ')       || d.includes('COMPRA RAPPI')      ||
+      d.includes('RAPPI DOMICILIO'))                                        return 'Alimentación'
 
-  if (d.includes('PAGO PSE MONO') || d.includes('EPM') ||
-      d.includes('ACUEDUCTO')     || d.includes('GAS NATURAL')) return 'Servicios/Suscripciones'
+  // EPM uses word boundary to avoid false positives on substrings like 'TEMPO' or 'EJEMPLAR'
+  if (d.includes('PAGO PSE MONO')  || /(^|\s)EPM(\s|$)/.test(d) ||
+      d.includes('ACUEDUCTO')      || d.includes('GAS NATURAL'))  return 'Servicios/Suscripciones'
 
   return 'Otro'
 }
