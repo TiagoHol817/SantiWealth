@@ -145,7 +145,12 @@ export async function POST(req: NextRequest) {
   /* ── Update account balance from last transaction's running balance ───── */
   // Use the balance column of the last transaction (by date) as the closing
   // balance. Fall back to the summary-level last_balance if no row has one.
-  const rowsWithBalance = (body.rows as Record<string, unknown>[])
+  const bodyRows = body.rows as Record<string, unknown>[]
+  console.log('[DEBUG] rows sample balance values:',
+    bodyRows.slice(0, 5).map(r => ({ date: r.date, balance: r.balance, amount: r.amount, balanceType: typeof r.balance }))
+  )
+
+  const rowsWithBalance = bodyRows
     .filter(r => Number(r.balance) > 0)
     .sort((a, b) => String(b.date).localeCompare(String(a.date)))
   const closingBalance =
@@ -155,6 +160,8 @@ export async function POST(req: NextRequest) {
         ? Number(body.last_balance)
         : null
 
+  console.log('[DEBUG] finalBalance computed:', closingBalance)
+  console.log('[DEBUG] typeof finalBalance:', typeof closingBalance)
   console.log('[import-transactions] final balance:', closingBalance)
 
   if (accountId && closingBalance != null) {
