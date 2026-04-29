@@ -53,16 +53,19 @@ export async function parsePDFInBrowser(
   const allItems: PDFItem[] = []
   let fullText = ''
 
+  const PAGE_HEIGHT_OFFSET = 1000 // cada página ocupa 1000px en el eje Y global
+
   for (let i = 1; i <= pdf.numPages; i++) {
     const page    = await pdf.getPage(i)
     const content = await page.getTextContent()
+    const yOffset = (i - 1) * PAGE_HEIGHT_OFFSET
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content.items.forEach((item: any) => {
       if (item.str?.trim()) {
         allItems.push({
           str: item.str,
           x:   Math.round(item.transform?.[4] ?? 0),
-          y:   Math.round(item.transform?.[5] ?? 0),
+          y:   Math.round((item.transform?.[5] ?? 0) + yOffset),
         })
       }
     })
