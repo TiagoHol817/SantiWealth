@@ -423,22 +423,10 @@ function Step3({ data, set }: { data: WizardData; set: (p: Partial<WizardData>) 
 }
 
 /* ─── Done screen ────────────────────────────────── */
-function StepDone({ name, data, countdown }: { name: string; data: WizardData; countdown: number }) {
+function StepDone({ name, data }: { name: string; data: WizardData }) {
   const total    = data.accounts.reduce((s, a) => s + (Number(a.balance) || 0), 0)
   const hasGoal  = data.goalName.trim() && Number(data.goalAmount) > 0
   const accCount = data.accounts.length
-  const [extractoChoice, setExtractoChoice] = useState<'now' | 'later' | null>(null)
-
-  function handleSubirAhora() {
-    try { localStorage.setItem('statement_imported', 'false') } catch {}
-    setExtractoChoice('now')
-    window.location.href = '/transacciones/importar'
-  }
-
-  function handleRecordarDespues() {
-    try { localStorage.setItem('remind_statement_upload', 'true') } catch {}
-    setExtractoChoice('later')
-  }
 
   return (
     <div style={{ textAlign: 'center', padding: '12px 0' }}>
@@ -451,7 +439,7 @@ function StepDone({ name, data, countdown }: { name: string; data: WizardData; c
       </p>
 
       {/* Summary chips */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginBottom: '28px' }}>
         <div style={{ padding: '6px 14px', borderRadius: '20px', backgroundColor: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
           <span style={{ color: '#10b981', fontSize: '13px' }}>
             {data.currency === 'COP' ? '🇨🇴' : '🇺🇸'} {data.currency}
@@ -480,58 +468,31 @@ function StepDone({ name, data, countdown }: { name: string; data: WizardData; c
         )}
       </div>
 
-      {/* ── Extracto prompt ─────────────────────── */}
-      {extractoChoice === null && (
-        <div style={{
-          backgroundColor: '#0d1220', border: '1px solid rgba(99,102,241,0.2)',
-          borderRadius: '14px', padding: '18px 20px', marginBottom: '20px', textAlign: 'left',
-        }}>
-          <p style={{ color: '#e5e7eb', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>
-            📄 ¿Tienes tu extracto bancario a mano?
-          </p>
-          <p style={{ color: '#6b7280', fontSize: '12px', lineHeight: 1.65, marginBottom: '14px' }}>
-            Sube tu PDF de Bancolombia y WealthHost detectará automáticamente tus gastos,
-            ingresos y costos recurrentes.
-          </p>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              type="button"
-              onClick={handleSubirAhora}
-              style={{
-                flex: 1, padding: '10px', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
-                backgroundColor: '#6366f1', color: '#fff', border: 'none', cursor: 'pointer',
-              }}
-            >
-              Subir extracto ahora
-            </button>
-            <button
-              type="button"
-              onClick={handleRecordarDespues}
-              style={{
-                padding: '10px 14px', borderRadius: '10px', fontSize: '13px',
-                backgroundColor: 'transparent', color: '#6b7280',
-                border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer',
-              }}
-            >
-              Recordarme después
-            </button>
-          </div>
-        </div>
-      )}
-
-      {extractoChoice === 'later' && (
-        <p style={{ color: '#6b7280', fontSize: '12px', marginBottom: '20px' }}>
-          👍 Te recordaremos en el dashboard. Puedes importarlo cuando quieras desde{' '}
-          <span style={{ color: '#6366f1' }}>Transacciones → Importar</span>.
-        </p>
-      )}
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#4b5563', fontSize: '13px' }}>
-        <div style={{
-          width: '32px', height: '32px', border: '2px solid rgba(212,175,55,0.2)',
-          borderTopColor: '#D4AF37', borderRadius: '50%', animation: 'spin 0.7s linear infinite', flexShrink: 0,
-        }} />
-        Redirigiendo al Dashboard en {countdown}s...
+      {/* Action buttons */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <button
+          type="button"
+          onClick={() => { try { localStorage.setItem('statement_imported', 'false') } catch {} window.location.href = '/transacciones/importar' }}
+          style={{
+            width: '100%', padding: '12px', borderRadius: '10px', fontSize: '14px', fontWeight: 700,
+            backgroundColor: '#6366f1', color: '#fff', border: 'none', cursor: 'pointer',
+            transition: 'opacity 150ms ease',
+          }}
+        >
+          Subir extracto ahora
+        </button>
+        <button
+          type="button"
+          onClick={() => { window.location.href = '/dashboard' }}
+          style={{
+            width: '100%', padding: '12px', borderRadius: '10px', fontSize: '14px', fontWeight: 700,
+            background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)',
+            border: 'none', color: '#0f1117', cursor: 'pointer',
+            transition: 'opacity 150ms ease',
+          }}
+        >
+          Ir a mi dashboard →
+        </button>
       </div>
     </div>
   )
@@ -545,7 +506,6 @@ export default function OnboardingPage() {
   const [step, setStep]           = useState<Step>(1)
   const [saving, setSaving]       = useState(false)
   const [saveError, setSaveError] = useState(false)
-  const [countdown, setCountdown] = useState(3)
   const [data, setData]           = useState<WizardData>({
     currency:   'COP',
     country:    'CO',
@@ -565,13 +525,6 @@ export default function OnboardingPage() {
       setUser(d.user)
     })
   }, [router])
-
-  useEffect(() => {
-    if (step !== 'done') return
-    if (countdown <= 0) { window.location.href = '/dashboard'; return }
-    const id = setTimeout(() => setCountdown(c => c - 1), 1000)
-    return () => clearTimeout(id)
-  }, [step, countdown])
 
   async function handleFinish() {
     if (!user) return
@@ -656,7 +609,7 @@ export default function OnboardingPage() {
           {step === 1     && <Step1 data={data} set={set} name={name} />}
           {step === 2     && <Step2 data={data} set={set} />}
           {step === 3     && <Step3 data={data} set={set} />}
-          {step === 'done' && <StepDone name={name} data={data} countdown={countdown} />}
+          {step === 'done' && <StepDone name={name} data={data} />}
 
           {/* Navigation */}
           {step !== 'done' && (
