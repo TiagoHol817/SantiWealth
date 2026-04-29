@@ -1,5 +1,5 @@
 'use client'
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Upload, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
@@ -327,6 +327,15 @@ export default function ImportarPage() {
   const [recurringSugg,   setRecurringSugg]   = useState<RecurringSuggestion[]>([])
   const [imageFile,             setImageFile]             = useState<File | null>(null)
   const [showImageInstructions, setShowImageInstructions] = useState(false)
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set())
+
+  // Inicializar mes más reciente como expandido cuando llegan filas
+  useEffect(() => {
+    if (rows.length === 0) { setExpandedMonths(new Set()); return }
+    const keys = [...new Set(rows.map(r => r.date.substring(0, 7)))].sort((a, b) => b.localeCompare(a))
+    setExpandedMonths(new Set([keys[0]]))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows.length > 0])
 
   // ── PDF password state ───────────────────────────────────────────────────
   const [pdfPassword,      setPdfPassword]      = useState('')
@@ -532,6 +541,36 @@ export default function ImportarPage() {
       setProgress(0)
       setError(err instanceof Error ? err.message : 'No se pudo completar la importación. Inténtalo de nuevo.')
     }
+  }
+
+  /* ── month grouping ─────────────────────────────────────────────────── */
+  const groupedMonths = useMemo(() => {
+    const map = new Map<string, number[]>()
+    rows.forEach((row, i) => {
+      const key = row.date.substring(0, 7)
+      if (!map.has(key)) map.set(key, [])
+      map.get(key)!.push(i)
+    })
+    return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0]))
+  }, [rows])
+
+  function toggleMonth(indices: number[]) {
+    const allSelected = indices.every(i => rows[i].include)
+    setRows(prev => prev.map((r, i) => indices.includes(i) ? { ...r, include: !allSelected } : r))
+  }
+
+  function toggleExpandMonth(key: string) {
+    setExpandedMonths(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key); else next.add(key)
+      return next
+    })
+  }
+
+  function monthLabel(key: string): string {
+    const [year, month] = key.split('-')
+    const names = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+    return `${names[parseInt(month) - 1]} ${year}`
   }
 
   /* ── input style helper ─────────────────────────────────────────────── */
@@ -831,78 +870,147 @@ export default function ImportarPage() {
               </div>
             </div>
 
-            {/* Table */}
-            <div className="rounded-xl overflow-hidden mb-6 table-scroll"
-              style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', minWidth: '640px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #2a3040', backgroundColor: '#0f1117' }}>
-                    {['✓', 'Fecha', 'Descripción', 'Tipo', 'Categoría', 'Monto'].map((h, i) => (
-                      <th key={h} style={{
-                        padding: '10px 14px', fontWeight: '500', fontSize: '10px',
-                        color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em',
-                        textAlign: i === 0 ? 'center' : i === 5 ? 'right' : 'left',
-                      }}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row, i) => (
-                    <tr key={i}
-                      onClick={() => toggleRow(i)}
-                      className="cursor-pointer hover:bg-white/[0.02]"
-                      style={{
-                        borderBottom: i < rows.length - 1 ? '1px solid #1e2535' : 'none',
-                        opacity: row.include ? 1 : 0.4,
-                      }}>
-                      <td style={{ padding: '10px 14px', textAlign: 'center' }}>
-                        <div className="w-4 h-4 rounded flex items-center justify-center mx-auto"
-                          style={{
-                            backgroundColor: row.include ? '#10b981' : '#2a3040',
-                            border: `1px solid ${row.include ? '#10b981' : '#2a3040'}`,
-                          }}>
-                          {row.include && <span style={{ color: 'white', fontSize: '10px' }}>✓</span>}
-                        </div>
-                      </td>
-                      <td style={{ padding: '10px 14px', color: '#9ca3af' }}>{row.date}</td>
-                      <td style={{ padding: '10px 14px', color: '#e5e7eb', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {row.description || '—'}
-                      </td>
-                      {/* Type toggle */}
-                      <td style={{ padding: '10px 14px' }} onClick={e => { e.stopPropagation(); toggleType(i) }}>
-                        <span style={{
-                          padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
-                          cursor: 'pointer',
-                          backgroundColor: row.type === 'income' ? '#10b98120' : '#ef444420',
-                          color:           row.type === 'income' ? '#10b981'   : '#ef4444',
-                          border:          `1px solid ${row.type === 'income' ? '#10b98130' : '#ef444430'}`,
-                        }}>
-                          {row.type === 'income' ? '↑ Ingreso' : '↓ Gasto'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '10px 14px' }} onClick={e => e.stopPropagation()}>
-                        <select
-                          style={inp}
-                          value={row.category}
-                          onChange={e => setRows(prev => prev.map((r, idx) => idx === i ? { ...r, category: e.target.value } : r))}
-                        >
-                          {Object.keys(CATEGORY_MAP).concat(['Otro']).map(c => (
-                            <option key={c} value={c}>{c}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td style={{ padding: '10px 14px', textAlign: 'right' }}>
-                        <span className="tabular-nums font-semibold"
-                          style={{ color: row.type === 'income' ? '#10b981' : '#ef4444' }}>
-                          {fmtCOP(row.amount)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {/* Grouped by month */}
+            <div className="mb-6" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {groupedMonths.map(([monthKey, indices]) => {
+                const isExpanded  = expandedMonths.has(monthKey)
+                const allSelected = indices.every(i => rows[i].include)
+                const anySelected = indices.some(i => rows[i].include)
+                const monthRows   = indices.map(i => rows[i])
+                const income   = monthRows.filter(r => r.type === 'income').reduce((s, r) => s + r.amount, 0)
+                const expenses = monthRows.filter(r => r.type === 'expense').reduce((s, r) => s + r.amount, 0)
+                const net      = income - expenses
+
+                return (
+                  <div key={monthKey} style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #2a3040' }}>
+
+                    {/* Month header */}
+                    <div
+                      onClick={() => toggleExpandMonth(monthKey)}
+                      className="hover:bg-white/[0.02] transition-colors cursor-pointer"
+                      style={{ backgroundColor: '#1a1f2e', padding: '11px 14px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}
+                    >
+                      {/* Checkbox */}
+                      <div
+                        onClick={e => { e.stopPropagation(); toggleMonth(indices) }}
+                        className="flex-shrink-0"
+                        style={{
+                          width: '16px', height: '16px', borderRadius: '4px', cursor: 'pointer',
+                          backgroundColor: allSelected ? '#10b981' : anySelected ? '#10b98150' : '#2a3040',
+                          border: `1px solid ${allSelected || anySelected ? '#10b981' : '#2a3040'}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}
+                      >
+                        {allSelected && <span style={{ color: 'white', fontSize: '10px' }}>✓</span>}
+                        {!allSelected && anySelected && <span style={{ color: 'white', fontSize: '10px' }}>–</span>}
+                      </div>
+
+                      {/* Arrow */}
+                      <span style={{
+                        fontSize: '9px', color: '#6b7280', flexShrink: 0,
+                        display: 'inline-block',
+                        transition: 'transform 200ms ease',
+                        transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                      }}>▶</span>
+
+                      {/* Month name */}
+                      <span style={{ color: '#e5e7eb', fontWeight: 700, fontSize: '13px', flex: 1, minWidth: '120px' }}>
+                        {monthLabel(monthKey)}
+                      </span>
+
+                      {/* Stats */}
+                      <span style={{ color: '#6b7280', fontSize: '11px', flexShrink: 0 }}>
+                        {indices.length} transacciones
+                      </span>
+                      <span style={{ color: '#00d4aa', fontSize: '11px', flexShrink: 0 }}>
+                        ↑ {fmtCOP(income)}
+                      </span>
+                      <span style={{ color: '#ef4444', fontSize: '11px', flexShrink: 0 }}>
+                        ↓ {fmtCOP(expenses)}
+                      </span>
+                      <span style={{ fontWeight: 600, fontSize: '11px', flexShrink: 0, color: net >= 0 ? '#00d4aa' : '#ef4444' }}>
+                        = {net < 0 ? '-' : ''}{fmtCOP(Math.abs(net))}
+                      </span>
+                    </div>
+
+                    {/* Rows */}
+                    {isExpanded && (
+                      <div className="table-scroll" style={{ borderTop: '1px solid #2a3040' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', minWidth: '640px' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid #2a3040', backgroundColor: '#0f1117' }}>
+                              {['✓', 'Fecha', 'Descripción', 'Tipo', 'Categoría', 'Monto'].map((h, hi) => (
+                                <th key={h} style={{
+                                  padding: '8px 14px', fontWeight: 500, fontSize: '10px',
+                                  color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em',
+                                  textAlign: hi === 0 ? 'center' : hi === 5 ? 'right' : 'left',
+                                }}>
+                                  {h}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {indices.map((flatIdx, j) => {
+                              const row = rows[flatIdx]
+                              return (
+                                <tr key={flatIdx}
+                                  onClick={() => toggleRow(flatIdx)}
+                                  className="cursor-pointer hover:bg-white/[0.02]"
+                                  style={{
+                                    borderBottom: j < indices.length - 1 ? '1px solid #1e2535' : 'none',
+                                    opacity: row.include ? 1 : 0.4,
+                                  }}>
+                                  <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                                    <div className="w-4 h-4 rounded flex items-center justify-center mx-auto"
+                                      style={{
+                                        backgroundColor: row.include ? '#10b981' : '#2a3040',
+                                        border: `1px solid ${row.include ? '#10b981' : '#2a3040'}`,
+                                      }}>
+                                      {row.include && <span style={{ color: 'white', fontSize: '10px' }}>✓</span>}
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: '10px 14px', color: '#9ca3af' }}>{row.date}</td>
+                                  <td style={{ padding: '10px 14px', color: '#e5e7eb', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {row.description || '—'}
+                                  </td>
+                                  <td style={{ padding: '10px 14px' }} onClick={e => { e.stopPropagation(); toggleType(flatIdx) }}>
+                                    <span style={{
+                                      padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
+                                      backgroundColor: row.type === 'income' ? '#10b98120' : '#ef444420',
+                                      color:           row.type === 'income' ? '#10b981'   : '#ef4444',
+                                      border:          `1px solid ${row.type === 'income' ? '#10b98130' : '#ef444430'}`,
+                                    }}>
+                                      {row.type === 'income' ? '↑ Ingreso' : '↓ Gasto'}
+                                    </span>
+                                  </td>
+                                  <td style={{ padding: '10px 14px' }} onClick={e => e.stopPropagation()}>
+                                    <select
+                                      style={inp}
+                                      value={row.category}
+                                      onChange={e => setRows(prev => prev.map((r, idx) => idx === flatIdx ? { ...r, category: e.target.value } : r))}
+                                    >
+                                      {Object.keys(CATEGORY_MAP).concat(['Otro']).map(c => (
+                                        <option key={c} value={c}>{c}</option>
+                                      ))}
+                                    </select>
+                                  </td>
+                                  <td style={{ padding: '10px 14px', textAlign: 'right' }}>
+                                    <span className="tabular-nums font-semibold"
+                                      style={{ color: row.type === 'income' ? '#10b981' : '#ef4444' }}>
+                                      {fmtCOP(row.amount)}
+                                    </span>
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
 
             {/* Progress bar */}
