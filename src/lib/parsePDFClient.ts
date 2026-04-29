@@ -2,16 +2,13 @@
 
 // src/lib/parsePDFClient.ts
 // Procesamiento de PDF en el BROWSER — nunca corre en servidor.
+// Parser basado en coordenadas X,Y para soportar el layout real de Bancolombia.
 // El PDF se procesa en memoria y se descarta; solo los datos financieros
 // básicos se envían al servidor (cumple Ley 1581 de 2012 — Colombia).
-//
-// Campos que NUNCA salen del browser:
-//   - El archivo PDF
-//   - La contraseña
-//   - Número completo de cuenta
-//   - Nombre del titular, NIT, cédula, dirección
 
 import type { ParsedTransaction } from './parsePDF'
+
+interface PDFItem { str: string; x: number; y: number }
 
 export async function parsePDFInBrowser(
   file: File,
@@ -39,13 +36,12 @@ export async function parsePDFInBrowser(
   } catch (err: unknown) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const e = err as any
-    const name = e?.name  ?? ''
+    const name = e?.name ?? ''
     const msg  = e instanceof Error ? e.message : String(err)
-    const code = e?.code  ?? 0
+    const code = e?.code ?? 0
 
     const isPasswordException = name === 'PasswordException' || msg.includes('PasswordException')
     if (isPasswordException) {
-      // code 1 = NEED_PASSWORD, code 2 = INCORRECT_PASSWORD
       const isWrong = code === 2 || msg.toLowerCase().includes('incorrect')
       if (isWrong) throw new Error('WRONG_PASSWORD')
       throw new Error('PASSWORD_REQUIRED')
@@ -53,23 +49,39 @@ export async function parsePDFInBrowser(
     throw new Error('PDF_PARSE_ERROR')
   }
 
-  // Extraer texto página a página
+  // Recolectar todos los items con posición X,Y y texto plano para helpers
+  const allItems: PDFItem[] = []
   let fullText = ''
+
   for (let i = 1; i <= pdf.numPages; i++) {
     const page    = await pdf.getPage(i)
     const content = await page.getTextContent()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pageText = content.items.map((item: any) => ('str' in item ? item.str : '')).join(' ')
-    fullText += pageText + '\n'
+    content.items.forEach((item: any) => {
+      if (item.str?.trim()) {
+        allItems.push({
+          str: item.str,
+          x:   Math.round(item.transform?.[4] ?? 0),
+          y:   Math.round(item.transform?.[5] ?? 0),
+        })
+      }
+    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fullText += content.items.map((item: any) => ('str' in item ? item.str : '')).join(' ') + '\n'
   }
 
   if (fullText.trim().length < 100) {
     throw new Error('PDF_SCANNED_OR_EMPTY')
   }
 
-  const accountLast4  = extractAccountLast4(fullText)
-  const statementYear = extractYear(fullText)
-  const transactions  = parseTransactions(fullText, accountLast4, statementYear)
+  // Extraer rango de años del encabezado
+  const fromMatch = fullText.match(/DESDE:\s*(\d{4})/)
+  const toMatch   = fullText.match(/HASTA:\s*(\d{4})/)
+  const fromYear  = fromMatch ? parseInt(fromMatch[1]) : new Date().getFullYear()
+  const toYear    = toMatch   ? parseInt(toMatch[1])   : new Date().getFullYear()
+
+  const accountLast4 = extractAccountLast4(fullText)
+  const transactions = parseTransactionsByPosition(allItems, accountLast4, toYear, fromYear)
 
   return {
     transactions,
@@ -89,68 +101,87 @@ function extractAccountLast4(text: string): string {
   return '????'
 }
 
-function extractYear(text: string): number {
-  // Preferir año del encabezado HASTA: YYYY/MM/DD
-  const hasta = text.match(/HASTA:\s*(\d{4})\/\d{2}\/\d{2}/)
-  if (hasta) return parseInt(hasta[1])
-  const m = text.match(/20(2[0-9]|3[0-9])/)
-  return m ? parseInt(m[0]) : new Date().getFullYear()
-}
+// ─── Parser por coordenadas ───────────────────────────────────────────────────
 
-function parseTransactions(
-  text: string,
+function parseTransactionsByPosition(
+  items: PDFItem[],
   accountLast4: string,
-  statementYear: number
+  toYear: number,
+  fromYear: number
 ): ParsedTransaction[] {
   const transactions: ParsedTransaction[] = []
 
-  // Extraer rango de fechas del encabezado para resolver el año por mes
-  const fromMatch = text.match(/DESDE:\s*(\d{4})\/(\d{2})\/(\d{2})/)
-  const toMatch   = text.match(/HASTA:\s*(\d{4})\/(\d{2})\/(\d{2})/)
-  const fromYear  = fromMatch ? parseInt(fromMatch[1]) : statementYear
-  const toYear    = toMatch   ? parseInt(toMatch[1])   : statementYear
+  // Agrupar items por fila (Y con tolerancia ±4px)
+  const rows = new Map<number, PDFItem[]>()
+  for (const item of items) {
+    if (!item.str.trim()) continue
+    let rowY = item.y
+    for (const [y] of rows) {
+      if (Math.abs(y - item.y) <= 4) { rowY = y; break }
+    }
+    if (!rows.has(rowY)) rows.set(rowY, [])
+    rows.get(rowY)!.push(item)
+  }
 
-  // Formato Bancolombia:
-  //   D/MM  DESCRIPCIÓN [INFO SUCURSAL]  -42,000.00  30,000.00
-  // Valor negativo = gasto, positivo = ingreso. Saldo siempre positivo.
-  const lineRegex = /(\d{1,2})\/(\d{2})\s+(.+?)\s+(-?[\d,]+\.\d{2})\s+([\d,]+\.\d{2})(?:\s|$)/g
+  for (const [, rowItems] of rows) {
+    // Fecha: x < 60, formato D/MM o DD/MM
+    const dateItem = rowItems.find(
+      i => i.x < 60 && /^\d{1,2}\/\d{2}$/.test(i.str.trim())
+    )
+    if (!dateItem) continue
 
-  let match
-  while ((match = lineRegex.exec(text)) !== null) {
-    const [, day, month, rawDesc, valueStr, balanceStr] = match
+    const [day, month] = dateItem.str.trim().split('/')
+    const monthNum = parseInt(month)
+    const year = (fromYear !== toYear && monthNum === 12) ? fromYear : toYear
 
-    // Limpiar descripción — quitar fragmentos de sucursal/canal
-    const desc = rawDesc
-      .replace(/\s+(SUC|VIRTUAL|CANAL|CORRESPONSA|AHORROS|CTA|CAJERO)\s*/gi, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
+    // Valor: x entre 420–535, puede ser negativo
+    const valueItem = rowItems.find(
+      i =>
+        i.x >= 420 && i.x <= 535 &&
+        /^-?[\d,]*\.?\d+$/.test(i.str.trim()) &&
+        i.str.trim() !== '.'
+    )
+    if (!valueItem) continue
 
-    const value   = parseFloat(valueStr.replace(/,/g, ''))
-    const balance = parseFloat(balanceStr.replace(/,/g, ''))
+    const value = parseFloat(valueItem.str.trim().replace(/,/g, ''))
     if (isNaN(value) || value === 0) continue
 
-    // Asignar año: si el extracto cruza diciembre→enero, mes 12 = año anterior
-    const monthNum = parseInt(month)
-    let year = toYear
-    if (fromYear !== toYear && monthNum === 12) year = fromYear
+    // Saldo: x > 530
+    const balanceItem = rowItems.find(
+      i => i.x > 530 && /^[\d,]+\.\d+$/.test(i.str.trim())
+    )
+    const balance = balanceItem
+      ? parseFloat(balanceItem.str.replace(/,/g, ''))
+      : 0
 
-    const descUpper = desc.toUpperCase()
-    const isIncome  = value > 0 ||
-      descUpper.includes('ABONO')     ||
-      descUpper.includes('CONSIG')    ||
-      descUpper.includes('INTERES')   ||
-      (descUpper.includes('TRANSFERENCIA CTA') && value > 0)
+    // Descripción: x entre 60–420, ordenar por x y unir
+    const description = rowItems
+      .filter(i => i.x >= 60 && i.x < 420)
+      .sort((a, b) => a.x - b.x)
+      .map(i => i.str.trim())
+      .filter(Boolean)
+      .join(' ')
+      .trim()
+
+    if (!description) continue
+
+    const descUpper = description.toUpperCase()
+    const isIncome  =
+      value > 0              ||
+      descUpper.includes('ABONO')  ||
+      descUpper.includes('CONSIG') ||
+      descUpper.includes('INTERES')
 
     transactions.push({
       date:         `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`,
-      description:  desc,
+      description,
       amount:       Math.abs(value),
-      type:         value < 0 ? 'expense' : (isIncome ? 'income' : 'expense'),
+      type:         value < 0 ? 'expense' : 'income',
       balance,
       accountLast4,
       statementYear: year,
     })
   }
 
-  return transactions
+  return transactions.sort((a, b) => a.date.localeCompare(b.date))
 }
