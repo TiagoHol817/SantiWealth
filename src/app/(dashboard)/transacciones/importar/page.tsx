@@ -421,7 +421,11 @@ export default function ImportarPage() {
         amount:      t.amount,
         type:        t.type,
         // DB rules take priority; fall back to parser's autoCategory hint
-        category:    categorizeTransaction(t.description, rules) || t.category || 'Otro',
+        // Parser's autoCategory takes priority when it produced a specific result.
+        // Only consult DB rules when the parser returned 'Otro' or nothing.
+        category:    (t.category && t.category !== 'Otro')
+                       ? t.category
+                       : (categorizeTransaction(t.description, rules) || 'Otro'),
         include:     true,
       })))
     } catch (err: unknown) {
