@@ -67,6 +67,12 @@ export async function parsePDFInBrowser(
     throw new Error('PDF_SCANNED_OR_EMPTY')
   }
 
+  // ── DIAGNÓSTICO TEMPORAL — eliminar después ──────────────────────────
+  console.log('=== TEXTO EXTRAÍDO DEL PDF ===')
+  console.log(fullText.substring(0, 3000))
+  console.log('=== FIN TEXTO ===')
+  // ────────────────────────────────────────────────────────────────────
+
   const accountLast4  = extractAccountLast4(fullText)
   const statementYear = extractYear(fullText)
   const transactions  = parseTransactions(fullText, accountLast4, statementYear)
