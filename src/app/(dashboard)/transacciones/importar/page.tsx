@@ -360,8 +360,9 @@ export default function ImportarPage() {
   const [done,       setDone]       = useState(false)
   const [error,      setError]      = useState('')
   const [sourceKind, setSourceKind] = useState<SourceKind>(null)
-  const [accountLastFour, setAccountLastFour] = useState<string | null>(null)
-  const [accountType,     setAccountType]     = useState<string>('Cuenta de Ahorros')
+  const [accountLastFour,  setAccountLastFour]  = useState<string | null>(null)
+  const [accountType,      setAccountType]      = useState<string>('Cuenta de Ahorros')
+  const [accountBalance,   setAccountBalance]   = useState<number | null>(null)
   const [showRecurring,   setShowRecurring]   = useState(false)
   const [recurringSugg,   setRecurringSugg]   = useState<RecurringSuggestion[]>([])
   const [showInvestmentBanner,  setShowInvestmentBanner]  = useState(false)
@@ -413,6 +414,7 @@ export default function ImportarPage() {
       setSourceKind('pdf')
       setAccountLastFour(result.accountLast4 ?? null)
       setAccountType(result.accountType ?? 'Cuenta de Ahorros')
+      setAccountBalance(result.accountBalance ?? null)
       setRows(txs.map(t => ({
         date:        t.date,
         description: t.description,
@@ -476,6 +478,7 @@ export default function ImportarPage() {
     setRows([])
     setSourceKind(null)
     setAccountLastFour(null)
+    setAccountBalance(null)
     setPasswordRequired(false)
     setPdfPassword('')
     setPasswordError('')
@@ -545,6 +548,9 @@ export default function ImportarPage() {
                               bank === 'davivienda'  ? 'Davivienda'  :
                               bank === 'nequi'       ? 'Nequi'       :
                               bank === 'nu'          ? 'Nu'          : undefined,
+          // Only send last_balance when extracted from "SALDO ACTUAL" in the summary.
+          // Never use transaction-row running balances for this.
+          ...(accountBalance != null ? { last_balance: accountBalance } : {}),
           rows: selectedRows.map(r => ({
             type:        r.type,
             amount:      r.amount,

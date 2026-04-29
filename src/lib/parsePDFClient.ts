@@ -13,7 +13,7 @@ interface PDFItem { str: string; x: number; y: number }
 export async function parsePDFInBrowser(
   file: File,
   password?: string
-): Promise<{ transactions: ParsedTransaction[]; accountLast4: string; accountType: string; pageCount: number }> {
+): Promise<{ transactions: ParsedTransaction[]; accountLast4: string; accountType: string; pageCount: number; accountBalance: number | null }> {
   // Importar pdfjs-dist dinámicamente — no afecta el bundle inicial
   const pdfjs = await import('pdfjs-dist')
 
@@ -94,13 +94,15 @@ export async function parsePDFInBrowser(
     accountType = 'Tarjeta de Crédito'
   }
 
-  const transactions = parseTransactionsByPosition(allItems, accountLast4, toYear, fromYear)
+  const transactions  = parseTransactionsByPosition(allItems, accountLast4, toYear, fromYear)
+  const accountBalance = extractAccountBalance(fullText)
 
   return {
     transactions,
     accountLast4,
     accountType,
     pageCount: pdf.numPages,
+    accountBalance,
   }
 }
 
@@ -175,6 +177,16 @@ function classifyTransaction(description: string, signedAmount: number): TxType 
 
   // Fallback: signo del monto
   return signedAmount < 0 ? 'expense' : 'income'
+}
+
+// ─── Extract closing balance from the RESUMEN section ────────────────────────
+// Only "SALDO ACTUAL" in the summary is the true closing balance.
+// Transaction-row balances (running column) must never be used for this.
+function extractAccountBalance(text: string): number | null {
+  const m = text.match(/SALDO\s+ACTUAL\s*\$?\s*([\d.,]+)/i)
+  if (!m) return null
+  const value = parseColombianAmount(m[1])
+  return isNaN(value) || value <= 0 ? null : value
 }
 
 // ─── Parser por coordenadas ───────────────────────────────────────────────────
