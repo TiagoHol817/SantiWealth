@@ -144,34 +144,37 @@ function categorizeTransaction(description: string, type: 'income' | 'expense'):
   const d = description.toUpperCase()
 
   if (type === 'income') {
-    if (d.includes('ABONO INTERESES') || d.includes('INTERES INV')) return 'Intereses'
-    if (d.includes('CONSIG'))                                         return 'Ingresos'
-    if (d.includes('PAGO DE PROV') || d.includes('PAGO DE TERC'))    return 'Ingresos'
-    if (d.includes('CANCELA INV'))                                    return 'Inversiones'
+    if (d.includes('ABONO INTERESES') || d.includes('INTERES INV'))                              return 'Intereses'
+    if (d.includes('CANCELA INV'))                                                                return 'Inversiones'
+    if (d.includes('CONSIG') || d.includes('CONSIGNACION'))                                      return 'Ingresos'
+    if (d.includes('PAGO DE PROV') || d.includes('PAGO DE TERC') || d.includes('PAGO INTERBANC')) return 'Ingresos'
+    if (d.includes('TRANSF DE') || d.includes('TRANSFERENCIA'))                                  return 'Transferencias'
     return 'Ingresos'
   }
 
   // Gastos
-  if (d.includes('EXITO')        || d.includes('TIENDA D1')     || d.includes('AUTOSERVICIO') ||
-      d.includes('CARULLA')      || d.includes('COCOROLLO')     || d.includes('CRUCERO DE'))   return 'Alimentación'
-  if (d.includes('RESTAUR')      || d.includes('SABOR')         || d.includes('BRASA')         ||
-      d.includes('BANG WOK')     || d.includes('ESTADERO')      || d.includes('JUAN VALDE')    ||
-      d.includes('PASTEU')       || d.includes('TAMBOS')        || d.includes('CASTILLO TOUR')) return 'Alimentación'
-  if (d.includes('SPOTIFY')      || d.includes('APPLE')         || d.includes('NETFLIX')       ||
-      d.includes('TIGO')         || d.includes('SMARTFIT')      || d.includes('SMART FIT')     ||
-      d.includes('CLAUDE')       || d.includes('PAYU')          || d.includes('MOVII'))         return 'Servicios/Suscripciones'
-  if (d.includes('EDS')          || d.includes('TEXACO')        || d.includes('ROSCOMBUST')    ||
-      d.includes('CASTILLO TOUR'))                                                               return 'Transporte'
-  if (d.includes('RETIRO')       || d.includes('COMISION RETIRO') || d.includes('MANEJO TARJETA') ||
-      d.includes('IMPTO GOBIERNO') || d.includes('4X1000')      || d.includes('AJUSTE INTERES')) return 'Bancario'
-  if (d.includes('LOCATEL')      || d.includes('DROGUERIA')     || d.includes('FARMAD'))        return 'Salud'
-  if (d.includes('DOLLARCITY')   || d.includes('MINISO')        || d.includes('MODA')           ||
-      d.includes('SPORTY')       || d.includes('TEMU')          || d.includes('DLO*'))           return 'Compras'
-  if (d.includes('APERTURA INV') || d.includes('CANCELA INV')   || d.includes('PINGUINO')       ||
-      d.includes('INTERES INV')  || d.includes('PSE MONO'))                                      return 'Inversiones'
-  if (d.includes('LUZ ELENA')    || d.includes('CELULA')        || d.includes('CELULAR')        ||
-      d.includes('COMUNICACION'))                                                                 return 'Vivienda'
-  if (d.includes('NEQUI')        || d.includes('TRANSF')        || d.includes('TRANSFERENCIA')) return 'Transferencias'
+  if (d.includes('EXITO')         || d.includes('TIENDA D1')      || d.includes('AUTOSERVICIO') ||
+      d.includes('CARULLA')       || d.includes('COCOROLLO')      || d.includes('CRUCERO DE'))   return 'Alimentación'
+  if (d.includes('RESTAUR')       || d.includes('SABOR')          || d.includes('BRASA')         ||
+      d.includes('BANG WOK')      || d.includes('ESTADERO')       || d.includes('JUAN VALDE')    ||
+      d.includes('PASTEU')        || d.includes('TAMBOS')         || d.includes('CASTILLO TOUR')) return 'Alimentación'
+  if (d.includes('SPOTIFY')       || d.includes('APPLE')          || d.includes('NETFLIX')       ||
+      d.includes('TIGO')          || d.includes('SMARTFIT')       || d.includes('SMART FIT')     ||
+      d.includes('CLAUDE')        || d.includes('PAYU')           || d.includes('MOVII'))         return 'Servicios/Suscripciones'
+  if (d.includes('EDS')           || d.includes('TEXACO')         || d.includes('ROSCOMBUST'))    return 'Transporte'
+  if (d.includes('RETIRO')        || d.includes('COMISION RETIRO') || d.includes('MANEJO TARJETA') ||
+      d.includes('IMPTO GOBIERNO') || d.includes('4X1000')        || d.includes('AJUSTE INTERES')) return 'Bancario'
+  if (d.includes('LOCATEL')       || d.includes('DROGUERIA')      || d.includes('FARMAD'))        return 'Salud'
+  if (d.includes('DOLLARCITY')    || d.includes('MINISO')         || d.includes('SPORTY')         ||
+      d.includes('MODA')          || d.includes('TEMU')           || d.includes('DLO*')           ||
+      d.includes('MOONPAY')       || d.includes('PLAYXDIGITAL'))                                   return 'Compras'
+  if (d.includes('APERTURA INV')  || d.includes('CANCELA INV')    || d.includes('PINGUINO')       ||
+      d.includes('INTERES INV')   || d.includes('PSE MONO'))                                       return 'Inversiones'
+  if (d.includes('LUZ ELENA')     || d.includes('CELULA')         || d.includes('CELULAR')        ||
+      d.includes('COMUNICACION'))                                                                   return 'Vivienda'
+  if (d.includes('TRANSFERENCIA') || d.includes('TRANSF A')       || d.includes('TRANSF QR')     ||
+      d.includes('TRANSFERENCIAS A') || d.includes('NEQUI')       || d.includes('TRANSF'))        return 'Transferencias'
+  if (d.includes('CONSIG')        || d.includes('CONSIGNACION'))                                   return 'Ingresos'
 
   return 'Otro'
 }
