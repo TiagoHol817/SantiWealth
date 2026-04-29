@@ -150,14 +150,16 @@ export async function POST(req: NextRequest) {
     bodyRows.slice(0, 5).map(r => ({ date: r.date, balance: r.balance, amount: r.amount, balanceType: typeof r.balance }))
   )
 
+  // last_balance = "SALDO ACTUAL" from the PDF summary — most reliable source.
+  // Fall back to the running balance of the last transaction row.
   const rowsWithBalance = bodyRows
     .filter(r => Number(r.balance) > 0)
     .sort((a, b) => String(b.date).localeCompare(String(a.date)))
   const closingBalance =
-    rowsWithBalance.length > 0
-      ? Number(rowsWithBalance[0].balance)
-      : body.last_balance != null && Number(body.last_balance) > 0
-        ? Number(body.last_balance)
+    body.last_balance != null && Number(body.last_balance) > 0
+      ? Number(body.last_balance)
+      : rowsWithBalance.length > 0
+        ? Number(rowsWithBalance[0].balance)
         : null
 
   console.log('[DEBUG] finalBalance computed:', closingBalance)
