@@ -94,7 +94,7 @@ export default function LoginPage() {
     await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${siteUrl}/api/auth/callback`,
+        redirectTo: `${siteUrl}/auth/done`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
