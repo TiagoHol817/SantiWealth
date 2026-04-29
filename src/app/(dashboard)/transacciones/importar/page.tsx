@@ -458,6 +458,8 @@ export default function ImportarPage() {
   const [accountLastFour,  setAccountLastFour]  = useState<string | null>(null)
   const [accountType,      setAccountType]      = useState<string>('Cuenta de Ahorros')
   const [accountBalance,   setAccountBalance]   = useState<number | null>(null)
+  const [accounts,         setAccounts]         = useState<{ id: string; name: string }[]>([])
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('')
   const [showRecurring,   setShowRecurring]   = useState(false)
   const [recurringSugg,   setRecurringSugg]   = useState<RecurringSuggestion[]>([])
   const [showInvestmentBanner,  setShowInvestmentBanner]  = useState(false)
@@ -466,6 +468,22 @@ export default function ImportarPage() {
   const [imageFile,             setImageFile]             = useState<File | null>(null)
   const [showImageInstructions, setShowImageInstructions] = useState(false)
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set())
+
+  // Fetch user's bank accounts for the account selector
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('accounts')
+      .select('id, name')
+      .in('type', ['bank', 'cash'])
+      .order('name')
+      .then(({ data }) => {
+        if (data?.length) {
+          setAccounts(data)
+          setSelectedAccountId(data[0].id)
+        }
+      })
+  }, [])
 
   // Inicializar mes más reciente como expandido cuando llegan filas
   useEffect(() => {
@@ -644,13 +662,12 @@ export default function ImportarPage() {
         body:    JSON.stringify({
           consent:            true,
           source:             sourceKind === 'pdf' ? 'import_pdf' : 'import_csv',
+          account_id:         selectedAccountId || undefined,
           account_last_four:  accountLastFour,
           institution:        bank === 'bancolombia' ? 'Bancolombia' :
                               bank === 'davivienda'  ? 'Davivienda'  :
                               bank === 'nequi'       ? 'Nequi'       :
                               bank === 'nu'          ? 'Nu'          : undefined,
-          // Only send last_balance when extracted from "SALDO ACTUAL" in the summary.
-          // Never use transaction-row running balances for this.
           ...(accountBalance != null ? { last_balance: accountBalance } : {}),
           rows: selectedRows.map(r => ({
             type:        r.type,
@@ -1088,12 +1105,28 @@ export default function ImportarPage() {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => { setRows([]); setFileName(''); setBank(null); setSourceKind(null); setAccountLastFour(null) }}
-                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10"
-                style={{ color: '#6b7280' }}>
-                <X size={14} />
-              </button>
+              <div className="flex items-center gap-2">
+                {accounts.length > 0 && (
+                  <select
+                    value={selectedAccountId}
+                    onChange={e => setSelectedAccountId(e.target.value)}
+                    style={{
+                      backgroundColor: '#0f1117', border: '1px solid #2a3040', borderRadius: '8px',
+                      color: '#e5e7eb', padding: '4px 8px', fontSize: '12px', outline: 'none',
+                    }}
+                  >
+                    {accounts.map(a => (
+                      <option key={a.id} value={a.id}>{a.name}</option>
+                    ))}
+                  </select>
+                )}
+                <button
+                  onClick={() => { setRows([]); setFileName(''); setBank(null); setSourceKind(null); setAccountLastFour(null) }}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10"
+                  style={{ color: '#6b7280' }}>
+                  <X size={14} />
+                </button>
+              </div>
             </div>
 
             {/* Smart summary */}

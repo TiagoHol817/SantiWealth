@@ -94,6 +94,11 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  console.log('[import-transactions] resolved accountId:', accountId)
+  if (!accountId) {
+    return NextResponse.json({ error: 'No se encontró o pudo crear la cuenta destino' }, { status: 400 })
+  }
+
   /* ── Build source tags ───────────────────────────────────────────────── */
   const sourceTags: string[] = body.source ? [body.source] : []
 
