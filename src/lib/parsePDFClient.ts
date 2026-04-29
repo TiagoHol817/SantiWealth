@@ -13,7 +13,7 @@ interface PDFItem { str: string; x: number; y: number }
 export async function parsePDFInBrowser(
   file: File,
   password?: string
-): Promise<{ transactions: ParsedTransaction[]; accountLast4: string; pageCount: number }> {
+): Promise<{ transactions: ParsedTransaction[]; accountLast4: string; accountType: string; pageCount: number }> {
   // Importar pdfjs-dist dinámicamente — no afecta el bundle inicial
   const pdfjs = await import('pdfjs-dist')
 
@@ -81,11 +81,22 @@ export async function parsePDFInBrowser(
   const toYear    = toMatch   ? parseInt(toMatch[1])   : new Date().getFullYear()
 
   const accountLast4 = extractAccountLast4(fullText)
+
+  let accountType = 'Cuenta de Ahorros'
+  if (fullText.includes('CUENTA CORRIENTE') || fullText.includes('CTA CORRIENTE')) {
+    accountType = 'Cuenta Corriente'
+  } else if (fullText.includes('CUENTA DE AHORROS') || fullText.includes('CTA AHORROS')) {
+    accountType = 'Cuenta de Ahorros'
+  } else if (fullText.includes('TARJETA DE CREDITO') || fullText.includes('TARJETA CRÉDITO')) {
+    accountType = 'Tarjeta de Crédito'
+  }
+
   const transactions = parseTransactionsByPosition(allItems, accountLast4, toYear, fromYear)
 
   return {
     transactions,
     accountLast4,
+    accountType,
     pageCount: pdf.numPages,
   }
 }

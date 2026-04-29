@@ -322,6 +322,7 @@ export default function ImportarPage() {
   const [error,      setError]      = useState('')
   const [sourceKind, setSourceKind] = useState<SourceKind>(null)
   const [accountLastFour, setAccountLastFour] = useState<string | null>(null)
+  const [accountType,     setAccountType]     = useState<string>('Cuenta de Ahorros')
   const [showRecurring,   setShowRecurring]   = useState(false)
   const [recurringSugg,   setRecurringSugg]   = useState<RecurringSuggestion[]>([])
   const [imageFile,             setImageFile]             = useState<File | null>(null)
@@ -359,6 +360,7 @@ export default function ImportarPage() {
       setBank('bancolombia')
       setSourceKind('pdf')
       setAccountLastFour(result.accountLast4 ?? null)
+      setAccountType(result.accountType ?? 'Cuenta de Ahorros')
       setRows(txs.map(t => ({
         date:        t.date,
         description: t.description,
@@ -802,7 +804,7 @@ export default function ImportarPage() {
                 <span style={{ fontSize: '14px' }}>🏦</span>
                 <p style={{ color: '#9ca3af', fontSize: '12px' }}>
                   Bancolombia <strong style={{ color: '#6366f1' }}>****{accountLastFour}</strong>
-                  {' · '}Cuenta de Ahorros / Corriente
+                  {' · '}{accountType}
                 </p>
               </div>
             )}
