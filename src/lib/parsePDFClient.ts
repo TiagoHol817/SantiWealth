@@ -140,46 +140,38 @@ function extractAccountLast4(text: string): string {
 
 // ─── Transaction classifier — 2 types only ───────────────────────────────────
 
-function autoCategory(d: string): string {
-  if (d.includes('CANCELA INV VIRT')       ||
-      d.includes('INTERES INV VIRT')        ||
-      d.includes('APERTURA INV VIRT')       ||
-      d.includes('INVERSION VIRTUAL'))        return 'Inversiones'
+function categorizeTransaction(description: string, type: 'income' | 'expense'): string {
+  const d = description.toUpperCase()
 
-  if (d.includes('TRANSFERENCIA CTA SUC')  ||
-      d.includes('CONSIGNACION CORRESPONSAL') ||
-      d.includes('CONSIG NACIONAL'))          return 'Transferencias'
+  if (type === 'income') {
+    if (d.includes('ABONO INTERESES') || d.includes('INTERES INV')) return 'Intereses'
+    if (d.includes('CONSIG'))                                         return 'Ingresos'
+    if (d.includes('PAGO DE PROV') || d.includes('PAGO DE TERC'))    return 'Ingresos'
+    if (d.includes('CANCELA INV'))                                    return 'Inversiones'
+    return 'Ingresos'
+  }
 
-  if (d.includes('RETIRO CAJERO')          ||
-      d.includes('COMISION RETIRO')         ||
-      d.includes('MANEJO TARJETA')          ||
-      d.includes('IMPTO GOBIERNO'))           return 'Bancario'
-
-  if (d.includes('ABONO INTERESES')        ||
-      d.includes('AJUSTE INTERESES'))         return 'Intereses'
-
-  if (d.includes('PAGO DE PROV')           ||
-      d.includes('PAGO PROV'))                return 'Salario'
-
-  if (d.includes('SPOTIFY')   || d.includes('NETFLIX')  ||
-      d.includes('APPLE.COM') || d.includes('DISNEY')   ||
-      d.includes('TIGO')      || d.includes('CLARO')    ||
-      d.includes('PSE MOVII') || d.includes('CHATGPT'))  return 'Servicios/Suscripciones'
-
-  if (d.includes('COMPRA EN EDS') || d.includes('TEXACO') ||
-      d.includes('TERPEL')        || d.includes('BIOMAX')) return 'Transporte'
-
-  if (d.includes('SMARTFIT')   || d.includes('BODYTECH') ||
-      d.includes('DROGUERIA')  || d.includes('FARMACIA')) return 'Salud'
-
-  if (d.includes('COMPRA EN EXITO')   || d.includes('COMPRA EN CARULLA') ||
-      d.includes('COMPRA EN D1')      || d.includes('COMPRA EN ARA')     ||
-      d.includes('JUAN VALDEZ')       || d.includes('COMPRA RAPPI')      ||
-      d.includes('RAPPI DOMICILIO'))                                        return 'Alimentación'
-
-  // EPM uses word boundary to avoid false positives on substrings like 'TEMPO' or 'EJEMPLAR'
-  if (d.includes('PAGO PSE MONO')  || /(^|\s)EPM(\s|$)/.test(d) ||
-      d.includes('ACUEDUCTO')      || d.includes('GAS NATURAL'))  return 'Servicios/Suscripciones'
+  // Gastos
+  if (d.includes('EXITO')        || d.includes('TIENDA D1')     || d.includes('AUTOSERVICIO') ||
+      d.includes('CARULLA')      || d.includes('COCOROLLO')     || d.includes('CRUCERO DE'))   return 'Alimentación'
+  if (d.includes('RESTAUR')      || d.includes('SABOR')         || d.includes('BRASA')         ||
+      d.includes('BANG WOK')     || d.includes('ESTADERO')      || d.includes('JUAN VALDE')    ||
+      d.includes('PASTEU')       || d.includes('TAMBOS')        || d.includes('CASTILLO TOUR')) return 'Alimentación'
+  if (d.includes('SPOTIFY')      || d.includes('APPLE')         || d.includes('NETFLIX')       ||
+      d.includes('TIGO')         || d.includes('SMARTFIT')      || d.includes('SMART FIT')     ||
+      d.includes('CLAUDE')       || d.includes('PAYU')          || d.includes('MOVII'))         return 'Servicios/Suscripciones'
+  if (d.includes('EDS')          || d.includes('TEXACO')        || d.includes('ROSCOMBUST')    ||
+      d.includes('CASTILLO TOUR'))                                                               return 'Transporte'
+  if (d.includes('RETIRO')       || d.includes('COMISION RETIRO') || d.includes('MANEJO TARJETA') ||
+      d.includes('IMPTO GOBIERNO') || d.includes('4X1000')      || d.includes('AJUSTE INTERES')) return 'Bancario'
+  if (d.includes('LOCATEL')      || d.includes('DROGUERIA')     || d.includes('FARMAD'))        return 'Salud'
+  if (d.includes('DOLLARCITY')   || d.includes('MINISO')        || d.includes('MODA')           ||
+      d.includes('SPORTY')       || d.includes('TEMU')          || d.includes('DLO*'))           return 'Compras'
+  if (d.includes('APERTURA INV') || d.includes('CANCELA INV')   || d.includes('PINGUINO')       ||
+      d.includes('INTERES INV')  || d.includes('PSE MONO'))                                      return 'Inversiones'
+  if (d.includes('LUZ ELENA')    || d.includes('CELULA')        || d.includes('CELULAR')        ||
+      d.includes('COMUNICACION'))                                                                 return 'Vivienda'
+  if (d.includes('NEQUI')        || d.includes('TRANSF')        || d.includes('TRANSFERENCIA')) return 'Transferencias'
 
   return 'Otro'
 }
@@ -188,9 +180,8 @@ function classifyTransaction(description: string, signedAmount: number): {
   type: 'income' | 'expense'
   category: string
 } {
-  const d = description.toUpperCase()
   const type: 'income' | 'expense' = signedAmount >= 0 ? 'income' : 'expense'
-  return { type, category: autoCategory(d) }
+  return { type, category: categorizeTransaction(description, type) }
 }
 
 // ─── Extract closing balance from the RESUMEN section ────────────────────────
