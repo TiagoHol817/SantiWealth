@@ -138,45 +138,57 @@ function extractAccountLast4(text: string): string {
   return '????'
 }
 
-// ─── Transaction type classifier ─────────────────────────────────────────────
+// ─── Transaction classifier — 2 types only ───────────────────────────────────
 
-type TxType = 'income' | 'expense' | 'transfer' | 'investment_return'
+function autoCategory(d: string): string {
+  if (d.includes('CANCELA INV VIRT')       ||
+      d.includes('INTERES INV VIRT')        ||
+      d.includes('APERTURA INV VIRT')       ||
+      d.includes('INVERSION VIRTUAL'))        return 'Inversiones'
 
-function classifyTransaction(description: string, signedAmount: number): TxType {
+  if (d.includes('TRANSFERENCIA CTA SUC')  ||
+      d.includes('CONSIGNACION CORRESPONSAL') ||
+      d.includes('CONSIG NACIONAL'))          return 'Transferencias'
+
+  if (d.includes('RETIRO CAJERO')          ||
+      d.includes('COMISION RETIRO')         ||
+      d.includes('MANEJO TARJETA')          ||
+      d.includes('IMPTO GOBIERNO'))           return 'Bancario'
+
+  if (d.includes('ABONO INTERESES')        ||
+      d.includes('AJUSTE INTERESES'))         return 'Intereses'
+
+  if (d.includes('PAGO DE PROV')           ||
+      d.includes('PAGO PROV'))                return 'Salario'
+
+  if (d.includes('SPOTIFY')   || d.includes('NETFLIX')  ||
+      d.includes('APPLE.COM') || d.includes('DISNEY')   ||
+      d.includes('TIGO')      || d.includes('CLARO')    ||
+      d.includes('PSE MOVII') || d.includes('CHATGPT'))  return 'Servicios/Suscripciones'
+
+  if (d.includes('COMPRA EN EDS') || d.includes('TEXACO') ||
+      d.includes('TERPEL')        || d.includes('BIOMAX')) return 'Transporte'
+
+  if (d.includes('SMARTFIT')   || d.includes('BODYTECH') ||
+      d.includes('DROGUERIA')  || d.includes('FARMACIA')) return 'Salud'
+
+  if (d.includes('COMPRA EN EXITO')   || d.includes('COMPRA EN CARULLA') ||
+      d.includes('COMPRA EN D1')      || d.includes('COMPRA EN ARA')     ||
+      d.includes('JUAN VALDEZ')       || d.includes('RAPPI'))             return 'Alimentación'
+
+  if (d.includes('PAGO PSE MONO') || d.includes('EPM') ||
+      d.includes('ACUEDUCTO')     || d.includes('GAS NATURAL')) return 'Servicios/Suscripciones'
+
+  return 'Otro'
+}
+
+function classifyTransaction(description: string, signedAmount: number): {
+  type: 'income' | 'expense'
+  category: string
+} {
   const d = description.toUpperCase()
-
-  // Comisiones bancarias → gasto real aunque vengan positivas en el texto
-  if (d.includes('COMISION')) return 'expense'
-
-  // Impuesto 4x1000
-  if (d.includes('IMPTO GOBIERNO 4X1000')) return 'expense'
-
-  // Transferencias internas (no son ingreso ni gasto real)
-  if (
-    d.includes('TRANSFERENCIA CTA SUC VIRTUAL') ||
-    d.includes('CONSIGNACION CORRESPONSAL CB')  ||
-    d.includes('CONSIG NACIONAL EFECTIVO')
-  ) return 'transfer'
-
-  // Devolución de capital CDT al vencer (no es ingreso real)
-  if (d.includes('CANCELA INV VIRT') || d.includes('CANCELACION INV')) {
-    return 'investment_return'
-  }
-
-  // Apertura CDT → dinero que SALE (gasto)
-  if (d.includes('APERTURA INV VIRTUAL') || d.includes('APERTURA INV VIRT')) {
-    return 'expense'
-  }
-
-  // Intereses de inversión → ingreso real
-  if (
-    d.includes('INTERES INV VIRT')        ||
-    d.includes('ABONO INTERESES AHORROS') ||
-    d.includes('AJUSTE INTERESES')
-  ) return 'income'
-
-  // Fallback: signo del monto
-  return signedAmount < 0 ? 'expense' : 'income'
+  const type: 'income' | 'expense' = signedAmount >= 0 ? 'income' : 'expense'
+  return { type, category: autoCategory(d) }
 }
 
 // ─── Extract closing balance from the RESUMEN section ────────────────────────
@@ -256,11 +268,13 @@ function parseTransactionsByPosition(
     )
     const balance = balanceItem ? parseColombianAmount(balanceItem.str) : 0
 
+    const { type, category } = classifyTransaction(description, value)
     transactions.push({
       date:         `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`,
       description,
       amount:       Math.abs(value),
-      type:         classifyTransaction(description, value),
+      type,
+      category,
       balance,
       accountLast4,
       statementYear: year,

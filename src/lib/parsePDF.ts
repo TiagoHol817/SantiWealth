@@ -12,7 +12,8 @@ export interface ParsedTransaction {
   date: string        // YYYY-MM-DD
   description: string
   amount: number      // positivo siempre
-  type: 'income' | 'expense' | 'transfer' | 'investment_return'
+  type: 'income' | 'expense'
+  category?: string   // hint from parser; overridden by DB rules in the UI
   balance: number
   accountLast4: string
   statementYear: number

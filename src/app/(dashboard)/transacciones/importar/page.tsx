@@ -10,7 +10,7 @@ import { loadCategoryRules, categorizeTransaction } from '@/lib/categorizeTransa
 import type { CDTData } from '@/lib/parseCDTClient'
 
 /* ── Types ──────────────────────────────────────────────────────────── */
-type TxType = 'income' | 'expense' | 'transfer' | 'investment_return'
+type TxType = 'income' | 'expense'
 
 type ParsedRow = {
   date:        string
@@ -420,7 +420,8 @@ export default function ImportarPage() {
         description: t.description,
         amount:      t.amount,
         type:        t.type,
-        category:    categorizeTransaction(t.description, rules),
+        // DB rules take priority; fall back to parser's autoCategory hint
+        category:    categorizeTransaction(t.description, rules) || t.category || 'Otro',
         include:     true,
       })))
     } catch (err: unknown) {
@@ -515,7 +516,7 @@ export default function ImportarPage() {
   const toggleRow  = (i: number) =>
     setRows(prev => prev.map((r, idx) => idx === i ? { ...r, include: !r.include } : r))
 
-  const TX_TYPE_CYCLE: TxType[] = ['income', 'expense', 'transfer', 'investment_return']
+  const TX_TYPE_CYCLE: TxType[] = ['income', 'expense']
   const toggleType = (i: number) =>
     setRows(prev => prev.map((r, idx) => {
       if (idx !== i) return r
@@ -998,11 +999,14 @@ export default function ImportarPage() {
                 <strong style={{ color: '#ef4444' }}>
                   ↓ {fmtCOP(selectedRows.filter(r => r.type === 'expense').reduce((s,r) => s+r.amount, 0))}
                 </strong>
-                {selectedRows.some(r => r.type === 'transfer' || r.type === 'investment_return') && (
-                  <span style={{ color: '#6b7280' }}>
-                    {' · '}{selectedRows.filter(r => r.type === 'transfer' || r.type === 'investment_return').length} mov. neutros
-                  </span>
-                )}
+                {' · '}
+                <span style={{ color: '#6b7280' }}>
+                  = {(() => {
+                    const net = selectedRows.filter(r => r.type === 'income').reduce((s,r) => s+r.amount, 0)
+                              - selectedRows.filter(r => r.type === 'expense').reduce((s,r) => s+r.amount, 0)
+                    return <span style={{ color: net >= 0 ? '#10b981' : '#ef4444' }}>{net < 0 ? '-' : ''}{fmtCOP(Math.abs(net))}</span>
+                  })()}
+                </span>
               </p>
               <div className="flex gap-2">
                 <button
@@ -1127,27 +1131,11 @@ export default function ImportarPage() {
                                   <td style={{ padding: '10px 14px' }} onClick={e => { e.stopPropagation(); toggleType(flatIdx) }}>
                                     <span style={{
                                       padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
-                                      backgroundColor:
-                                        row.type === 'income'            ? '#10b98120' :
-                                        row.type === 'expense'           ? '#ef444420' :
-                                        row.type === 'transfer'          ? '#6b728020' :
-                                                                           '#6366f120',
-                                      color:
-                                        row.type === 'income'            ? '#10b981' :
-                                        row.type === 'expense'           ? '#ef4444' :
-                                        row.type === 'transfer'          ? '#9ca3af' :
-                                                                           '#818cf8',
-                                      border: `1px solid ${
-                                        row.type === 'income'            ? '#10b98130' :
-                                        row.type === 'expense'           ? '#ef444430' :
-                                        row.type === 'transfer'          ? '#6b728030' :
-                                                                           '#6366f130'
-                                      }`,
+                                      backgroundColor: row.type === 'income' ? '#10b98120' : '#ef444420',
+                                      color:           row.type === 'income' ? '#10b981'   : '#ef4444',
+                                      border: `1px solid ${row.type === 'income' ? '#10b98130' : '#ef444430'}`,
                                     }}>
-                                      {row.type === 'income'            ? '↑ Ingreso'     :
-                                       row.type === 'expense'           ? '↓ Gasto'       :
-                                       row.type === 'transfer'          ? '⇄ Transferencia' :
-                                                                          '◎ Inversión'}
+                                      {row.type === 'income' ? '↑ Ingreso' : '↓ Gasto'}
                                     </span>
                                   </td>
                                   <td style={{ padding: '10px 14px' }} onClick={e => e.stopPropagation()}>
@@ -1163,7 +1151,7 @@ export default function ImportarPage() {
                                   </td>
                                   <td style={{ padding: '10px 14px', textAlign: 'right' }}>
                                     <span className="tabular-nums font-semibold"
-                                      style={{ color: row.type === 'income' ? '#10b981' : row.type === 'expense' ? '#ef4444' : row.type === 'transfer' ? '#9ca3af' : '#818cf8' }}>
+                                      style={{ color: row.type === 'income' ? '#10b981' : '#ef4444' }}>
                                       {fmtCOP(row.amount)}
                                     </span>
                                   </td>

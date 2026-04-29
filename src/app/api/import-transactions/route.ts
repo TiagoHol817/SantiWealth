@@ -3,7 +3,7 @@ import { createClient }              from '@/lib/supabase/server'
 import { sanitizeText, sanitizeAmount, sanitizeDate, sanitizeCategory } from '@/lib/sanitize'
 import { rateLimit, getIP }          from '@/lib/rateLimit'
 
-const ALLOWED_TYPES = ['income', 'expense', 'debt_payment', 'transfer', 'investment_return'] as const
+const ALLOWED_TYPES = ['income', 'expense', 'debt_payment'] as const
 
 export async function POST(req: NextRequest) {
   /* ── Rate-limit ──────────────────────────────────────────────────────── */
