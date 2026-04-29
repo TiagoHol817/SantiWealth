@@ -158,19 +158,30 @@ export async function POST(req: NextRequest) {
   })
 
   console.log('[import-transactions] dedup:', rows.length, '→', newRows.length, 'new rows')
+  console.log('[DEBUG] existingKeys sample:', [...existingKeys].slice(0, 3))
 
   if (newRows.length === 0) {
+    console.warn('[import-transactions] SKIPPED: all rows already exist in DB (dedup). skipped:', rows.length)
     return NextResponse.json({ success: true, count: 0, account_id: accountId, skipped: rows.length })
   }
 
-  const { error } = await supabase.from('transactions').insert(newRows)
+  const { data: insertData, error: insertError } = await supabase
+    .from('transactions')
+    .insert(newRows)
+    .select('id')
 
-  if (error) {
-    console.error('[import-transactions]', error.message)
+  console.log('[DEBUG] insert result:', {
+    inserted: insertData?.length ?? 0,
+    error:    insertError?.message ?? null,
+    code:     insertError?.code    ?? null,
+  })
+
+  if (insertError) {
+    console.error('[import-transactions] INSERT ERROR:', insertError.message, insertError.code)
     return NextResponse.json({ error: 'No se pudieron guardar las transacciones' }, { status: 500 })
   }
 
-  console.log('[import-transactions] inserted:', newRows.length)
+  console.log('[import-transactions] inserted:', insertData?.length ?? newRows.length)
 
   /* ── Update account balance from last transaction's running balance ───── */
   // Use the balance column of the last transaction (by date) as the closing
