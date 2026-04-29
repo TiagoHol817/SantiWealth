@@ -19,6 +19,7 @@ type ParsedRow = {
   type:        TxType
   category:    string
   include:     boolean
+  balance?:    number
 }
 
 type BankFormat = 'bancolombia' | 'davivienda' | 'nequi' | 'nu' | 'generic'
@@ -514,13 +515,11 @@ export default function ImportarPage() {
         description: t.description,
         amount:      t.amount,
         type:        t.type,
-        // DB rules take priority; fall back to parser's autoCategory hint
-        // Parser's autoCategory takes priority when it produced a specific result.
-        // Only consult DB rules when the parser returned 'Otro' or nothing.
         category:    (t.category && t.category !== 'Otro')
                        ? t.category
                        : (categorizeTransaction(t.description, rules) || 'Otro'),
         include:     true,
+        balance:     t.balance,
       })))
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : ''
@@ -659,6 +658,7 @@ export default function ImportarPage() {
             category:    r.category,
             description: r.description,
             date:        r.date,
+            balance:     r.balance ?? 0,
           })),
         }),
       })

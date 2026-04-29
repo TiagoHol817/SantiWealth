@@ -20,15 +20,23 @@ export function sanitizeText(value: string, maxLength = 200): string {
 }
 
 // ── Sanitizar monto numérico ─────────────────────────────
+// COP se almacena como enteros en pesos (sin centavos).
+// Si llega un number (ya parseado por JSON), no tocar el punto decimal.
+// Si llega un string colombiano como "1.810.000,00", convertir el formato.
 export function sanitizeAmount(value: string | number): number {
+  if (typeof value === 'number') {
+    if (!isFinite(value) || value < 0) return 0
+    if (value > 999_999_999_999) return 0
+    return Math.round(value)
+  }
   const raw = String(value)
     .replace(/\./g, '')   // quitar separadores de miles colombianos
     .replace(/,/g, '.')   // convertir coma decimal a punto
     .replace(/[^\d.]/g, '') // solo dígitos y punto
   const num = parseFloat(raw)
   if (isNaN(num) || num < 0) return 0
-  if (num > 999_999_999_999) return 0 // max 1 billón COP
-  return Math.round(num * 100) / 100
+  if (num > 999_999_999_999) return 0
+  return Math.round(num)
 }
 
 // ── Sanitizar fecha ──────────────────────────────────────

@@ -135,12 +135,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No se pudieron guardar las transacciones' }, { status: 500 })
   }
 
-  /* ── Update account balance from last statement saldo ────────────────── */
-  if (accountId && body.last_balance != null && Number(body.last_balance) > 0) {
+  /* ── Update account balance from last transaction's running balance ───── */
+  // Use the balance column of the last transaction (by date) as the closing
+  // balance. Fall back to the summary-level last_balance if no row has one.
+  const rowsWithBalance = (body.rows as Record<string, unknown>[])
+    .filter(r => Number(r.balance) > 0)
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)))
+  const closingBalance =
+    rowsWithBalance.length > 0
+      ? Number(rowsWithBalance[0].balance)
+      : body.last_balance != null && Number(body.last_balance) > 0
+        ? Number(body.last_balance)
+        : null
+
+  if (accountId && closingBalance != null) {
     await supabase
       .from('accounts')
-      .update({ current_balance: Number(body.last_balance), updated_at: new Date().toISOString() })
+      .update({ current_balance: closingBalance, updated_at: new Date().toISOString() })
       .eq('id', accountId)
+      .eq('user_id', user.id)
   }
 
   return NextResponse.json({ success: true, count: rows.length, account_id: accountId })
