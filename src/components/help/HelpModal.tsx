@@ -62,16 +62,10 @@ export default function HelpModal({ moduleId, autoOpen = true }: Props) {
       {/* Trigger button */}
       <button
         onClick={() => { setOpen(true); setTimeout(() => setAnimate(true), 30) }}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all hover:opacity-80"
-        style={{
-          backgroundColor: content.color + '15',
-          color:           content.color,
-          border:          `1px solid ${content.color}30`,
-        }}
+        className="help-btn"
         title={`Guía de ${content.title}`}
       >
-        <span style={{ fontWeight: '700', fontSize: '13px', lineHeight: 1 }}>?</span>
-        <span>¿Cómo funciona?</span>
+        ?
       </button>
 
       {/* Overlay */}

@@ -48,7 +48,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const padding = DENSITY_PADDING[settings.ui_density] ?? '32px'
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: '#0f1117' }}>
+    <div className="flex min-h-screen" style={{ backgroundColor: 'transparent' }}>
 
       {/* Mobile overlay */}
       {isMobile && mobileOpen && (

@@ -1,24 +1,22 @@
 export default function Loading() {
   return (
-    <div className="space-y-6 pb-8 animate-pulse">
-      {/* Header skeleton */}
-      <div className="flex items-end justify-between">
-        <div className="space-y-2">
-          <div className="h-8 w-56 rounded-xl" style={{ backgroundColor: "#1a1f2e" }} />
-          <div className="h-4 w-40 rounded-lg" style={{ backgroundColor: "#1a1f2e" }} />
+    <div className="space-y-6 pb-8 animate-pulse" style={{ maxWidth: '840px', margin: '0 auto' }}>
+      <div className="space-y-2">
+        <div className="h-8 w-56 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)' }} />
+        <div className="h-4 w-40 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)' }} />
+      </div>
+      <div className="flex gap-6">
+        <div className="w-48 flex flex-col gap-2">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-10 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)' }} />
+          ))}
         </div>
-        <div className="h-9 w-28 rounded-xl" style={{ backgroundColor: "#1a1f2e" }} />
+        <div className="flex-1 space-y-4">
+          <div className="card h-28 rounded-2xl" />
+          <div className="card h-40 rounded-2xl" />
+          <div className="card h-28 rounded-2xl" />
+        </div>
       </div>
-      {/* KPI cards skeleton */}
-      <div className="grid grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-28 rounded-2xl" style={{ backgroundColor: "#1a1f2e" }} />
-        ))}
-      </div>
-      {/* Main card skeleton */}
-      <div className="h-80 rounded-2xl" style={{ backgroundColor: "#1a1f2e" }} />
-      {/* Secondary card skeleton */}
-      <div className="h-64 rounded-2xl" style={{ backgroundColor: "#1a1f2e" }} />
     </div>
   )
 }

@@ -32,11 +32,6 @@ export default function UpdateGoalButton({ id, current }: { id: string; current:
     }
   }
 
-  const inp = {
-    backgroundColor: '#0f1117', border: '1px solid #2a3040', borderRadius: '10px',
-    color: '#e5e7eb', padding: '6px 10px', fontSize: '13px', outline: 'none', width: '160px'
-  }
-
   if (!open) return (
     <button onClick={() => setOpen(true)}
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all hover:opacity-80"
@@ -51,7 +46,8 @@ export default function UpdateGoalButton({ id, current }: { id: string; current:
   return (
     <div className="flex gap-2 items-center">
       <input
-        style={inp}
+        className="form-input"
+        style={{ width: '160px', padding: '6px 10px', fontSize: '13px' }}
         type="number"
         value={valor}
         onChange={e => setValor(e.target.value)}

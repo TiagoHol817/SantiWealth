@@ -13,13 +13,6 @@ const COLORES: Record<string, string> = {
   'Alimentación': '#ef4444', 'Transporte': '#3b82f6', 'Otro': '#6b7280',
 }
 
-const inputStyle = {
-  backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: '10px', color: '#e5e7eb', padding: '11px 14px',
-  fontSize: '14px', width: '100%', outline: 'none'
-}
-const labelStyle = { color: '#6b7280', fontSize: '12px', marginBottom: '6px', display: 'block' as const }
-
 type Cost = {
   id: string; name: string; category: string;
   amount: number; frequency: string; active: boolean
@@ -122,38 +115,36 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
 
   if (mode === 'add' || mode === 'edit') {
     return (
-      <div className="glass-card rounded-2xl p-6 mb-6" style={{ border: '1px solid #10b98140' }}>
+      <div className="card card-purple p-6 mb-6">
         <div className="flex items-center justify-between mb-5">
           <p className="text-white font-semibold">{mode === 'edit' ? 'Editar costo' : 'Nuevo costo fijo'}</p>
-          <button onClick={() => setMode('list')} style={{ color: '#6b7280', fontSize: '22px', lineHeight: 1 }}>×</button>
+          <button onClick={() => setMode('list')} className="text-muted hover:text-white transition-colors" style={{ fontSize: '22px', lineHeight: 1 }}>×</button>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label style={labelStyle}>Nombre</label>
-            <input style={inputStyle} placeholder="Ej: Arriendo apartamento"
+            <label className="form-label">Nombre</label>
+            <input className="form-input" placeholder="Ej: Arriendo apartamento"
               value={form.name} onChange={e => set('name', e.target.value)} />
           </div>
           <div>
-            <label style={labelStyle}>Categoría</label>
-            <select style={inputStyle} value={form.category} onChange={e => set('category', e.target.value)}>
+            <label className="form-label">Categoría</label>
+            <select className="form-input" value={form.category} onChange={e => set('category', e.target.value)}>
               {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label style={labelStyle}>Monto mensual (COP)</label>
-            <input style={inputStyle} placeholder="500000" type="number"
+            <label className="form-label">Monto mensual (COP)</label>
+            <input className="form-input" placeholder="500000" type="number"
               value={form.amount} onChange={e => set('amount', e.target.value)} />
           </div>
         </div>
         <div className="flex gap-3 mt-4">
-          <button onClick={() => setMode('list')}
-            className="flex-1 py-2.5 rounded-xl text-sm font-medium"
-            style={{ backgroundColor: '#0f1117', border: '1px solid #2a3040', color: '#6b7280' }}>
+          <button onClick={() => setMode('list')} className="btn-secondary flex-1 py-2.5 text-sm">
             Cancelar
           </button>
           <button onClick={guardar} disabled={guardando || !form.name || !form.amount}
-            className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-opacity"
-            style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117', opacity: (!form.name || !form.amount || guardando) ? 0.5 : 1 }}>
+            className="btn-primary flex-1 py-2.5 text-sm"
+            style={{ opacity: (!form.name || !form.amount || guardando) ? 0.5 : 1 }}>
             {guardando ? 'Guardando...' : mode === 'edit' ? 'Guardar cambios' : 'Agregar'}
           </button>
         </div>
@@ -165,9 +156,10 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
 
   return (
     <div className="space-y-6">
-      <div className={`rounded-2xl overflow-hidden${isEmpty ? ' breathe-teal' : ''}`}
-        style={{ backgroundColor: '#1a1f2e', border: `1px solid ${isEmpty ? '#00d4aa25' : '#2a3040'}` }}>
-        <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #2a3040' }}>
+      <div className={`card overflow-hidden${isEmpty ? ' breathe-teal' : ''}`}
+        style={isEmpty ? { borderColor: '#00d4aa25' } : {}}>
+        <div className="px-6 py-4 flex items-center justify-between"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <p className="text-white font-semibold">Lista de costos</p>
           <button onClick={abrirAgregar}
             className="px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
@@ -185,25 +177,19 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
             <p className="text-white font-bold text-lg mb-2">
               Conoce el costo real de tu estilo de vida
             </p>
-            <p style={{ color: '#6b7280', fontSize: '14px' }}>
+            <p className="text-muted" style={{ fontSize: '14px' }}>
               Quienes tienen visión saben exactamente qué necesitan para operar.
             </p>
           </div>
         )}
 
-        {costs.length === 0 ? (
-          <div className="px-6 py-16 text-center">
-            <p className="text-4xl mb-4">💸</p>
-            <p className="text-white font-medium mb-2">Sin costos registrados</p>
-            <p style={{ color: '#6b7280', fontSize: '13px' }}>Agrega tu primer costo fijo</p>
-          </div>
-        ) : costs.map((cost, i) => {
+        {costs.length > 0 && costs.map((cost, i) => {
           const color = COLORES[cost.category] ?? '#6b7280'
           return (
             <div key={cost.id}
               className="flex items-center justify-between px-6 py-4 transition-all hover:bg-white/[0.02]"
               style={{
-                borderBottom: i < costs.length - 1 ? '1px solid #1e2535' : 'none',
+                borderBottom: i < costs.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                 opacity: cost.active ? 1 : 0.5
               }}>
               <div className="flex items-center gap-4">
@@ -225,11 +211,11 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
                   {fmtCOP(cost.amount)}
                 </p>
                 <button onClick={() => toggleActivo(cost)}
-                  className="px-3 py-1 rounded-full text-xs font-medium transition-all"
-                  style={{
-                    backgroundColor: cost.active ? '#10b98120' : '#1e2535',
-                    color: cost.active ? '#10b981' : '#6b7280',
-                    border: `1px solid ${cost.active ? '#10b98140' : '#2a3040'}`
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all${cost.active ? ' costo-activo' : ''}`}
+                  style={cost.active ? {} : {
+                    backgroundColor: 'rgba(255,255,255,0.05)',
+                    color: '#6b7280',
+                    border: '1px solid rgba(255,255,255,0.08)'
                   }}>
                   {cost.active ? 'Activo' : 'Inactivo'}
                 </button>

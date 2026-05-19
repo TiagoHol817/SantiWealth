@@ -18,15 +18,15 @@ const TIPOS = [
 ]
 
 export default function FiltrosMes() {
-  const router                    = useRouter()
-  const params                    = useSearchParams()
+  const router                       = useRouter()
+  const params                       = useSearchParams()
   const [isPending, startTransition] = useTransition()
 
-  const mes         = params.get('mes')       ?? new Date().toISOString().slice(0, 7)
-  const catFiltro   = params.get('categoria') ?? 'todas'
+  const mes          = params.get('mes')       ?? new Date().toISOString().slice(0, 7)
+  const catFiltro    = params.get('categoria') ?? 'todas'
   const cuentaFiltro = params.get('cuenta')   ?? 'todas'
-  const tipoFiltro  = params.get('tipo')      ?? 'todos'
-  const busqueda    = params.get('q')         ?? ''
+  const tipoFiltro   = params.get('tipo')      ?? 'todos'
+  const busqueda     = params.get('q')         ?? ''
 
   const [localSearch, setLocalSearch] = useState(busqueda)
 
@@ -57,12 +57,6 @@ export default function FiltrosMes() {
 
   const hasActiveFilters = catFiltro !== 'todas' || tipoFiltro !== 'todos' || busqueda !== ''
 
-  const inp = {
-    backgroundColor: '#0f1117', border: '1px solid #2a3040',
-    borderRadius: '10px', color: '#e5e7eb', padding: '7px 12px 7px 36px',
-    fontSize: '13px', outline: 'none', width: '100%',
-  }
-
   return (
     <div className="space-y-3 mb-5">
 
@@ -71,7 +65,8 @@ export default function FiltrosMes() {
         <div style={{ position: 'relative', flex: 1 }}>
           <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
           <input
-            style={inp}
+            className="form-input"
+            style={{ paddingLeft: '36px' }}
             placeholder="Buscar por descripción, categoría o monto..."
             value={localSearch}
             onChange={e => handleSearch(e.target.value)}
@@ -89,11 +84,8 @@ export default function FiltrosMes() {
           type="month"
           value={mes}
           onChange={e => nav({ mes: e.target.value })}
-          style={{
-            backgroundColor: '#1a1f2e', border: '1px solid #2a3040',
-            borderRadius: '10px', color: '#e5e7eb', padding: '7px 12px',
-            fontSize: '13px', outline: 'none', flexShrink: 0,
-          }}
+          className="form-input"
+          style={{ flexShrink: 0, width: 'auto' }}
         />
 
         {hasActiveFilters && (
@@ -114,15 +106,15 @@ export default function FiltrosMes() {
             onClick={() => nav({ tipo: tipo.value })}
             className="px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
             style={{
-              backgroundColor: tipoFiltro === tipo.value ? tipo.color + '25' : '#1a1f2e',
+              backgroundColor: tipoFiltro === tipo.value ? tipo.color + '25' : 'rgba(255,255,255,0.05)',
               color:           tipoFiltro === tipo.value ? tipo.color : '#6b7280',
-              border:          `1px solid ${tipoFiltro === tipo.value ? tipo.color + '60' : '#2a3040'}`,
+              border:          `1px solid ${tipoFiltro === tipo.value ? tipo.color + '60' : 'rgba(255,255,255,0.08)'}`,
             }}>
             {tipo.label}
           </button>
         ))}
 
-        <div style={{ width: '1px', backgroundColor: '#2a3040', margin: '0 4px' }} />
+        <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
 
         {CATEGORIAS.map(cat => (
           <button
@@ -130,9 +122,9 @@ export default function FiltrosMes() {
             onClick={() => nav({ categoria: cat })}
             className="px-3 py-1.5 rounded-lg text-xs transition-all"
             style={{
-              backgroundColor: catFiltro === cat ? '#6366f1' : '#1a1f2e',
+              backgroundColor: catFiltro === cat ? '#6366f1' : 'rgba(255,255,255,0.05)',
               color:           catFiltro === cat ? '#fff' : '#6b7280',
-              border:          '1px solid #2a3040',
+              border:          `1px solid ${catFiltro === cat ? '#6366f1' : 'rgba(255,255,255,0.08)'}`,
             }}>
             {cat === 'todas' ? 'Todas' : cat}
           </button>
@@ -140,7 +132,7 @@ export default function FiltrosMes() {
       </div>
 
       {isPending && (
-        <p style={{ color: '#6b7280', fontSize: '11px' }}>Filtrando...</p>
+        <p className="text-muted" style={{ fontSize: '11px' }}>Filtrando...</p>
       )}
     </div>
   )

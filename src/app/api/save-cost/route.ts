@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { sanitizeText, sanitizeAmount } from '@/lib/sanitize'
 import { rateLimit, getIP } from '@/lib/rateLimit'
 
-const ALLOWED_FREQUENCIES = ['monthly', 'annual', 'weekly', 'quarterly'] as const
+// Must match the frequency enum in schema.prisma
+const ALLOWED_FREQUENCIES = ['monthly', 'annual', 'one_time', 'per_transaction'] as const
 type Frequency = typeof ALLOWED_FREQUENCIES[number]
 
 export async function POST(req: NextRequest) {
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
       category:  sanitizeText(body.category, 80),
       amount:    sanitizeAmount(body.amount),
       frequency,
-      active:    true,
+      is_active: true,
       user_id:   user.id,
     })
 

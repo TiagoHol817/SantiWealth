@@ -42,15 +42,21 @@ const fmtCOP  = (n: number) =>
 const fmtPct  = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`
 const fmtSh   = (n: number) => n % 1 === 0 ? n.toString() : n.toFixed(4)
 
+const CARD_VARIANT: Record<string, string> = {
+  '#6366f1': 'card-purple',
+  '#10b981': 'card-green',
+  '#f59e0b': 'card-amber',
+}
+
 function DayRangeBar({ low, high, current, color }: { low: number; high: number; current: number; color: string }) {
   const range = high - low
   const pos   = range > 0 ? ((current - low) / range) * 100 : 50
   return (
-    <div style={{ position: 'relative', height: '4px', backgroundColor: '#0f1117', borderRadius: '2px' }}>
+    <div className="progress-track" style={{ position: 'relative', height: '4px' }}>
       <div style={{
         position: 'absolute', left: `${Math.min(96, Math.max(0, pos))}%`, top: '-3px',
         width: '10px', height: '10px', borderRadius: '50%', backgroundColor: color,
-        transform: 'translateX(-50%)', border: '2px solid #1a1f2e',
+        transform: 'translateX(-50%)', border: '2px solid rgba(255,255,255,0.15)',
       }} />
     </div>
   )
@@ -110,7 +116,7 @@ export default async function InversionesPage({
     }
   })
 
-  // ── CDTs (manual via accounts + importados via cdts table) ──────────────────
+  // ── CDTs ─────────────────────────────────────────────────────────────────
   const [{ data: cdtAccounts }, { data: cdtsImported }] = await Promise.all([
     supabase.from('accounts').select('*').eq('type', 'other').ilike('name', '%CDT%'),
     supabase.from('cdts').select('*').order('start_date', { ascending: false }),
@@ -118,7 +124,6 @@ export default async function InversionesPage({
 
   const today = new Date()
 
-  // Normalize accounts-based CDTs (manual)
   const cdtsFromAccounts = (cdtAccounts ?? []).map(a => {
     const meta         = typeof a.notes === 'string' ? JSON.parse(a.notes) : (a.notes ?? {})
     const vencimiento  = new Date(meta.vencimiento)
@@ -137,7 +142,6 @@ export default async function InversionesPage({
     }
   })
 
-  // Normalize imported CDTs from cdts table
   const cdtsFromTable = (cdtsImported ?? []).map(c => {
     const endDate    = c.end_date ?? c.start_date
     const apertura   = new Date(c.start_date)
@@ -182,28 +186,26 @@ export default async function InversionesPage({
     new Date(d).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
 
   return (
-    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top right, rgba(99,102,241,0.05) 0%, transparent 60%)' }}>
+    <div className="space-y-6 pb-8" style={{ background: 'radial-gradient(ellipse at top right, rgba(99,102,241,0.05) 0%, transparent 60%)' }}>
 
       {/* Header */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden page-enter">
         <div className="blob-purple absolute -top-20 -right-20 opacity-40" style={{ width: '300px', height: '300px' }} />
         <div className="relative flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Inversiones</h1>
-            <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
-              Portafolio en tiempo real · Actualiza cada 60s
-            </p>
+            <h1 className="page-title">Inversiones</h1>
+            <p className="page-subtitle">Portafolio en tiempo real · Actualiza cada 60s</p>
           </div>
           <div className="flex items-center gap-3">
             <HelpModal moduleId="inversiones" />
             <a href="/inversiones/importar"
               className="px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-              style={{ backgroundColor: '#1a1f2e', border: '1px solid #f59e0b40', color: '#f59e0b' }}>
+              style={{ backgroundColor: 'rgba(245,158,11,0.10)', border: '1px solid #f59e0b40', color: '#f59e0b' }}>
               ← Importar CDT
             </a>
             <a href="/inversiones"
               className="px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-              style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#10b981' }}>
+              style={{ backgroundColor: 'rgba(16,185,129,0.10)', border: '1px solid #10b98140', color: '#10b981' }}>
               ↻ Actualizar
             </a>
           </div>
@@ -211,23 +213,22 @@ export default async function InversionesPage({
       </div>
 
       {/* KPIs globales */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-4 gap-4 page-enter page-enter-delay-1">
         {[
           { label: 'Valor de mercado',   value: fmtUSD(totalMktVal),    color: '#e5e7eb', sub: `Invertido: ${fmtUSD(totalInvested)}`,   animClass: 'breathe-green' },
           { label: 'Ganancia total',     value: fmtUSD(totalGain),      color: isTotalPos ? '#10b981' : '#ef4444', sub: fmtPct(totalGainPct), animClass: isTotalPos ? 'breathe-green' : '' },
           { label: 'Cambio hoy',         value: fmtUSD(totalDayChange), color: isDayPos   ? '#10b981' : '#ef4444', sub: fmtPct(totalDayPct),  animClass: '' },
           { label: 'CDTs — Capital',     value: fmtCOP(totalCapitalCDT), color: '#f59e0b', sub: `Rendimiento: ${fmtCOP(totalActualCDT)}`, animClass: '' },
         ].map(item => (
-          <div key={item.label} className={`rounded-2xl p-5 relative overflow-hidden${item.animClass ? ` ${item.animClass}` : ''}`}
-            style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+          <div key={item.label} className={`card p-5 relative overflow-hidden${item.animClass ? ` ${item.animClass}` : ''}`}>
             <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
               style={{ background: item.color, transform: 'translate(30%,-30%)' }} />
-            <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
+            <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
               {item.label}
             </p>
             <HiddenValue value={item.value} className="tabular-nums font-bold"
               style={{ color: item.color, fontSize: '18px' }} />
-            <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '4px' }} className="tabular-nums">
+            <p className="text-muted tabular-nums" style={{ fontSize: '11px', marginTop: '4px' }}>
               {item.sub}
             </p>
           </div>
@@ -239,16 +240,13 @@ export default async function InversionesPage({
 
       {/* ══ TAB: PORTAFOLIO ══════════════════════════════════════════════════ */}
       {activeTab === 'portafolio' && rows.length === 0 && (
-        <div className="rounded-2xl overflow-hidden relative"
-          style={{ background: 'linear-gradient(135deg, #0f1117 0%, #1a1f2e 50%, #0d1526 100%)', border: '1px solid #2a3040' }}>
-          {/* Glow blobs */}
+        <div className="card rounded-2xl overflow-hidden relative page-enter page-enter-delay-2">
           <div className="absolute top-0 left-1/2 w-96 h-96 rounded-full opacity-[0.07] blur-3xl pointer-events-none"
             style={{ background: '#6366f1', transform: 'translate(-50%, -40%)' }} />
           <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full opacity-[0.05] blur-3xl pointer-events-none"
             style={{ background: '#818cf8', transform: 'translate(30%, 30%)' }} />
 
           <div className="relative px-8 py-14 text-center">
-            {/* Icon */}
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-6"
               style={{ background: 'linear-gradient(135deg, #6366f115, #818cf825)', border: '1px solid #6366f130' }}>
               <span style={{ fontSize: '36px' }}>📈</span>
@@ -257,22 +255,20 @@ export default async function InversionesPage({
             <h2 className="text-white font-bold text-2xl mb-3 tracking-tight">
               Tu dinero puede trabajar mientras tú descansas
             </h2>
-            <p style={{ color: '#9ca3af', fontSize: '15px', maxWidth: '480px', margin: '0 auto 32px' }}>
+            <p className="text-muted" style={{ fontSize: '15px', maxWidth: '480px', margin: '0 auto 32px' }}>
               Quienes multiplican lo registran todo. Empieza con lo que tienes — acciones, ETFs, cripto, CDTs o finca raíz.
             </p>
 
-            {/* Feature cards */}
             <div className="grid grid-cols-3 gap-4 mb-10 text-left">
               {[
                 { icon: '📊', title: 'Portafolio en vivo', desc: 'Precios actualizados de Yahoo Finance cada minuto' },
                 { icon: '💱', title: 'Doble moneda', desc: 'Todo convertido a COP y USD con TRM del día' },
                 { icon: '🎯', title: 'Camino a $100K USD', desc: 'Rastrea tu avance hacia la meta de patrimonio neto' },
               ].map(card => (
-                <div key={card.title} className="rounded-xl p-4"
-                  style={{ backgroundColor: '#ffffff06', border: '1px solid #ffffff0a' }}>
+                <div key={card.title} className="stat-cell p-4">
                   <p style={{ fontSize: '22px', marginBottom: '8px' }}>{card.icon}</p>
                   <p className="text-white text-sm font-semibold mb-1">{card.title}</p>
-                  <p style={{ color: '#6b7280', fontSize: '12px', lineHeight: 1.5 }}>{card.desc}</p>
+                  <p className="text-muted" style={{ fontSize: '12px', lineHeight: 1.5 }}>{card.desc}</p>
                 </div>
               ))}
             </div>
@@ -282,7 +278,7 @@ export default async function InversionesPage({
               style={{ background: 'linear-gradient(135deg, #6366f1, #818cf8)', color: 'white', boxShadow: '0 0 32px #6366f140' }}>
               + Agregar primera inversión
             </a>
-            <p style={{ color: '#4b5563', fontSize: '12px', marginTop: '16px' }}>
+            <p className="text-muted" style={{ fontSize: '12px', marginTop: '16px' }}>
               Soporta acciones, ETFs, CDTs, cripto y fondos de inversión
             </p>
           </div>
@@ -292,8 +288,7 @@ export default async function InversionesPage({
       {activeTab === 'portafolio' && rows.length > 0 && (
         <>
           {/* Donut + distribución */}
-          <div className="rounded-2xl p-6 relative overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%)', border: '1px solid #2a3040' }}>
+          <div className="card card-purple p-6 relative overflow-hidden page-enter page-enter-delay-2">
             <div className="absolute top-0 right-0 w-72 h-72 rounded-full opacity-5 blur-3xl"
               style={{ background: '#6366f1', transform: 'translate(20%,-20%)' }} />
             <div className="flex items-center gap-8">
@@ -307,7 +302,7 @@ export default async function InversionesPage({
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: g.color }} />
-                        <span style={{ color: '#9ca3af', fontSize: '13px' }}>{g.label}</span>
+                        <span className="text-muted" style={{ fontSize: '13px' }}>{g.label}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <HiddenValue value={fmtUSD(g.total)} className="tabular-nums font-semibold text-white text-sm" />
@@ -317,14 +312,14 @@ export default async function InversionesPage({
                         </span>
                       </div>
                     </div>
-                    <div className="rounded-full overflow-hidden" style={{ height: '5px', backgroundColor: '#0f1117' }}>
-                      <div className="h-full rounded-full" style={{ width: `${g.pct}%`, backgroundColor: g.color }} />
+                    <div className="progress-track" style={{ height: '5px' }}>
+                      <div className="progress-fill" style={{ width: `${g.pct}%`, backgroundColor: g.color }} />
                     </div>
                   </div>
                 ))}
-                <div className="mt-5 pt-4 grid grid-cols-2 gap-4" style={{ borderTop: '1px solid #2a3040' }}>
+                <div className="mt-5 pt-4 grid grid-cols-2 gap-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                   <div>
-                    <p style={{ color: '#6b7280', fontSize: '11px', marginBottom: '4px' }}>Ganancia total</p>
+                    <p className="text-muted" style={{ fontSize: '11px', marginBottom: '4px' }}>Ganancia total</p>
                     <HiddenValue value={fmtUSD(totalGain)} className="tabular-nums font-bold"
                       style={{ color: isTotalPos ? '#10b981' : '#ef4444', fontSize: '16px' }} />
                     <span className="tabular-nums text-xs" style={{ color: isTotalPos ? '#10b981' : '#ef4444' }}>
@@ -332,7 +327,7 @@ export default async function InversionesPage({
                     </span>
                   </div>
                   <div>
-                    <p style={{ color: '#6b7280', fontSize: '11px', marginBottom: '4px' }}>Cambio hoy</p>
+                    <p className="text-muted" style={{ fontSize: '11px', marginBottom: '4px' }}>Cambio hoy</p>
                     <HiddenValue value={fmtUSD(totalDayChange)} className="tabular-nums font-bold"
                       style={{ color: isDayPos ? '#10b981' : '#ef4444', fontSize: '16px' }} />
                     <span className="tabular-nums text-xs" style={{ color: isDayPos ? '#10b981' : '#ef4444' }}>
@@ -345,15 +340,16 @@ export default async function InversionesPage({
           </div>
 
           {/* Grupos de activos */}
-          {grupos.map(g => (
-            <div key={g.label} className="rounded-2xl overflow-hidden"
-              style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-              <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #2a3040' }}>
+          {grupos.map((g, gi) => (
+            <div key={g.label} className={`card ${CARD_VARIANT[g.color] ?? ''} overflow-hidden page-enter`}
+              style={{ animationDelay: `${(gi + 3) * 60}ms` }}>
+              <div className="px-6 py-4 flex items-center justify-between"
+                style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 <div className="flex items-center gap-3">
                   <div className="w-1.5 h-6 rounded-full" style={{ backgroundColor: g.color }} />
                   <div>
                     <h2 className="text-white font-semibold">{g.label}</h2>
-                    <p style={{ color: '#6b7280', fontSize: '11px' }}>{g.items.length} posición{g.items.length !== 1 ? 'es' : ''}</p>
+                    <p className="text-muted" style={{ fontSize: '11px' }}>{g.items.length} posición{g.items.length !== 1 ? 'es' : ''}</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -373,7 +369,7 @@ export default async function InversionesPage({
 
                 return (
                   <div key={row.id} className="px-6 py-5 transition-all hover:bg-white/[0.015]"
-                    style={{ borderBottom: i < g.items.length - 1 ? '1px solid #1e2535' : 'none' }}>
+                    style={{ borderBottom: i < g.items.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                     <div className="flex items-start gap-4">
                       <div className="w-11 h-11 rounded-xl flex items-center justify-center font-bold shrink-0"
                         style={{ backgroundColor: g.color + '20', color: g.color, fontSize: '11px' }}>
@@ -384,9 +380,9 @@ export default async function InversionesPage({
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="text-white font-bold">{row.ticker.replace('-USD','')}</span>
-                              <span style={{ color: '#6b7280', fontSize: '12px' }}>{row.name}</span>
+                              <span className="text-muted" style={{ fontSize: '12px' }}>{row.name}</span>
                             </div>
-                            <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '1px' }}>
+                            <p className="text-muted" style={{ fontSize: '11px', marginTop: '1px' }}>
                               {fmtSh(Number(row.shares))} unidades
                             </p>
                           </div>
@@ -406,15 +402,16 @@ export default async function InversionesPage({
                         </div>
                         <div className="grid grid-cols-3 gap-3 mb-2">
                           {[
-                            { label: 'Precio actual', value: fmtUSD(row.price), color: '#e5e7eb' },
-                            { label: 'Cambio hoy',    value: `${isDayR ? '+' : ''}${fmtUSD(row.pd?.dayChange ?? 0)} (${fmtPct(row.pd?.dayPct ?? 0)})`, color: isDayR ? '#10b981' : '#ef4444' },
-                            { label: 'Costo prom. DCA', value: `${fmtUSD(row.avgCost)} ${dcaDiff >= 0 ? '▲' : '▼'}${Math.abs(dcaDiff).toFixed(1)}%`, color: dcaDiff >= 0 ? '#10b981' : '#ef4444' },
+                            { label: 'Precio actual',    value: fmtUSD(row.price), color: undefined },
+                            { label: 'Cambio hoy',       value: `${isDayR ? '+' : ''}${fmtUSD(row.pd?.dayChange ?? 0)} (${fmtPct(row.pd?.dayPct ?? 0)})`, color: isDayR ? '#10b981' : '#ef4444' },
+                            { label: 'Costo prom. DCA',  value: `${fmtUSD(row.avgCost)} ${dcaDiff >= 0 ? '▲' : '▼'}${Math.abs(dcaDiff).toFixed(1)}%`, color: dcaDiff >= 0 ? '#10b981' : '#ef4444' },
                           ].map(item => (
-                            <div key={item.label} className="rounded-xl p-2.5" style={{ backgroundColor: '#0f1117' }}>
-                              <p style={{ color: '#4b5563', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            <div key={item.label} className="stat-cell p-2.5">
+                              <p className="text-muted" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                 {item.label}
                               </p>
-                              <p className="tabular-nums font-semibold" style={{ color: item.color, fontSize: '12px', marginTop: '2px' }}>
+                              <p className="tabular-nums font-semibold"
+                                style={{ color: item.color ?? 'inherit', fontSize: '12px', marginTop: '2px' }}>
                                 {item.value}
                               </p>
                             </div>
@@ -423,13 +420,13 @@ export default async function InversionesPage({
                         <div className="flex items-center gap-4">
                           <div className="flex-1">
                             <div className="flex justify-between mb-1">
-                              <span style={{ color: '#4b5563', fontSize: '10px' }}>Min {fmtUSD(row.pd?.dayLow ?? row.price)}</span>
-                              <span style={{ color: '#4b5563', fontSize: '10px' }}>Max {fmtUSD(row.pd?.dayHigh ?? row.price)}</span>
+                              <span className="text-muted" style={{ fontSize: '10px' }}>Min {fmtUSD(row.pd?.dayLow ?? row.price)}</span>
+                              <span className="text-muted" style={{ fontSize: '10px' }}>Max {fmtUSD(row.pd?.dayHigh ?? row.price)}</span>
                             </div>
                             <DayRangeBar low={row.pd?.dayLow ?? row.price} high={row.pd?.dayHigh ?? row.price} current={row.price} color={g.color} />
                           </div>
                           <div className="shrink-0 text-right">
-                            <p style={{ color: '#4b5563', fontSize: '10px' }}>Del portafolio</p>
+                            <p className="text-muted" style={{ fontSize: '10px' }}>Del portafolio</p>
                             <p className="tabular-nums font-semibold" style={{ color: g.color, fontSize: '13px' }}>
                               {pctTotal.toFixed(1)}%
                             </p>
@@ -449,24 +446,23 @@ export default async function InversionesPage({
       {activeTab === 'renta-fija' && (
         <>
           <div className="flex items-center justify-between">
-            <p style={{ color: '#6b7280', fontSize: '13px' }}>
+            <p className="text-muted" style={{ fontSize: '13px' }}>
               {cdts.length} CDT{cdts.length !== 1 ? 's' : ''} activo{cdts.length !== 1 ? 's' : ''}
             </p>
             <CDTUploader cdts={cdtsFromAccounts.map(c => ({ id: c.id, name: c.name, notes: c.meta, current_balance: c.capital }))} />
           </div>
 
           {/* KPIs CDTs */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-4 page-enter page-enter-delay-1">
             {[
               { label: 'Capital total',          value: fmtCOP(totalCapitalCDT), color: '#e5e7eb' },
               { label: 'Rendimiento proyectado', value: fmtCOP(totalRendCDT),    color: '#10b981' },
               { label: 'Rendimiento acumulado',  value: fmtCOP(totalActualCDT),  color: '#6366f1' },
             ].map(item => (
-              <div key={item.label} className="rounded-2xl p-5 relative overflow-hidden"
-                style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+              <div key={item.label} className="card p-5 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
                   style={{ background: item.color, transform: 'translate(30%,-30%)' }} />
-                <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
+                <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
                   {item.label}
                 </p>
                 <HiddenValue value={item.value} className="tabular-nums font-bold"
@@ -487,18 +483,18 @@ export default async function InversionesPage({
           )}
 
           {/* Lista CDTs */}
-          <div className="space-y-4">
+          <div className="space-y-4 page-enter page-enter-delay-2">
             {cdts.length === 0 ? (
-              <div className="rounded-2xl p-16 text-center" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+              <div className="card p-16 text-center">
                 <p className="text-4xl mb-4">📄</p>
                 <p className="text-white font-semibold mb-2">Sin CDTs registrados</p>
-                <p style={{ color: '#6b7280', fontSize: '13px' }}>Agrega tu primer CDT con el botón de arriba</p>
+                <p className="text-muted" style={{ fontSize: '13px' }}>Agrega tu primer CDT con el botón de arriba</p>
               </div>
             ) : cdts.map(cdt => {
               const color = cdt.vencido ? '#ef4444' : cdt.urgente ? '#f59e0b' : '#10b981'
               return (
-                <div key={cdt.id} className="rounded-2xl p-6 relative overflow-hidden"
-                  style={{ backgroundColor: '#1a1f2e', border: `1px solid ${cdt.vencido ? '#ef444440' : cdt.urgente ? '#f59e0b40' : '#2a3040'}` }}>
+                <div key={cdt.id} className="card p-6 relative overflow-hidden"
+                  style={{ borderColor: cdt.vencido ? '#ef444440' : cdt.urgente ? '#f59e0b40' : undefined }}>
                   <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-5 blur-3xl"
                     style={{ background: color, transform: 'translate(20%,-20%)' }} />
                   <div className="flex items-start justify-between mb-5">
@@ -507,7 +503,7 @@ export default async function InversionesPage({
                         style={{ backgroundColor: color + '20', color }}>CDT</div>
                       <div>
                         <h3 className="text-white font-semibold text-lg">{cdt.name}</h3>
-                        <p style={{ color: '#6b7280', fontSize: '12px' }}>
+                        <p className="text-muted" style={{ fontSize: '12px' }}>
                           {fmtDate(cdt.meta.apertura)} → {fmtDate(cdt.meta.vencimiento)}
                         </p>
                       </div>
@@ -518,27 +514,27 @@ export default async function InversionesPage({
                     </div>
                     <div className="text-right">
                       <HiddenValue value={fmtCOP(cdt.capital)} className="tabular-nums font-bold text-white" style={{ fontSize: '20px' }} />
-                      <p style={{ color: '#6b7280', fontSize: '12px' }}>Capital</p>
+                      <p className="text-muted" style={{ fontSize: '12px' }}>Capital</p>
                     </div>
                   </div>
                   <div className="mb-4">
                     <div className="flex justify-between mb-2">
-                      <p style={{ color: '#6b7280', fontSize: '12px' }}>Progreso del plazo</p>
+                      <p className="text-muted" style={{ fontSize: '12px' }}>Progreso del plazo</p>
                       <p className="tabular-nums font-semibold" style={{ color, fontSize: '12px' }}>{cdt.progreso}%</p>
                     </div>
-                    <div className="rounded-full overflow-hidden" style={{ backgroundColor: '#0f1117', height: '8px' }}>
-                      <div className="h-full rounded-full" style={{ width: `${cdt.progreso}%`, backgroundColor: color }} />
+                    <div className="progress-track" style={{ height: '8px' }}>
+                      <div className="progress-fill" style={{ width: `${cdt.progreso}%`, backgroundColor: color }} />
                     </div>
                   </div>
                   <div className="grid grid-cols-4 gap-3">
                     {[
-                      { label: 'Tasa EA',            value: `${cdt.meta.tasa_ea}%`,      isAmt: false },
-                      { label: 'Tasa Nominal',        value: `${cdt.meta.tasa_nominal}%`, isAmt: false },
-                      { label: 'Rendimiento total',   value: fmtCOP(cdt.rendTotal),       isAmt: true  },
-                      { label: 'Acumulado hoy',       value: fmtCOP(cdt.rendActual),      isAmt: true  },
+                      { label: 'Tasa EA',           value: `${cdt.meta.tasa_ea}%`,      isAmt: false },
+                      { label: 'Tasa Nominal',       value: `${cdt.meta.tasa_nominal}%`, isAmt: false },
+                      { label: 'Rendimiento total',  value: fmtCOP(cdt.rendTotal),       isAmt: true  },
+                      { label: 'Acumulado hoy',      value: fmtCOP(cdt.rendActual),      isAmt: true  },
                     ].map(item => (
-                      <div key={item.label} className="rounded-xl p-3" style={{ backgroundColor: '#0f1117', border: '1px solid #1e2535' }}>
-                        <p style={{ color: '#4b5563', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+                      <div key={item.label} className="stat-cell p-3">
+                        <p className="text-muted" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
                           {item.label}
                         </p>
                         {item.isAmt

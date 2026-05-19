@@ -1,7 +1,7 @@
 function Sk({ w, h, className }: { w?: string; h: string; className?: string }) {
   return (
     <div className={`animate-pulse rounded-xl ${className ?? ''}`}
-      style={{ backgroundColor: '#1a1f2e', width: w, height: h }} />
+      style={{ background: 'rgba(255,255,255,0.06)', width: w, height: h }} />
   )
 }
 
@@ -14,8 +14,7 @@ export default function Loading() {
       </div>
       <div className="grid grid-cols-3 gap-4">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="rounded-2xl p-5 animate-pulse"
-            style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+          <div key={i} className="card p-5 animate-pulse">
             <Sk h="12px" w="80px" className="mb-4" />
             <Sk h="32px" w="120px" className="mb-2" />
             <Sk h="6px" w="100%" className="rounded-full" />
@@ -24,8 +23,7 @@ export default function Loading() {
       </div>
       <div className="grid grid-cols-2 gap-4">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="rounded-2xl p-5 animate-pulse"
-            style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+          <div key={i} className="card p-5 animate-pulse">
             <div className="flex justify-between mb-4">
               <Sk h="16px" w="120px" />
               <Sk h="20px" w="40px" className="rounded-full" />

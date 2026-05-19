@@ -13,7 +13,6 @@ const ICONOS: Record<string,string> = {
   'Suscripciones':'🔄','Alimentación':'🍽️','Transporte':'🚗','Otro':'📦',
 }
 
-// Colombian avg salary ~$1,800,000/month / 22 working days
 const SALARIO_DIA = 1_800_000 / 22
 
 const fmtCOP = (n: number) =>
@@ -28,7 +27,6 @@ export default async function CostosOpPage() {
   const mesActual  = now.getMonth() + 1
   const yearActual = now.getFullYear()
 
-  // ── Historial últimos 6 meses ─────────────────────────────────────────────
   const hace6Meses = new Date(now)
   hace6Meses.setMonth(hace6Meses.getMonth() - 5)
   const desde = `${hace6Meses.getFullYear()}-${String(hace6Meses.getMonth() + 1).padStart(2,'0')}-01`
@@ -37,7 +35,6 @@ export default async function CostosOpPage() {
     .from('transactions').select('date, amount, category, type')
     .eq('type', 'expense').gte('date', desde)
 
-  // ── Agrupar gastos por mes ────────────────────────────────────────────────
   const porMes: Record<string, number> = {}
   txHistorial?.forEach(t => {
     const mes = t.date.slice(0, 7)
@@ -52,7 +49,6 @@ export default async function CostosOpPage() {
       total,
     }))
 
-  // ── Comparativa mes actual vs anterior ───────────────────────────────────
   const mesActualStr = `${yearActual}-${String(mesActual).padStart(2,'0')}`
   const mesPrevNum   = mesActual === 1 ? 12 : mesActual - 1
   const yearPrev     = mesActual === 1 ? yearActual - 1 : yearActual
@@ -71,14 +67,12 @@ export default async function CostosOpPage() {
   const totalMensual = activos.reduce((s, c) => s + Number(c.amount), 0)
   const totalAnual   = totalMensual * 12
 
-  // ── Días de trabajo equivalentes ─────────────────────────────────────────
   const diasDeTrabajo = totalMensual > 0 ? Math.round(totalMensual / SALARIO_DIA) : 0
 
   const porCategoria: Record<string,number> = {}
   activos.forEach(c => { porCategoria[c.category] = (porCategoria[c.category] ?? 0) + Number(c.amount) })
   const categoriasOrdenadas = Object.entries(porCategoria).sort((a, b) => b[1] - a[1])
 
-  // ── Alertas: costos sobre promedio histórico ──────────────────────────────
   const alertas = categoriasOrdenadas.filter(([cat, total]) => {
     const promCat = txHistorial
       ?.filter(t => t.category === cat)
@@ -88,19 +82,18 @@ export default async function CostosOpPage() {
     return avgCat > 0 && total > avgCat * 1.2
   })
 
-  // ── Oportunidad de ahorro: inactivos ─────────────────────────────────────
   const ahorroInactivos = inactivos.reduce((s, c) => s + Number(c.amount), 0)
 
   return (
-    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top left, rgba(0,212,170,0.04) 0%, transparent 60%)' }}>
+    <div className="space-y-6 pb-8" style={{ background: 'radial-gradient(ellipse at top left, rgba(0,212,170,0.04) 0%, transparent 60%)' }}>
 
       {/* Header */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden page-enter">
         <div className="blob-green absolute -top-20 -right-20 opacity-40" style={{ width: '300px', height: '300px' }} />
         <div className="relative flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Costos Operacionales</h1>
-            <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>Gastos fijos recurrentes</p>
+            <h1 className="page-title">Costos Operacionales</h1>
+            <p className="page-subtitle">Gastos fijos recurrentes</p>
           </div>
           <div className="flex items-center gap-3">
             <HelpModal moduleId="costos-op" />
@@ -110,29 +103,28 @@ export default async function CostosOpPage() {
 
       {/* Hero — Compromiso mensual */}
       {totalMensual > 0 && (
-        <div className="rounded-2xl p-6 relative overflow-hidden breathe-teal"
-          style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%)', border: '1px solid #2a3040' }}>
+        <div className="card card-red p-6 relative overflow-hidden breathe-teal page-enter page-enter-delay-1">
           <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-[0.06] blur-3xl pointer-events-none"
             style={{ background: '#ef4444', transform: 'translate(20%,-20%)' }} />
           <div className="flex items-end justify-between">
             <div>
-              <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '6px' }}>Compromiso mensual</p>
+              <p className="text-muted" style={{ fontSize: '13px', marginBottom: '6px' }}>Compromiso mensual</p>
               <HiddenValue
                 value={fmtCOP(totalMensual)}
                 className="tabular-nums font-black"
                 style={{ color: '#ef4444', fontSize: '36px', lineHeight: 1 }}
               />
-              <p style={{ color: '#4b5563', fontSize: '13px', marginTop: '8px' }}>
+              <p className="text-muted" style={{ fontSize: '13px', marginTop: '8px' }}>
                 Lo que sale automáticamente cada mes
               </p>
             </div>
             {diasDeTrabajo > 0 && (
               <div className="text-right">
-                <p style={{ color: '#6b7280', fontSize: '12px', marginBottom: '4px' }}>Equivale a</p>
+                <p className="text-muted" style={{ fontSize: '12px', marginBottom: '4px' }}>Equivale a</p>
                 <p className="tabular-nums font-black" style={{ color: '#f59e0b', fontSize: '32px', lineHeight: 1 }}>
                   {diasDeTrabajo}
                 </p>
-                <p style={{ color: '#4b5563', fontSize: '12px', marginTop: '4px' }}>
+                <p className="text-muted" style={{ fontSize: '12px', marginTop: '4px' }}>
                   días de trabajo promedio
                 </p>
               </div>
@@ -142,54 +134,54 @@ export default async function CostosOpPage() {
       )}
 
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="rounded-2xl p-5 relative overflow-hidden"
-          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+      <div className="grid grid-cols-4 gap-4 page-enter page-enter-delay-2">
+        <div className="card p-5 relative overflow-hidden"
+          style={{ borderLeftColor: '#ef4444', borderLeftWidth: '3px' }}>
           <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
             style={{ background: '#ef4444', transform: 'translate(30%,-30%)' }} />
-          <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Total mensual</p>
+          <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Total mensual</p>
           <HiddenValue value={fmtCOP(totalMensual)} className="tabular-nums font-bold"
             style={{ color: '#ef4444', fontSize: '20px' }} />
-          <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '4px' }}>
+          <p className="text-muted" style={{ fontSize: '11px', marginTop: '4px' }}>
             {activos.length} costos activos
           </p>
         </div>
-        <div className="rounded-2xl p-5 relative overflow-hidden"
-          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+        <div className="card p-5 relative overflow-hidden"
+          style={{ borderLeftColor: '#f59e0b', borderLeftWidth: '3px' }}>
           <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
             style={{ background: '#f59e0b', transform: 'translate(30%,-30%)' }} />
-          <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Total anual</p>
+          <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Total anual</p>
           <HiddenValue value={fmtCOP(totalAnual)} className="tabular-nums font-bold"
             style={{ color: '#f59e0b', fontSize: '20px' }} />
-          <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '4px' }}>Proyección 12 meses</p>
+          <p className="text-muted" style={{ fontSize: '11px', marginTop: '4px' }}>Proyección 12 meses</p>
         </div>
-        <div className="rounded-2xl p-5 relative overflow-hidden"
-          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+        <div className="card p-5 relative overflow-hidden"
+          style={{ borderLeftColor: '#6366f1', borderLeftWidth: '3px' }}>
           <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
             style={{ background: '#6366f1', transform: 'translate(30%,-30%)' }} />
-          <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Vs mes anterior</p>
+          <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Vs mes anterior</p>
           {deltaVsPrev !== null ? (
             <>
               <p className="tabular-nums font-bold"
                 style={{ color: deltaVsPrev <= 0 ? '#10b981' : '#ef4444', fontSize: '20px' }}>
                 {deltaVsPrev >= 0 ? '+' : ''}{deltaVsPrev.toFixed(1)}%
               </p>
-              <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '4px' }}>
+              <p className="text-muted" style={{ fontSize: '11px', marginTop: '4px' }}>
                 {deltaVsPrev <= 0 ? '↓ Bajaste' : '↑ Subiste'} vs mes anterior
               </p>
             </>
           ) : (
-            <p className="font-bold" style={{ color: '#4b5563', fontSize: '16px' }}>Sin datos prev.</p>
+            <p className="font-bold text-muted" style={{ fontSize: '16px' }}>Sin datos prev.</p>
           )}
         </div>
-        <div className="rounded-2xl p-5 relative overflow-hidden"
-          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+        <div className="card p-5 relative overflow-hidden"
+          style={{ borderLeftColor: '#10b981', borderLeftWidth: '3px' }}>
           <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
             style={{ background: '#10b981', transform: 'translate(30%,-30%)' }} />
-          <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Promedio histórico</p>
+          <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Promedio histórico</p>
           <HiddenValue value={fmtCOP(promedioHistorico)} className="tabular-nums font-bold"
             style={{ color: '#10b981', fontSize: '20px' }} />
-          <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '4px' }}>
+          <p className="text-muted" style={{ fontSize: '11px', marginTop: '4px' }}>
             Últimos {mesesOrdenados.length} meses
           </p>
         </div>
@@ -197,14 +189,14 @@ export default async function CostosOpPage() {
 
       {/* Alertas */}
       {alertas.length > 0 && (
-        <div className="rounded-2xl p-4 flex items-start gap-3"
-          style={{ backgroundColor: '#2d1515', border: '1px solid #ef444440' }}>
+        <div className="card card-red p-4 flex items-start gap-3 page-enter page-enter-delay-3"
+          style={{ borderColor: 'rgba(239,68,68,0.30)' }}>
           <span style={{ fontSize: '20px', flexShrink: 0, marginTop: '1px' }}>⚠️</span>
           <div>
             <p style={{ color: '#ef4444', fontWeight: '600', fontSize: '13px', marginBottom: '4px' }}>
               {alertas.length} categoría{alertas.length > 1 ? 's' : ''} sobre el promedio histórico
             </p>
-            <p style={{ color: '#9ca3af', fontSize: '12px' }}>
+            <p className="text-muted" style={{ fontSize: '12px' }}>
               {alertas.map(([cat]) => cat).join(', ')} · Estos gastos superan +20% de tu promedio
             </p>
           </div>
@@ -213,14 +205,14 @@ export default async function CostosOpPage() {
 
       {/* Savings opportunity */}
       {(ahorroInactivos > 0 || inactivos.length > 0) && (
-        <div className="rounded-2xl p-4 flex items-start gap-3"
-          style={{ backgroundColor: '#0a2d1f', border: '1px solid #10b98130' }}>
+        <div className="card card-green p-4 flex items-start gap-3 page-enter page-enter-delay-3"
+          style={{ borderColor: 'rgba(0,212,170,0.30)' }}>
           <span style={{ fontSize: '20px', flexShrink: 0, marginTop: '1px' }}>💡</span>
           <div className="flex-1">
             <p style={{ color: '#10b981', fontWeight: '600', fontSize: '13px', marginBottom: '2px' }}>
               Oportunidad de ahorro detectada
             </p>
-            <p style={{ color: '#9ca3af', fontSize: '12px' }}>
+            <p className="text-muted" style={{ fontSize: '12px' }}>
               Tienes {inactivos.length} costo{inactivos.length !== 1 ? 's' : ''} inactivo{inactivos.length !== 1 ? 's' : ''}.
               {ahorroInactivos > 0 && (
                 <> Eliminarlos te ahorraría{' '}
@@ -234,12 +226,14 @@ export default async function CostosOpPage() {
 
       {/* Burn Rate Chart */}
       {mesesOrdenados.length >= 2 && (
-        <BurnRateChart data={mesesOrdenados} promedio={promedioHistorico} />
+        <div className="page-enter page-enter-delay-4">
+          <BurnRateChart data={mesesOrdenados} promedio={promedioHistorico} />
+        </div>
       )}
 
       {/* Distribución por categoría */}
       {categoriasOrdenadas.length > 0 && (
-        <div className="rounded-2xl p-6" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+        <div className="card p-6 page-enter page-enter-delay-5">
           <p className="text-white font-semibold mb-4">Distribución por categoría</p>
           <div className="flex rounded-full overflow-hidden mb-5" style={{ height: '10px' }}>
             {categoriasOrdenadas.map(([cat, total]) => (
@@ -251,14 +245,13 @@ export default async function CostosOpPage() {
               const color = COLORES[cat] ?? '#6b7280'
               const pct   = ((total/totalMensual)*100).toFixed(1)
               return (
-                <div key={cat} className="flex items-center justify-between rounded-xl px-4 py-3"
-                  style={{ backgroundColor: '#0f1117' }}>
+                <div key={cat} className="stat-cell flex items-center justify-between rounded-xl px-4 py-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center"
                       style={{ backgroundColor: color + '20' }}>
                       <span style={{ fontSize: '16px' }}>{ICONOS[cat] ?? '📦'}</span>
                     </div>
-                    <span style={{ color: '#9ca3af', fontSize: '13px' }}>{cat}</span>
+                    <span className="text-muted" style={{ fontSize: '13px' }}>{cat}</span>
                   </div>
                   <div className="text-right">
                     <HiddenValue value={fmtCOP(total)} className="tabular-nums font-semibold text-white text-sm" />
@@ -271,7 +264,7 @@ export default async function CostosOpPage() {
         </div>
       )}
 
-      {/* Lista de costos — handled by CostosForm (includes add/edit/delete + empty state) */}
+      {/* Lista de costos */}
       <CostosForm costs={costs ?? []} />
     </div>
   )

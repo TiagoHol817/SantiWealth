@@ -9,12 +9,12 @@ import { animate }                      from 'animejs'
 interface Options {
   duration?: number   // ms (default 1200)
   delay?: number      // ms (default 0)
-  ease?: string       // Anime.js easing (default 'outExpo')
+  ease?: string       // Anime.js easing (default 'out(4)')
   decimals?: number   // decimal places (default 0)
 }
 
 export function useCountUp(target: number, options: Options = {}) {
-  const { duration = 1200, delay = 0, ease = 'outExpo', decimals = 0 } = options
+  const { duration = 1200, delay = 0, ease = 'out(4)', decimals = 0 } = options
   const [displayed, setDisplayed] = useState(0)
   const obj = useRef({ value: 0 })
 

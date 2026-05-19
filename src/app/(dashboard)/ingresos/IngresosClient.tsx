@@ -17,14 +17,13 @@ function CustomTooltip({ active, payload, label }: any) {
   const { visible } = useBalance()
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl p-3 shadow-2xl"
-      style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', minWidth: '180px' }}>
-      <p style={{ color: '#6b7280', fontSize: '11px', marginBottom: '8px' }}>{label}</p>
+    <div className="card rounded-xl p-3 shadow-2xl" style={{ minWidth: '180px' }}>
+      <p className="text-muted" style={{ fontSize: '11px', marginBottom: '8px' }}>{label}</p>
       {payload.map((p: any) => (
         <div key={p.dataKey} className="flex items-center justify-between gap-4 mb-1">
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.fill }} />
-            <span style={{ color: '#9ca3af', fontSize: '11px' }}>{p.dataKey}</span>
+            <span className="text-muted" style={{ fontSize: '11px' }}>{p.dataKey}</span>
           </div>
           <span className="tabular-nums font-semibold" style={{ color: p.fill, fontSize: '11px' }}>
             {visible ? fmtCOP(p.value) : '••••••'}
@@ -51,8 +50,7 @@ export default function IngresosClient({
     <div className="space-y-4">
 
       {/* Tabs */}
-      <div className="flex gap-2 p-1 rounded-2xl w-fit"
-        style={{ backgroundColor: '#0f1117', border: '1px solid #2a3040' }}>
+      <div className="card flex gap-2 p-1 rounded-2xl w-fit">
         {([
           ['chart', '📊 Historial'],
           ['list',  '📋 Transacciones'],
@@ -60,9 +58,9 @@ export default function IngresosClient({
           <button key={id} onClick={() => setTab(id as any)}
             className="px-5 py-2 rounded-xl text-sm font-medium transition-all"
             style={{
-              backgroundColor: tab === id ? '#1a1f2e' : 'transparent',
-              color:           tab === id ? '#e5e7eb'  : '#6b7280',
-              border:          tab === id ? '1px solid #2a3040' : '1px solid transparent',
+              backgroundColor: tab === id ? 'rgba(99,102,241,0.15)' : 'transparent',
+              color:           tab === id ? '#e5e7eb'                : '#6b7280',
+              border:          tab === id ? '1px solid rgba(99,102,241,0.30)' : '1px solid transparent',
             }}>
             {label}
           </button>
@@ -71,13 +69,13 @@ export default function IngresosClient({
 
       {/* Gráfico histórico */}
       {tab === 'chart' && historial.length >= 2 && (
-        <div className="rounded-2xl p-6" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+        <div className="card card-purple p-6">
           <p className="text-white font-semibold mb-1">Ingresos históricos por fuente</p>
-          <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '20px' }}>Últimos {historial.length} meses</p>
+          <p className="text-muted" style={{ fontSize: '13px', marginBottom: '20px' }}>Últimos {historial.length} meses</p>
           <div style={{ position: 'relative', height: '260px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={historial} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e2535" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis dataKey="label" tick={{ fill: '#4b5563', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={v => visible ? fmtCOP(v) : '••••'} tick={{ fill: '#4b5563', fontSize: 11 }} axisLine={false} tickLine={false} width={80} />
                 <Tooltip content={<CustomTooltip />} />
@@ -96,9 +94,9 @@ export default function IngresosClient({
 
       {/* Lista de transacciones */}
       {tab === 'list' && (
-        <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-          <div className="px-6 py-4" style={{ borderBottom: '1px solid #2a3040', backgroundColor: '#0f1117' }}>
-            <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <div className="card overflow-hidden">
+          <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               {transacciones.length} ingresos recientes
             </p>
           </div>
@@ -112,7 +110,7 @@ export default function IngresosClient({
             return (
               <div key={i}
                 className="flex items-center justify-between px-6 py-4 transition-all hover:bg-white/[0.02]"
-                style={{ borderBottom: i < transacciones.length - 1 ? '1px solid #1e2535' : 'none' }}>
+                style={{ borderBottom: i < transacciones.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                 <div className="flex items-center gap-4">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs"
                     style={{ backgroundColor: color + '20', color }}>
@@ -120,7 +118,7 @@ export default function IngresosClient({
                   </div>
                   <div>
                     <p className="text-white text-sm font-medium">{t.description || t.category}</p>
-                    <p style={{ color: '#6b7280', fontSize: '12px' }}>
+                    <p className="text-muted" style={{ fontSize: '12px' }}>
                       <span className="inline-block px-1.5 py-0.5 rounded text-xs mr-2"
                         style={{ backgroundColor: color + '20', color, fontSize: '10px' }}>
                         {t.category || 'Otro'}

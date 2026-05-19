@@ -24,12 +24,10 @@ export default function FeatureGoalButton({ id, isFeatured, goalName }: Props) {
       if (!user) throw new Error('Sesión expirada')
 
       if (!isFeatured) {
-        // Quitar destacado de todas las demás
         await supabase.from('investment_goals')
           .update({ is_featured: false })
           .eq('user_id', user.id)
           .eq('is_featured', true)
-        // Destacar esta
         const { error } = await supabase.from('investment_goals')
           .update({ is_featured: true })
           .eq('id', id)
@@ -60,7 +58,7 @@ export default function FeatureGoalButton({ id, isFeatured, goalName }: Props) {
       style={{
         backgroundColor: isFeatured ? '#6366f120' : 'transparent',
         color:           isFeatured ? '#6366f1'   : '#4b5563',
-        border:          `1px solid ${isFeatured ? '#6366f140' : '#2a3040'}`,
+        border:          `1px solid ${isFeatured ? '#6366f140' : 'rgba(255,255,255,0.08)'}`,
         opacity:         loading ? 0.5 : 1,
       }}>
       {isFeatured

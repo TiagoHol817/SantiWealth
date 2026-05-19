@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-dm-sans, system-ui, ui-sans-serif, sans-serif);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -236,7 +236,7 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   WealthHost Design System v2 — Visual Upgrade Tokens
+   WealtHost Design System v2 — Visual Upgrade Tokens
    ══════════════════════════════════════════════════════════════════ */
 
 /* ── Gradient blobs reutilizables ──────────────────────────────── */
@@ -283,7 +283,7 @@
 
 /* ── Hover glow en filas de tabla / lista ──────────────────────── */
 .row-hover {
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 150ms cubic-bezier(0.16, 1, 0.3, 1), border-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .row-hover:hover {
   background: rgba(255,255,255,0.03);
@@ -298,7 +298,7 @@
   padding: 11px 14px;
   font-size: 14px;
   width: 100%;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 200ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .input-premium:focus {
   border-color: rgba(0,212,170,0.5);
@@ -318,7 +318,7 @@
   font-weight: 600;
   border: none;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .btn-primary:hover {
   transform: translateY(-1px);
@@ -334,7 +334,7 @@
   width: 40%; height: 200%;
   background: rgba(255,255,255,0.15);
   transform: skewX(-20deg);
-  transition: left 0.4s ease;
+  transition: left 400ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .btn-primary:hover::after {
   left: 120%;
@@ -349,7 +349,7 @@
 /* ── Card con hover border ─────────────────────────────────────── */
 .card-interactive {
   border: 1px solid rgba(255,255,255,0.05);
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 200ms cubic-bezier(0.16, 1, 0.3, 1), transform 200ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .card-interactive:hover {
   border-color: rgba(0,212,170,0.2);
@@ -357,20 +357,238 @@
   box-shadow: 0 8px 24px rgba(0,0,0,0.2);
 }
 
-/* ── Sidebar nav item ──────────────────────────────────────────── */
+/* ── Sidebar nav item — spring transitions ─────────────────────── */
 .nav-item {
-  border-left: 2px solid transparent;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  color: #c4b5fd;
+  transition:
+    background 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform  150ms cubic-bezier(0.16, 1, 0.3, 1),
+    color      150ms ease;
 }
-.nav-item:hover {
-  background: rgba(255,255,255,0.04);
-  color: #e5e7eb;
-  border-left-color: rgba(255,255,255,0.1);
+@media (hover: hover) and (pointer: fine) {
+  .nav-item:not(.nav-item-active):hover {
+    background: rgba(255,255,255,0.05);
+    transform: translateX(2px);
+    color: #e9d5ff;
+  }
+  html.light .nav-item:not(.nav-item-active):hover {
+    background: rgba(0,0,0,0.04);
+    color: #2d1f0e;
+  }
 }
 .nav-item-active {
-  background: linear-gradient(90deg, rgba(212,175,55,0.12) 0%, transparent 100%);
-  border-left: 2px solid #D4AF37;
-  color: #D4AF37 !important;
+  background: rgba(99,102,241,0.12) !important;
+  color: #e5e7eb !important;
+}
+html.light .nav-item-active {
+  background: rgba(217,119,6,0.10) !important;
+  color: #1c1917 !important;
+}
+.nav-item-indicator {
+  background-color: #6366f1;
+}
+html.light .nav-item-indicator {
+  background-color: #d97706;
+}
+.nav-section-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8b5cf6;
+  padding: 16px 16px 4px;
+  display: block;
+}
+html.light .nav-section-label { color: #c49a72; }
+
+/* ── Brand name colors — theme-safe ───────────────────────────── */
+.brand-wealth   { color: #6366f1; font-weight: 700; }
+.brand-host     { color: #a1a1aa; font-weight: 400; }
+html.light .brand-wealth { color: #d97706; }
+html.light .brand-host   { color: #b08060; }
+.brand-subtitle { color: #8b5cf6; font-size: 10px; letter-spacing: 0.02em; }
+html.light .brand-subtitle { color: #c49a72; }
+
+/* ── Logo avatar — theme-safe gradient via CSS ─────────────────── */
+.logo-avatar {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+}
+html.light .logo-avatar {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  box-shadow: 0 2px 8px rgba(245,158,11,0.3);
+}
+
+/* ── Greeting name color — theme-safe ──────────────────────────── */
+.greeting-hola {
+  color: #e5e7eb;
+}
+html.light .greeting-hola {
+  color: #2d1f0e;
+}
+.greeting-name {
+  color: #a78bfa;
+}
+html.light .greeting-name {
+  color: #c2610c;
+}
+.greeting-subtitle {
+  color: #6b7280;
+  font-size: 14px;
+}
+html.light .greeting-subtitle {
+  color: #9a7355;
+}
+.greeting-clock {
+  color: #4b5563;
+}
+html.light .greeting-clock {
+  color: #b08060;
+}
+
+/* ── TRM display ───────────────────────────────────────────────── */
+.trm-label {
+  color: #8b5cf6;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.trm-value {
+  color: #a78bfa;
+  font-size: 15px;
+  font-weight: 700;
+}
+html.light .trm-label { color: #b08060; }
+html.light .trm-value { color: #c2610c; font-weight: 800; }
+
+/* ── Help button ───────────────────────────────────────────────── */
+.help-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(99,102,241,0.15);
+  border: 1px solid rgba(99,102,241,0.30);
+  color: #a5b4fc;
+  font-size: 16px; font-weight: 700;
+  cursor: pointer;
+  transition: all 150ms cubic-bezier(0.16,1,0.3,1);
+}
+.help-btn:hover {
+  background: rgba(99,102,241,0.25);
+  border-color: rgba(99,102,241,0.50);
+  transform: scale(1.05);
+}
+html.light .help-btn {
+  background: rgba(217,119,6,0.12);
+  border: 1px solid rgba(217,119,6,0.28);
+  color: #d97706;
+}
+html.light .help-btn:hover {
+  background: rgba(217,119,6,0.22);
+}
+
+/* ── Chart tab buttons ─────────────────────────────────────────── */
+.chart-tab {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms cubic-bezier(0.16,1,0.3,1);
+  border: 1px solid transparent;
+  color: #8b7fd4;
+  background: rgba(255,255,255,0.06);
+}
+.chart-tab:hover {
+  background: rgba(255,255,255,0.10);
+  color: #e9d5ff;
+}
+.chart-tab-active {
+  background: rgba(0,212,170,0.15);
+  border-color: rgba(0,212,170,0.30);
+  color: #00d4aa;
+}
+html.light .chart-tab {
+  color: #9a7355;
+  background: rgba(180,140,100,0.08);
+  border-color: rgba(180,140,100,0.15);
+}
+html.light .chart-tab:hover {
+  background: rgba(180,140,100,0.14);
+  color: #2d1f0e;
+}
+html.light .chart-tab-active {
+  color: #c2610c !important;
+  background: rgba(194,97,12,0.12) !important;
+  border-color: rgba(194,97,12,0.25) !important;
+}
+
+/* ── Chart period buttons (7D / 30D / 90D / Todo) ─────────────── */
+.period-btn {
+  font-size: 12px; font-weight: 600;
+  padding: 4px 10px; border-radius: 6px;
+  cursor: pointer; color: #8b7fd4;
+  background: transparent;
+  transition: all 150ms cubic-bezier(0.16,1,0.3,1);
+}
+.period-btn:hover { color: #e9d5ff; }
+.period-btn-active {
+  background: rgba(99,102,241,0.20);
+  color: #a5b4fc;
+}
+html.light .period-btn { color: #9a7355; }
+html.light .period-btn:hover { color: #2d1f0e; }
+html.light .period-btn-active {
+  background: rgba(194,97,12,0.12);
+  color: #c2610c;
+  border-color: rgba(194,97,12,0.25);
+}
+
+/* ── Chart stat footer labels & values ────────────────────────── */
+.chart-stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+.chart-stat-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #e5e7eb;
+  margin-top: 2px;
+}
+html.light .chart-stat-label { color: #9a7355; }
+html.light .chart-stat-value { color: #2d1f0e; }
+
+/* ── Recharts area fill — reduce opacity in light mode ─────────── */
+html.light .recharts-area-area { opacity: 0.5; }
+
+/* ── Donut chart center labels (SVG text) ──────────────────────── */
+.donut-center-label {
+  fill: #6b7280;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.donut-center-value {
+  fill: #e5e7eb;
+  font-size: 13px;
+  font-weight: 800;
+}
+html.light .donut-center-label { fill: #92400e; }
+html.light .donut-center-value  { fill: #1c1917; }
+
+/* ── Asset distribution rows ───────────────────────────────────── */
+.asset-row {
+  background: rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+html.light .asset-row {
+  background: rgba(255,255,255,0.65);
+  border: 1px solid rgba(0,0,0,0.07);
 }
 
 /* ── Page header gradient text ─────────────────────────────────── */
@@ -387,3 +605,686 @@
   letter-spacing: -0.02em;
   font-feature-settings: "tnum";
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   Ambient background & animation system — v3
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Base body gradient — dark mode default, overrides @layer base */
+html.dark body, body {
+  background:
+    radial-gradient(ellipse 70% 120% at 0% 50%,
+      rgba(13,31,60,1) 0%,
+      rgba(17,24,39,0.95) 35%,
+      rgba(15,17,23,1) 60%,
+      rgba(10,13,26,1) 100%) !important;
+  min-height: 100vh;
+}
+html.light body {
+  background:
+    radial-gradient(ellipse 70% 120% at 0% 50%,
+      rgba(255,180,80,0.22) 0%,
+      rgba(255,210,140,0.12) 25%,
+      rgba(245,235,220,0.10) 50%,
+      #f2ede6 70%,
+      #ede8e0 100%) !important;
+  min-height: 100vh;
+}
+
+/* ── Fixed ambient blob system ─────────────────────────────────── */
+.blob-1 {
+  position: fixed;
+  top: 10%; left: -50px;
+  width: 500px; height: 800px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%);
+  filter: blur(80px);
+  animation: float1 12s ease-in-out infinite;
+  pointer-events: none;
+}
+.blob-2 {
+  position: fixed;
+  bottom: 10%; left: 50px;
+  width: 400px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,212,170,0.10) 0%, transparent 70%);
+  filter: blur(90px);
+  animation: float2 10s ease-in-out infinite;
+  pointer-events: none;
+}
+.blob-3 {
+  position: fixed;
+  top: 40%; left: 20%;
+  width: 300px; height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139,92,246,0.09) 0%, transparent 70%);
+  filter: blur(70px);
+  animation: float1 14s ease-in-out infinite reverse;
+  pointer-events: none;
+}
+
+/* Light mode blob tints */
+html.light .blob-1 {
+  background: radial-gradient(circle, rgba(255,150,50,0.18) 0%, transparent 70%);
+}
+html.light .blob-2 {
+  background: radial-gradient(circle, rgba(255,180,80,0.13) 0%, transparent 70%);
+}
+html.light .blob-3 {
+  background: radial-gradient(circle, rgba(220,120,30,0.10) 0%, transparent 70%);
+}
+
+/* Asymmetric float — more organic than a perfect sine wave */
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0); }
+  33%       { transform: translate(22px, -28px); }
+  66%       { transform: translate(32px, -14px); }
+}
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0); }
+  40%       { transform: translate(-27px, 19px); }
+  72%       { transform: translate(-12px, 26px); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Unified card system — futuristic matte glass with colored accents
+   — Doppelrand inset highlight + spring-eased transitions
+   ══════════════════════════════════════════════════════════════════ */
+.card {
+  background: linear-gradient(135deg, rgba(22,27,42,0.98) 0%, rgba(15,18,30,1) 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.055),
+    0 4px 16px rgba(0,0,0,0.28),
+    0 1px 3px rgba(0,0,0,0.18);
+  transition:
+    border-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform    200ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow   200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card:hover {
+  border-color: rgba(255,255,255,0.11);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    0 20px 40px rgba(0,0,0,0.32),
+    0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Accent variants — colored light bleeds from top-left, fades into deep matte */
+.card-green  { background: linear-gradient(135deg, rgba(16,185,129,0.10) 0%, rgba(22,27,42,0.98) 35%, rgba(15,18,30,1) 100%); border-color: rgba(16,185,129,0.15); }
+.card-red    { background: linear-gradient(135deg, rgba(239,68,68,0.10)  0%, rgba(22,27,42,0.98) 35%, rgba(15,18,30,1) 100%); border-color: rgba(239,68,68,0.15); }
+.card-purple { background: linear-gradient(135deg, rgba(99,102,241,0.10) 0%, rgba(22,27,42,0.98) 35%, rgba(15,18,30,1) 100%); border-color: rgba(99,102,241,0.15); }
+.card-amber  { background: linear-gradient(135deg, rgba(245,158,11,0.10) 0%, rgba(22,27,42,0.98) 35%, rgba(15,18,30,1) 100%); border-color: rgba(245,158,11,0.15); }
+.card-blue   { background: linear-gradient(135deg, rgba(59,130,246,0.10) 0%, rgba(22,27,42,0.98) 35%, rgba(15,18,30,1) 100%); border-color: rgba(59,130,246,0.15); }
+.card-green:hover  { border-color: rgba(16,185,129,0.28); }
+.card-red:hover    { border-color: rgba(239,68,68,0.28); }
+.card-purple:hover { border-color: rgba(99,102,241,0.28); }
+.card-amber:hover  { border-color: rgba(245,158,11,0.28); }
+.card-blue:hover   { border-color: rgba(59,130,246,0.28); }
+
+/* Light mode card — warm-tinted glass */
+html.light .card {
+  background: rgba(255,252,248,0.85);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid rgba(180,140,100,0.10);
+  box-shadow: 0 2px 16px rgba(120,80,30,0.06);
+}
+html.light .card:hover {
+  background: rgba(255,253,250,0.95);
+  box-shadow: 0 6px 24px rgba(120,80,30,0.09);
+  transform: translateY(-2px);
+}
+html.light .card-green  { background: rgba(240,253,244,0.90); border-color: rgba(16,185,129,0.18); }
+html.light .card-red    { background: rgba(254,242,242,0.90); border-color: rgba(239,68,68,0.18); }
+html.light .card-purple { background: rgba(245,243,255,0.90); border-color: rgba(99,102,241,0.18); }
+html.light .card-amber  { background: rgba(255,251,235,0.90); border-color: rgba(245,158,11,0.18); }
+html.light .card-blue   { background: rgba(239,246,255,0.90); border-color: rgba(59,130,246,0.18); }
+
+/* Light mode typography — warm sunset palette */
+html.light body { color: #3d2b1f; }
+html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6 { color: #2d1f0e; }
+html.light p { color: #3d2b1f; }
+html.light .patrimonio-number { color: #2d1f0e !important; }
+html.light .text-white  { color: #2d1f0e !important; }
+html.light .text-gray-100 { color: #3d2b1f !important; }
+html.light .text-gray-300 { color: #7c5c3e !important; }
+html.light .text-gray-400 { color: #9a7355 !important; }
+html.light .text-gray-500 { color: #b08060 !important; }
+html.light .text-gray-600 { color: #c49a72 !important; }
+html.light a { color: #c2610c !important; }
+html.light a:hover { color: #9a4010 !important; }
+html.light .link,
+html.light .ver-link,
+html.light [class*="ver-"],
+html.light [class*="link"] { color: #c2610c !important; }
+html.light .text-purple-400,
+html.light .text-indigo-400,
+html.light .text-violet-400 { color: #c2610c !important; }
+html.light .text-purple-500,
+html.light .text-indigo-500,
+html.light .text-violet-500 { color: #c2610c !important; }
+html.light aside {
+  background: rgba(255,255,255,0.85) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(0,0,0,0.06) !important;
+}
+html.light .nav-item-active {
+  background-color: rgba(255,255,255,0.9) !important;
+  color: #2d1f0e !important;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+}
+html.light .nav-section-label { color: #c49a72 !important; }
+html.light .recharts-cartesian-axis-tick-value { fill: #b08060 !important; }
+html.light .recharts-cartesian-grid line { stroke: rgba(160,100,50,0.12) !important; }
+html.light .nav-item { color: #5c3d25; }
+html.light .card { color: #3d2b1f; }
+html.light .asset-row { color: #3d2b1f; }
+html.light .nav-item a,
+html.light nav a { color: #5c3d25 !important; }
+html.light .nav-item a:hover,
+html.light nav a:hover { color: #2d1f0e !important; }
+
+/* ── Notifications panel ────────────────────────────────────────── */
+.notifications-panel {
+  background: #1a1f2e;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  color: #e5e7eb;
+}
+html.light .notifications-panel {
+  background: rgba(255,252,248,0.97);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(180,140,100,0.15);
+  box-shadow: 0 8px 32px rgba(120,80,30,0.12);
+  color: #3d2b1f;
+}
+html.light .notifications-panel h3,
+html.light .notifications-panel .title { color: #2d1f0e; }
+html.light .notifications-panel p { color: #9a7355; }
+html.light .notifications-panel .text-white { color: #2d1f0e !important; }
+html.light .notifications-panel .close-btn { color: #9a7355; }
+html.light .notifications-panel .close-btn:hover { color: #2d1f0e; }
+html.light .notifications-panel .footer-text { color: #b08060; }
+
+/* ── Dashboard enter animations ────────────────────────────────── */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+.animate-fade-in {
+  animation: fadeIn 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+/* ── Global reduced-motion guard ────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .blob-1, .blob-2, .blob-3 {
+    animation: none;
+  }
+  .animate-fade-up,
+  .animate-fade-in {
+    animation: none;
+  }
+  .card,
+  .card:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Title & heading accent color system
+   Dark = purple family · Light = amber/orange family
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Dark mode — all headings and section titles */
+h2, h3, .section-title,
+[class*="section-title"],
+.card h2, .card h3 {
+  color: #a78bfa;
+}
+
+/* Dark mode — card header labels */
+.card-label,
+[class*="card-label"],
+.stat-label,
+[class*="uppercase"][class*="text-xs"],
+[class*="uppercase"][class*="text-sm"] {
+  color: #8b7fd4;
+}
+
+/* Dark mode — subtitles under titles */
+.section-subtitle,
+[class*="section-subtitle"],
+.card p:first-of-type {
+  color: #6d5fa8;
+}
+
+/* Dark mode — font weight overrides */
+.text-white { color: #f0eeff; }
+.font-semibold:not([class*="text-"]) { color: #c4b5fd; }
+.font-bold:not([class*="text-"]):not([class*="patrimonio"]) { color: #ddd6fe; }
+
+/* Dark mode — Tailwind gray overrides → purple family */
+.text-gray-100 { color: #e9d5ff !important; }
+.text-gray-300 { color: #c4b5fd !important; }
+.text-gray-400 { color: #a78bfa !important; }
+.text-gray-500 { color: #8b7fd4 !important; }
+.text-gray-600 { color: #6d5fa8 !important; }
+
+/* Dark mode — asset row names */
+.asset-row .asset-name     { color: #a78bfa; }
+.asset-row .asset-subtitle { color: #6d5fa8; }
+
+/* Dark mode — transaction labels */
+.tx-title    { color: #c4b5fd; }
+.tx-category { color: #8b5cf6; }
+.tx-date     { color: #6d5fa8; }
+
+/* Dark mode — links default to purple (when not explicitly colored) */
+a:not([class*="text-"]) { color: #8b5cf6; }
+a:not([class*="text-"]):hover { color: #a78bfa; }
+
+/* Dark mode — recharts */
+.recharts-cartesian-axis-tick-value { fill: #7c6fcd !important; }
+.recharts-cartesian-grid line { stroke: rgba(139,92,246,0.08) !important; }
+
+/* ── Protected: money amounts always keep their semantic color ───── */
+.patrimonio-number               { color: #ffffff !important; }
+.amount-value                    { color: #f9fafb; }
+.text-green-400,
+[class*="text-[#00d4aa]"]        { color: #00d4aa !important; }
+.text-red-400,
+.text-red-500                    { color: #ef4444 !important; }
+
+/* Light mode — section titles */
+html.light .section-title,
+html.light [class*="section-title"],
+html.light .card h2,
+html.light .card h3,
+html.light h2,
+html.light h3 {
+  color: #c2610c !important;
+}
+
+/* Light mode — card header labels */
+html.light .card-label,
+html.light [class*="card-label"],
+html.light .stat-label {
+  color: #d97706;
+}
+
+/* Light mode — subtitles under titles */
+html.light .section-subtitle,
+html.light .card p:first-of-type {
+  color: #b45309 !important;
+}
+
+/* Light mode — font weight overrides */
+html.light .font-semibold { color: #c2610c !important; }
+html.light .font-bold:not(.patrimonio-number):not([class*="text-green"]):not([class*="text-red"]) { color: #92400e !important; }
+
+/* Keep accent colors — never override */
+html.light .text-\[\#00d4aa\] { color: #00d4aa !important; }
+html.light [style*="color: rgb(0, 212"] { color: #00d4aa !important; }
+
+/* Light mode — transaction metadata */
+html.light .tx-category { color: #d97706; }
+html.light .tx-date     { color: #b08060; }
+
+/* ── Sidebar collapse toggle button ─────────────────────────────── */
+.sidebar-toggle-btn {
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #8b5cf6;
+  font-size: 16px; font-weight: 700;
+  transition: all 150ms cubic-bezier(0.16,1,0.3,1);
+  flex-shrink: 0;
+}
+.sidebar-toggle-btn:hover {
+  background: rgba(99,102,241,0.20);
+  color: #a5b4fc;
+}
+html.light .sidebar-toggle-btn {
+  background: rgba(0,0,0,0.05);
+  border-color: rgba(180,140,100,0.20);
+  color: #c2610c;
+}
+html.light .sidebar-toggle-btn:hover {
+  background: rgba(194,97,12,0.15);
+}
+
+/* ── Muted text — theme-aware ──────────────────────────────────── */
+.text-muted { color: #6b7280; }
+html.light .text-muted { color: #9a7355; }
+
+/* ── Accent primary — purple dark / amber light ─────────────────── */
+.accent-primary { color: #6366f1; }
+html.light .accent-primary { color: #d97706; }
+
+/* ── Toggle pill states ─────────────────────────────────────────── */
+.toggle-on  { background: #6366f1; }
+html.light .toggle-on  { background: #d97706; }
+.toggle-off { background: rgba(255,255,255,0.12); }
+html.light .toggle-off { background: rgba(0,0,0,0.10); }
+
+/* ── Inner stat cells — theme-aware ────────────────────────────── */
+.stat-cell {
+  background: rgba(0,0,0,0.18);
+  border-radius: 10px;
+}
+html.light .stat-cell {
+  background: rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+/* ── Sidebar icon colors — theme-safe ───────────────────────────── */
+.nav-item svg,
+aside svg { color: #6366f1; }
+
+html.light .nav-item svg,
+html.light aside svg { color: #d97706 !important; }
+
+.nav-item-active svg { color: #a5b4fc; }
+html.light .nav-item-active svg { color: #c2610c !important; }
+
+.logout-icon svg { color: #6366f1; }
+html.light .logout-icon svg { color: #d97706 !important; }
+
+/* ══════════════════════════════════════════════════════════════════
+   Shared page layout system — used by all module pages
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Page header ── */
+.page-header {
+  margin-bottom: 24px;
+}
+.page-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #a78bfa;
+  letter-spacing: -0.02em;
+}
+html.light .page-title { color: #c2610c; }
+
+.page-subtitle {
+  font-size: 13px;
+  color: #6d5fa8;
+  margin-top: 4px;
+}
+html.light .page-subtitle { color: #9a7355; }
+
+/* ── Page entrance animations ── */
+.page-enter {
+  animation: fadeUp 400ms cubic-bezier(0.16,1,0.3,1) both;
+}
+.page-enter-delay-1 { animation-delay: 60ms; }
+.page-enter-delay-2 { animation-delay: 120ms; }
+.page-enter-delay-3 { animation-delay: 180ms; }
+.page-enter-delay-4 { animation-delay: 240ms; }
+.page-enter-delay-5 { animation-delay: 300ms; }
+
+/* ── Data tables ── */
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.data-table th {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8b5cf6;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(99,102,241,0.15);
+}
+html.light .data-table th {
+  color: #d97706;
+  border-bottom: 1px solid rgba(217,119,6,0.15);
+}
+.data-table td {
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #e5e7eb;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 150ms cubic-bezier(0.16,1,0.3,1);
+}
+html.light .data-table td {
+  color: #3d2b1f;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.data-table tr:hover td {
+  background: rgba(99,102,241,0.05);
+}
+html.light .data-table tr:hover td {
+  background: rgba(217,119,6,0.05);
+}
+
+/* ── Form inputs ── */
+.form-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #e5e7eb;
+  font-size: 14px;
+  transition: all 150ms cubic-bezier(0.16,1,0.3,1);
+}
+.form-input:focus {
+  outline: none;
+  border-color: rgba(99,102,241,0.50);
+  background: rgba(99,102,241,0.06);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.10);
+}
+html.light .form-input {
+  background: rgba(255,252,248,0.80);
+  border-color: rgba(180,140,100,0.20);
+  color: #3d2b1f;
+}
+html.light .form-input:focus {
+  border-color: rgba(217,119,6,0.50);
+  background: rgba(255,255,255,0.90);
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.10);
+}
+
+/* ── Form labels ── */
+.form-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8b5cf6;
+  margin-bottom: 6px;
+  display: block;
+}
+html.light .form-label { color: #d97706; }
+
+/* ── Buttons ── */
+.btn-primary {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 150ms cubic-bezier(0.16,1,0.3,1);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(99,102,241,0.35);
+}
+.btn-primary:active { transform: translateY(0) scale(0.99); }
+
+html.light .btn-primary {
+  background: linear-gradient(135deg, #d97706 0%, #c2610c 100%);
+  box-shadow: none;
+}
+html.light .btn-primary:hover {
+  box-shadow: 0 8px 20px rgba(217,119,6,0.30);
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: #a78bfa;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms cubic-bezier(0.16,1,0.3,1);
+}
+.btn-secondary:hover {
+  background: rgba(99,102,241,0.12);
+  border-color: rgba(99,102,241,0.30);
+}
+html.light .btn-secondary {
+  background: rgba(255,252,248,0.80);
+  border-color: rgba(180,140,100,0.20);
+  color: #c2610c;
+}
+html.light .btn-secondary:hover {
+  background: rgba(217,119,6,0.08);
+}
+
+/* ── Progress bars ── */
+.progress-track {
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+html.light .progress-track {
+  background: rgba(180,140,100,0.12) !important;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 600ms cubic-bezier(0.16,1,0.3,1);
+}
+
+/* ── Status badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-green {
+  background: rgba(0,212,170,0.12);
+  color: #00d4aa;
+  border: 1px solid rgba(0,212,170,0.20);
+}
+.badge-red {
+  background: rgba(239,68,68,0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239,68,68,0.20);
+}
+.badge-purple {
+  background: rgba(99,102,241,0.12);
+  color: #a78bfa;
+  border: 1px solid rgba(99,102,241,0.20);
+}
+.badge-amber {
+  background: rgba(245,158,11,0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245,158,11,0.20);
+}
+
+/* ── Empty states ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: #6d5fa8;
+  text-align: center;
+}
+html.light .empty-state { color: #9a7355; }
+.empty-state-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.5; }
+.empty-state-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #8b5cf6;
+  margin-bottom: 8px;
+}
+html.light .empty-state-title { color: #c2610c; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .page-enter-delay-1,
+  .page-enter-delay-2,
+  .page-enter-delay-3,
+  .page-enter-delay-4,
+  .page-enter-delay-5 {
+    animation: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT MODE — GLOBAL AMBER SWEEP
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Costo operacional activo badge ────────────────────────────── */
+.costo-activo {
+  background: rgba(239,68,68,0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239,68,68,0.20);
+  padding: 2px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+}
+html.light .costo-activo {
+  background: rgba(239,68,68,0.10);
+  color: #dc2626;
+  border-color: rgba(239,68,68,0.20);
+}
+
+/* ── Progress fills → amber in light (catches default purple fills) */
+html.light .progress-fill { background: #d97706 !important; }
+
+/* ── Tailwind purple/indigo/violet text → amber in light ────────── */
+html.light .text-purple-400,
+html.light .text-purple-500,
+html.light .text-indigo-400,
+html.light .text-indigo-500,
+html.light .text-violet-400 { color: #c2610c !important; }
+
+/* ── Tailwind purple/indigo bg → amber in light ─────────────────── */
+html.light .bg-purple-500,
+html.light .bg-indigo-500 { background: #d97706 !important; }
+
+/* ── Tailwind purple/indigo/violet borders → amber in light ──────── */
+html.light [class*="border-purple"],
+html.light [class*="border-indigo"],
+html.light [class*="border-violet"] { border-color: rgba(217,119,6,0.30) !important; }

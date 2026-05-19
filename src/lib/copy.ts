@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────
-// WealthHost — Sistema de Copy de Marca
+// WealtHost — Sistema de Copy de Marca
 // Voz: aspiracional, sin etiquetas de profesión.
 // El usuario no "aspira" a ganar — ya está en proceso.
 // ─────────────────────────────────────────────────────────────────
@@ -238,7 +238,7 @@ export const ACHIEVEMENT_TOASTS: Record<string, string[]> = {
   onboarding_complete: [
     'Configuración lista. Tu tablero de poder está activo.',
     'Todo en su lugar. A partir de aquí, solo hacia adelante.',
-    'WealthHost listo. Los que empiezan bien, terminan mejor.',
+    'WealtHost listo. Los que empiezan bien, terminan mejor.',
   ],
 }
 

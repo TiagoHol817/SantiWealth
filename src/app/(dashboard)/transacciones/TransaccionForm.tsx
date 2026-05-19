@@ -77,15 +77,6 @@ export default function TransaccionForm({ accounts }: { accounts: any[] }) {
     }
   }
 
-  const inp = {
-    backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px',
-    color: '#e5e7eb', padding: '11px 14px', fontSize: '13px', width: '100%', outline: 'none'
-  }
-  const lbl = {
-    color: '#6b7280', fontSize: '11px', marginBottom: '4px',
-    display: 'block' as const, textTransform: 'uppercase' as const, letterSpacing: '0.05em'
-  }
-
   if (!open) return (
     <button onClick={() => setOpen(true)}
       className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
@@ -97,14 +88,13 @@ export default function TransaccionForm({ accounts }: { accounts: any[] }) {
   return (
     <>
       <div className="fixed inset-0 z-40" style={{ backgroundColor: '#00000080' }} onClick={() => setOpen(false)} />
-      <div className="fixed z-50 glass-card rounded-2xl p-6 w-full max-w-md shadow-2xl"
+      <div className="card card-purple fixed z-50 p-6 w-full max-w-md shadow-2xl"
         style={{ top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }}>
 
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-white font-semibold text-lg">Nueva transacción</h3>
           <button onClick={() => setOpen(false)}
-            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10"
-            style={{ color: '#6b7280' }}>
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 text-muted">
             <X size={16} />
           </button>
         </div>
@@ -123,9 +113,9 @@ export default function TransaccionForm({ accounts }: { accounts: any[] }) {
               }}
               className="flex-1 py-2 rounded-xl text-sm font-medium transition-all"
               style={{
-                backgroundColor: form.type === val ? color + '25' : '#0f1117',
+                backgroundColor: form.type === val ? color + '25' : 'rgba(255,255,255,0.04)',
                 color:           form.type === val ? color : '#6b7280',
-                border:          `1px solid ${form.type === val ? color + '60' : '#2a3040'}`
+                border:          `1px solid ${form.type === val ? color + '60' : 'rgba(255,255,255,0.08)'}`
               }}>
               {label}
             </button>
@@ -134,37 +124,37 @@ export default function TransaccionForm({ accounts }: { accounts: any[] }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label style={lbl}>Monto (COP)</label>
-            <input style={inp} placeholder="50000" type="number"
+            <label className="form-label">Monto (COP)</label>
+            <input className="form-input" placeholder="50000" type="number"
               value={form.amount} onChange={e => set('amount', e.target.value)} />
           </div>
           <div>
-            <label style={lbl}>Fecha</label>
-            <input style={{ ...inp, colorScheme: 'dark' }} type="date"
+            <label className="form-label">Fecha</label>
+            <input className="form-input" style={{ colorScheme: 'dark' }} type="date"
               value={form.date} onChange={e => set('date', e.target.value)} />
           </div>
           <div>
-            <label style={lbl}>Categoría</label>
-            <select style={inp} value={form.category} onChange={e => set('category', e.target.value)}>
+            <label className="form-label">Categoría</label>
+            <select className="form-input" value={form.category} onChange={e => set('category', e.target.value)}>
               {cats.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label style={lbl}>Cuenta</label>
-            <select style={inp} value={form.account_id} onChange={e => set('account_id', e.target.value)}>
+            <label className="form-label">Cuenta</label>
+            <select className="form-input" value={form.account_id} onChange={e => set('account_id', e.target.value)}>
               {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
           </div>
           <div className="col-span-2">
-            <label style={lbl}>Descripción (opcional)</label>
-            <input style={inp} placeholder="Ej: Almuerzo en restaurante"
+            <label className="form-label">Descripción (opcional)</label>
+            <input className="form-input" placeholder="Ej: Almuerzo en restaurante"
               value={form.description} onChange={e => set('description', e.target.value)} />
           </div>
         </div>
 
         <button onClick={guardar} disabled={saving || !form.amount}
-          className="w-full py-3 rounded-xl text-sm font-semibold mt-5 transition-all"
-          style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117', opacity: (!form.amount || saving) ? 0.5 : 1 }}>
+          className="btn-primary w-full mt-5"
+          style={{ opacity: (!form.amount || saving) ? 0.5 : 1 }}>
           {saving ? 'Guardando...' : 'Guardar transacción'}
         </button>
       </div>

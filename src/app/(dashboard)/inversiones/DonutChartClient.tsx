@@ -40,7 +40,7 @@ function DonutChartClient({
     return seg
   })
 
-  const hovered   = hoveredIdx !== null ? grupos[hoveredIdx] : null
+  const hovered    = hoveredIdx !== null ? grupos[hoveredIdx] : null
   const displayVal = hovered
     ? (showCOP && trm ? hovered.total * trm : hovered.total)
     : (showCOP && trm ? total * trm : total)
@@ -56,7 +56,7 @@ function DonutChartClient({
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
       <div style={{ position: 'relative', width: size, height: size }}>
         <svg width={size} height={size} viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r={r} fill="none" stroke="#0f1117" strokeWidth="12" />
+          <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="12" />
           {segments.map(seg => (
             <circle
               key={seg.label}
@@ -77,19 +77,18 @@ function DonutChartClient({
             />
           ))}
 
-          {/* Texto central */}
           <text x="60" y="51" textAnchor="middle" fill={hovered ? hovered.color : 'white'}
-            fontSize="9" fontWeight="bold" fontFamily="Roboto, sans-serif">
+            fontSize="9" fontWeight="bold" fontFamily="inherit">
             {visible ? fmtVal(displayVal) : '••••••'}
           </text>
           <text x="60" y="63" textAnchor="middle" fill="#6b7280"
-            fontSize="7" fontFamily="Roboto, sans-serif">
+            fontSize="7" fontFamily="inherit">
             {hovered ? `${hovered.pct}%` : displayLabel.split(' ')[0]}
           </text>
           {hovered && hovered.gainPct !== undefined && (
             <text x="60" y="73" textAnchor="middle"
               fill={hovered.gainPct >= 0 ? '#10b981' : '#ef4444'}
-              fontSize="7" fontFamily="Roboto, sans-serif">
+              fontSize="7" fontFamily="inherit">
               {hovered.gainPct >= 0 ? '+' : ''}{hovered.gainPct.toFixed(1)}%
             </text>
           )}
@@ -102,9 +101,9 @@ function DonutChartClient({
           onClick={() => setShowCOP(v => !v)}
           className="px-3 py-1 rounded-lg text-xs font-medium transition-all hover:opacity-80"
           style={{
-            backgroundColor: showCOP ? '#10b98120' : '#1a1f2e',
+            backgroundColor: showCOP ? '#10b98120' : 'rgba(255,255,255,0.06)',
             color:           showCOP ? '#10b981'   : '#6b7280',
-            border:          `1px solid ${showCOP ? '#10b98140' : '#2a3040'}`,
+            border:          `1px solid ${showCOP ? '#10b98140' : 'rgba(255,255,255,0.10)'}`,
           }}>
           {showCOP ? 'COP' : 'USD'}
         </button>

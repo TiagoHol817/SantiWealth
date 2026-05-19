@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/providers/ThemeProvider";
 import CookieBanner from "@/components/CookieBanner";
 
-const roboto = Roboto({
-  weight: ['300', '400', '500', '700'],
+const dmSans = DM_Sans({
+  weight: ['300', '400', '500', '600', '700'],
   subsets: ["latin"],
-  variable: "--font-roboto",
+  variable: "--font-dm-sans",
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -32,7 +33,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={`${roboto.variable} antialiased`} style={{ fontFamily: 'var(--font-roboto), sans-serif' }}>
+      <body className={`${dmSans.variable} antialiased`}>
+        {/* Fixed ambient gradient blobs — GPU-composited, pointer-events-none */}
+        <div className="fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
+          <div className="blob-1" />
+          <div className="blob-2" />
+          <div className="blob-3" />
+        </div>
         <ThemeProvider>
           {children}
           <CookieBanner />

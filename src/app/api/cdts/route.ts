@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient }             from '@/lib/supabase/server'
+import { rateLimit, getIP }         from '@/lib/rateLimit'
 import type { CDTData }             from '@/lib/parseCDTClient'
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
+  const { allowed } = rateLimit(getIP(req), { limit: 30, windowMs: 60_000 })
+  if (!allowed) return NextResponse.json({ error: 'Demasiadas solicitudes' }, { status: 429 })
+
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
@@ -21,6 +25,9 @@ export async function GET(_req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const { allowed } = rateLimit(getIP(req), { limit: 30, windowMs: 60_000 })
+  if (!allowed) return NextResponse.json({ error: 'Demasiadas solicitudes' }, { status: 429 })
+
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
@@ -55,14 +62,13 @@ export async function POST(req: NextRequest) {
   const errs: string[] = []
 
   if (withId.length) {
-    // Try insert; on unique-constraint conflict just skip (already imported)
     const { data, error } = await supabase
       .from('cdts')
       .insert(withId)
       .select('id')
     if (error && !error.message.includes('duplicate')) {
       console.error('[cdts POST upsert]', error)
-      errs.push(error.message)
+      errs.push('Error procesando la operación')
     } else {
       inserted += data?.length ?? 0
     }
@@ -75,20 +81,23 @@ export async function POST(req: NextRequest) {
       .select('id')
     if (error) {
       console.error('[cdts POST insert]', error)
-      errs.push(error.message)
+      errs.push('Error procesando la operación')
     } else {
       inserted += data?.length ?? 0
     }
   }
 
   if (errs.length && inserted === 0) {
-    return NextResponse.json({ error: errs.join('; ') }, { status: 500 })
+    return NextResponse.json({ error: 'Operación fallida' }, { status: 500 })
   }
 
   return NextResponse.json({ success: true, count: inserted })
 }
 
 export async function DELETE(req: NextRequest) {
+  const { allowed } = rateLimit(getIP(req), { limit: 30, windowMs: 60_000 })
+  if (!allowed) return NextResponse.json({ error: 'Demasiadas solicitudes' }, { status: 429 })
+
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })

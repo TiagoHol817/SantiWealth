@@ -31,17 +31,11 @@ export default function ReportesClient({ cashflow }: { cashflow: any[] }) {
   return (
     <div className="flex items-center gap-3">
       {/* Selector de período */}
-      <div className="flex items-center gap-1 p-1 rounded-xl"
-        style={{ backgroundColor: '#0f1117', border: '1px solid #2a3040' }}>
+      <div className="card flex items-center gap-1 p-1 rounded-xl">
         {PERIODOS.map(p => (
           <button key={p.id}
             onClick={() => navPeriodo(p.id)}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={{
-              backgroundColor: periodo === p.id ? '#1a1f2e' : 'transparent',
-              color:           periodo === p.id ? '#e5e7eb'  : '#6b7280',
-              border:          periodo === p.id ? '1px solid #2a3040' : '1px solid transparent',
-            }}>
+            className={`chart-tab${periodo === p.id ? ' chart-tab-active' : ''}`}>
             {p.label}
           </button>
         ))}
@@ -53,11 +47,8 @@ export default function ReportesClient({ cashflow }: { cashflow: any[] }) {
           type="month"
           value={mes}
           onChange={e => navMes(e.target.value)}
-          style={{
-            backgroundColor: '#1a1f2e', border: '1px solid #2a3040',
-            borderRadius: '10px', color: '#e5e7eb', padding: '7px 12px',
-            fontSize: '13px', outline: 'none', colorScheme: 'dark',
-          }}
+          className="form-input"
+          style={{ colorScheme: 'dark', padding: '7px 12px', fontSize: '13px' }}
         />
       )}
     </div>

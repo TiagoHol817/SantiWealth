@@ -17,7 +17,6 @@ import {
 } from '@/lib/services/currency'
 import HelpModal from '@/components/help/HelpModal'
 import FeaturedGoalWidget from './FeaturedGoalWidget'
-import WealthScoreWidget from './WealthScoreWidget'
 import { computeWealthScore } from '@/lib/services/wealthScore'
 import SmartGreeting from './SmartGreeting'
 import StatementBanner from './StatementBanner'
@@ -26,30 +25,38 @@ import MonthSummary   from './MonthSummary'
 async function getPortfolioValues(): Promise<{ stocksUSD: number; cryptoUSD: number }> {
   try {
     const supabase = await createClient()
-    const { data: investments } = await supabase.from('investments').select('*')
-    if (!investments?.length) return { stocksUSD: 0, cryptoUSD: 0 }
+    const { data: positions } = await supabase
+      .from('portfolio_positions')
+      .select('total_shares, current_price_usd, avg_cost_usd, investment_assets(ticker, asset_type, yfinance_key)')
+    if (!positions?.length) return { stocksUSD: 0, cryptoUSD: 0 }
 
     const prices: Record<string, number> = {}
     await Promise.all(
-      investments.map(async inv => {
+      positions.map(async pos => {
+        const asset = Array.isArray(pos.investment_assets) ? pos.investment_assets[0] : pos.investment_assets
+        const key   = asset?.yfinance_key ?? asset?.ticker
+        if (!key) return
         try {
           const res = await fetch(
-            `https://query1.finance.yahoo.com/v8/finance/chart/${inv.ticker}?interval=1d&range=1d`,
+            `https://query1.finance.yahoo.com/v8/finance/chart/${key}?interval=1d&range=1d`,
             { next: { revalidate: 60 }, headers: { 'User-Agent': 'Mozilla/5.0' } }
           )
           const data = await res.json()
           const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice
-          if (price) prices[inv.ticker] = price
+          if (price) prices[key] = price
         } catch {}
       })
     )
 
     let stocksUSD = 0
     let cryptoUSD = 0
-    investments.forEach(inv => {
-      const price = prices[inv.ticker] ?? Number(inv.avg_cost)
-      const value = price * Number(inv.shares)
-      if (inv.type === 'crypto') cryptoUSD += value
+    positions.forEach(pos => {
+      const asset    = Array.isArray(pos.investment_assets) ? pos.investment_assets[0] : pos.investment_assets
+      const key      = asset?.yfinance_key ?? asset?.ticker ?? ''
+      const livePrice = prices[key]
+      const price    = livePrice ?? (Number(pos.current_price_usd) || Number(pos.avg_cost_usd))
+      const value    = price * Number(pos.total_shares)
+      if (asset?.asset_type === 'crypto') cryptoUSD += value
       else stocksUSD += value
     })
     return { stocksUSD, cryptoUSD }
@@ -80,7 +87,9 @@ export default async function DashboardPage() {
   const now   = new Date()
   const year  = now.getFullYear()
   const month = now.getMonth() + 1
-  const firstDay = `${year}-${String(month).padStart(2, '0')}-01`
+  const firstDay  = `${year}-${String(month).padStart(2, '0')}-01`
+  const daysInMonth = new Date(year, month, 0).getDate()
+  const lastDay   = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`
 
   const [
     { data: accounts },
@@ -89,6 +98,7 @@ export default async function DashboardPage() {
     { data: history },
     { data: txMonth },
     { data: allGoals },
+    { data: recentTxRaw },
   ] = await Promise.all([
     supabase.from('accounts').select('*'),
     getTRM(),
@@ -101,10 +111,16 @@ export default async function DashboardPage() {
     supabase
       .from('transactions')
       .select('type, amount, currency')
-      .gte('date', firstDay),
+      .gte('date', firstDay)
+      .lte('date', lastDay),
     supabase
       .from('investment_goals')
       .select('*'),
+    supabase
+      .from('transactions')
+      .select('id, type, amount, currency, description, date, categories(name, icon, color)')
+      .order('date', { ascending: false })
+      .limit(8),
   ])
 
   const featuredGoal = allGoals?.find(g => g.is_featured)
@@ -165,29 +181,31 @@ export default async function DashboardPage() {
 
   // ── Distribución para pie chart ───────────────────────────────────────────
   const distItems = [
-    { label: 'Efectivo / Bancos', valueCOP: totalBanks,   valueUSD: copToUsd(totalBanks, trm), color: '#10b981', icon: '🏦', href: '/transacciones' },
-    { label: 'Bolsa de Valores',  valueCOP: totalBrokers, valueUSD: stocksUSD,                  color: '#6366f1', icon: '📈', href: '/inversiones'   },
-    { label: 'Criptomonedas',     valueCOP: totalCrypto,  valueUSD: cryptoUSD,                  color: '#f59e0b', icon: '₿',  href: '/inversiones'   },
+    { label: 'Efectivo / Bancos', valueCOP: totalBanks,   valueUSD: copToUsd(totalBanks, trm), color: '#10b981', icon: '🏦', href: '/transacciones', cardVariant: 'card-blue'   },
+    { label: 'Bolsa de Valores',  valueCOP: totalBrokers, valueUSD: stocksUSD,                  color: '#6366f1', icon: '📈', href: '/inversiones',   cardVariant: 'card-purple' },
+    { label: 'Criptomonedas',     valueCOP: totalCrypto,  valueUSD: cryptoUSD,                  color: '#f59e0b', icon: '₿',  href: '/inversiones',   cardVariant: 'card-amber'  },
   ]
 
   const monthName = now.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
 
   return (
-    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top left, rgba(16,185,129,0.04) 0%, transparent 60%)' }}>
+    <div className="space-y-6 pb-8" style={{ color: 'var(--wh-text)' }}>
 
       {/* ── Statement import reminder ────────────────────────────────────────── */}
-      <StatementBanner />
+      <div className="animate-fade-up" style={{ animationDelay: '0ms' }}>
+        <StatementBanner />
+      </div>
 
       {/* ── Encabezado ──────────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden animate-fade-up" style={{ animationDelay: '60ms' }}>
         <div className="blob-green absolute -top-20 -right-20 opacity-40" style={{ width: '300px', height: '300px' }} />
         <div className="relative flex items-end justify-between">
         <SmartGreeting userName={userName} />
         <div className="flex items-center gap-3">
           <div className="text-right">
             <HelpModal moduleId="dashboard" />
-          <p style={{ color: '#6b7280', fontSize: '11px' }}>TRM del día</p>
-            <p className="tabular-nums font-semibold" style={{ color: '#D4AF37', fontSize: '14px' }}>
+            <p className="trm-label">TRM del día</p>
+            <p className="trm-value tabular-nums">
               {formatCOP(trm)}
             </p>
             {trmResult.source === 'fallback' && (
@@ -213,35 +231,37 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Patrimonio neto con variación ────────────────────────────────────── */}
-      <BalanceToggle
-        copValue={formatCOP(netWorthCOP)}
-        usdValue={formatUSD(netWorthUSD)}
-        trm={formatCOP(trm)}
-        variationCOP={variationCOP}
-        variationPct={variationPct}
-      />
-
-      {/* ── Wealth Score ─────────────────────────────────────────────────────── */}
-      <WealthScoreWidget score={wealthScore} hasTransactions={txArr.length > 0} />
+      <div className="animate-fade-up" style={{ animationDelay: '120ms' }}>
+        <BalanceToggle
+          copValue={formatCOP(netWorthCOP)}
+          usdValue={formatUSD(netWorthUSD)}
+          copRaw={netWorthCOP}
+          trm={formatCOP(trm)}
+          variationCOP={variationCOP}
+          variationPct={variationPct}
+        />
+      </div>
 
       {/* ── Resumen del mes ──────────────────────────────────────────────────── */}
-      <MonthSummary
-        ingresos={ingresosMes}
-        gastos={gastosMes}
-        balance={balanceMes}
-        monthName={monthName}
-      />
+      <div className="animate-fade-up" style={{ animationDelay: '180ms' }}>
+        <MonthSummary
+          ingresos={ingresosMes}
+          gastos={gastosMes}
+          balance={balanceMes}
+          monthName={monthName}
+          wealthScore={wealthScore}
+        />
+      </div>
 
       {/* ── Widgets de distribución con drill-down ───────────────────────────── */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-4 animate-fade-up" style={{ animationDelay: '240ms' }}>
         {distItems.map(item => {
           const pct = totalAssets > 0 ? Math.round((item.valueCOP / totalAssets) * 100) : 0
           return (
             <Link
               key={item.label}
               href={item.href}
-              className="rounded-2xl p-5 relative overflow-hidden block transition-all hover:scale-[1.02] hover:border-opacity-60"
-              style={{ backgroundColor: '#1a1f2e', border: `1px solid #2a3040` }}
+              className={`card ${item.cardVariant} p-5 relative overflow-hidden block`}
             >
               <div
                 className="absolute bottom-0 left-0 w-32 h-32 rounded-full opacity-5 blur-2xl"
@@ -269,7 +289,7 @@ export default async function DashboardPage() {
               </p>
               <div
                 className="mt-3 rounded-full overflow-hidden"
-                style={{ height: '3px', backgroundColor: '#0f1117' }}
+                style={{ height: '3px', background: 'rgba(255,255,255,0.06)' }}
               >
                 <div
                   className="h-full rounded-full"
@@ -285,7 +305,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Gráfico de pastel + Flandes ──────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 animate-fade-up" style={{ animationDelay: '300ms' }}>
         <AssetPieChart items={distItems} trm={trm} />
 
 
@@ -303,8 +323,7 @@ export default async function DashboardPage() {
           />
         )}
         {!featuredGoal && (
-          <div className="rounded-2xl p-8 flex items-center justify-center"
-            style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', minHeight: '200px' }}>
+          <div className="card p-8 flex items-center justify-center" style={{ minHeight: '200px' }}>
             <div className="text-center">
               <p style={{ fontSize: '32px', marginBottom: '10px' }}>📌</p>
               <p className="text-white font-medium mb-1">Sin compromiso destacado</p>
@@ -321,14 +340,67 @@ export default async function DashboardPage() {
         )}
       </div>
 
+      {/* ── Últimas transacciones ────────────────────────────────────────────── */}
+      {recentTxRaw && recentTxRaw.length > 0 && (
+        <div
+          className="card overflow-hidden animate-fade-up"
+          style={{ animationDelay: '360ms' }}
+        >
+          <div
+            className="px-6 py-4 flex items-center justify-between"
+            style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+          >
+            <h2 className="text-white font-semibold">Últimas transacciones</h2>
+            <Link
+              href="/transacciones"
+              className="text-xs transition-all hover:opacity-80"
+              style={{ color: '#6366f1' }}
+            >
+              Ver todas →
+            </Link>
+          </div>
+          {recentTxRaw.map((tx, i, arr) => {
+            const cat      = Array.isArray(tx.categories) ? tx.categories[0] : tx.categories
+            const isIncome = tx.type === 'income'
+            const amount   = Number(tx.amount)
+            const amtColor = isIncome ? '#00d4aa' : '#ef4444'
+            const sign     = isIncome ? '+' : '-'
+            const dateStr  = new Date(tx.date + 'T00:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })
+            return (
+              <div
+                key={tx.id}
+                className="flex items-center justify-between px-6 py-3 hover:bg-white/[0.02] transition-all"
+                style={{ borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0"
+                    style={{ backgroundColor: (cat?.color ?? amtColor) + '20' }}
+                  >
+                    {cat?.icon ?? (isIncome ? '↑' : '↓')}
+                  </span>
+                  <div>
+                    <p className="text-white text-sm font-medium leading-tight">{tx.description}</p>
+                    <p style={{ color: '#6b7280', fontSize: '11px' }}>{cat?.name ?? tx.type} · {dateStr}</p>
+                  </div>
+                </div>
+                <span className="tabular-nums text-sm font-semibold" style={{ color: amtColor }}>
+                  {sign}{formatCOP(amount)}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
       {/* ── Lista de cuentas ─────────────────────────────────────────────────── */}
       <div
-        className="rounded-2xl overflow-hidden"
-        style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}
+        className="card overflow-hidden animate-fade-up"
+        style={{ animationDelay: '420ms' }}
       >
         <div
           className="px-6 py-4 flex items-center justify-between"
-          style={{ borderBottom: '1px solid #2a3040' }}
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
         >
           <h2 className="text-white font-semibold">Cuentas</h2>
           <span style={{ color: '#6b7280', fontSize: '12px' }}>
@@ -346,7 +418,7 @@ export default async function DashboardPage() {
             <div
               key={account.id}
               className="flex items-center justify-between px-6 py-4 transition-all hover:bg-white/[0.02] group"
-              style={{ borderBottom: i < arr.length - 1 ? '1px solid #1e2535' : 'none' }}
+              style={{ borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
             >
               <div className="flex items-center gap-4">
                 <div
@@ -375,7 +447,9 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Gráfico histórico ─────────────────────────────────────────────────── */}
-      <PatrimonyChart data={historyArr} />
+      <div className="animate-fade-up" style={{ animationDelay: '480ms' }}>
+        <PatrimonyChart data={historyArr} />
+      </div>
 
       {/* ── Snapshot diario ───────────────────────────────────────────────────── */}
       <SnapshotSaver
@@ -388,10 +462,11 @@ export default async function DashboardPage() {
 
       {/* ── Welcome card when no accounts ─────────────────────────────────────── */}
       {(!accounts || accounts.filter(a => a.type !== 'liability').length === 0) && (
-        <div className="rounded-2xl p-10 text-center relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%)', border: '1px solid #2a3040' }}>
-          <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5 blur-3xl"
-            style={{ background: '#00d4aa', transform: 'translate(20%,-20%)' }} />
+        <div className="card p-10 text-center relative overflow-hidden animate-fade-up" style={{ animationDelay: '120ms' }}>
+          <div
+            className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(0,212,170,0.08) 0%, transparent 70%)', filter: 'blur(40px)', transform: 'translate(20%,-20%)' }}
+          />
           <p className="text-4xl mb-4">👋</p>
           <p className="text-white font-bold text-xl mb-2">¡Bienvenido a SantiWealth!</p>
           <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '24px', maxWidth: '400px', margin: '0 auto 24px' }}>
@@ -408,7 +483,7 @@ export default async function DashboardPage() {
             <Link
               href="/transacciones/importar"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-              style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#9ca3af' }}
+              style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#9ca3af' }}
             >
               Importar CSV
             </Link>

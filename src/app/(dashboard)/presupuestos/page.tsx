@@ -31,7 +31,6 @@ function HealthGauge({ pct, sinDatos }: { pct: number; sinDatos: boolean }) {
   const label  = sinDatos ? 'Sin datos' : pct <= 60 ? 'Vas bien 👍' : pct <= 80 ? 'Cuidado ⚠️' : 'Excedido 🚨'
   const r = 44
   const circ = 2 * Math.PI * r
-  // Gauge: -135° to +135° (270° arc)
   const ARC = 270
   const startAngle = -135
   const dash = sinDatos ? 0 : circ * (Math.min(pct, 100) / 100) * (ARC / 360)
@@ -41,12 +40,10 @@ function HealthGauge({ pct, sinDatos }: { pct: number; sinDatos: boolean }) {
     <div className="flex flex-col items-center">
       <div style={{ position: 'relative', width: '110px', height: '80px', overflow: 'hidden' }}>
         <svg width="110" height="110" style={{ position: 'absolute', top: 0, left: 0 }}>
-          {/* Track */}
-          <circle cx="55" cy="55" r={r} fill="none" stroke="#1e2535" strokeWidth="8"
+          <circle cx="55" cy="55" r={r} fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="8"
             strokeDasharray={`${circ * ARC / 360} ${circ * (1 - ARC / 360)}`}
             strokeLinecap="round"
             transform={`rotate(${startAngle} 55 55)`} />
-          {/* Fill */}
           {!sinDatos && (
             <circle cx="55" cy="55" r={r} fill="none" stroke={color} strokeWidth="8"
               strokeDasharray={`${dash} ${gap}`}
@@ -55,13 +52,13 @@ function HealthGauge({ pct, sinDatos }: { pct: number; sinDatos: boolean }) {
               style={{ transition: 'stroke-dasharray 0.8s ease', filter: `drop-shadow(0 0 4px ${color}88)` }} />
           )}
           <text x="55" y="62" textAnchor="middle" dominantBaseline="central"
-            fill={color} fontSize="16" fontWeight="800" fontFamily="system-ui, sans-serif">
+            fill={color} fontSize="16" fontWeight="800" fontFamily="inherit">
             {sinDatos ? '--' : `${Math.round(pct)}%`}
           </text>
         </svg>
       </div>
       <p style={{ color, fontSize: '13px', fontWeight: '700', marginTop: '-4px', textAlign: 'center' }}>{label}</p>
-      <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '2px' }}>Uso del presupuesto</p>
+      <p className="text-muted" style={{ fontSize: '11px', marginTop: '2px' }}>Uso del presupuesto</p>
     </div>
   )
 }
@@ -77,17 +74,14 @@ export default async function PresupuestosPage({
   const year   = Number(params.year ?? now.getFullYear())
   const supabase = await createClient()
 
-  // ── Días restantes del mes ────────────────────────────────────────────────
   const daysInMonth   = new Date(year, mes, 0).getDate()
   const isCurrentMonth = mes === now.getMonth() + 1 && year === now.getFullYear()
   const diasRestantes  = isCurrentMonth ? Math.max(0, daysInMonth - now.getDate()) : daysInMonth
 
-  // ── Mes actual ────────────────────────────────────────────────────────────
   const { data: budget } = await supabase
     .from('budgets').select('*').eq('month', mes).eq('year', year).single()
   const limites: Record<string,number> = budget?.notes ? JSON.parse(budget.notes) : {}
 
-  // ── Mes anterior ─────────────────────────────────────────────────────────
   const mesPrev  = mes === 1 ? 12 : mes - 1
   const yearPrev = mes === 1 ? year - 1 : year
   const { data: budgetPrev } = await supabase
@@ -97,7 +91,6 @@ export default async function PresupuestosPage({
   const mesStr     = `${year}-${String(mes).padStart(2,'0')}`
   const mesStrPrev = `${yearPrev}-${String(mesPrev).padStart(2,'0')}`
 
-  // ── Gastos mes actual ─────────────────────────────────────────────────────
   const { data: txActual } = await supabase
     .from('transactions').select('category, amount, type')
     .eq('type','expense').gte('date',`${mesStr}-01`).lte('date', lastDayOfMonth(year, mes))
@@ -105,7 +98,6 @@ export default async function PresupuestosPage({
   const gastos: Record<string,number> = {}
   txActual?.forEach(t => { gastos[t.category] = (gastos[t.category] ?? 0) + Number(t.amount) })
 
-  // ── Gastos mes anterior ───────────────────────────────────────────────────
   const { data: txPrev } = await supabase
     .from('transactions').select('category, amount, type')
     .eq('type','expense').gte('date',`${mesStrPrev}-01`).lte('date', lastDayOfMonth(yearPrev, mesPrev))
@@ -113,7 +105,6 @@ export default async function PresupuestosPage({
   const gastosPrev: Record<string,number> = {}
   txPrev?.forEach(t => { gastosPrev[t.category] = (gastosPrev[t.category] ?? 0) + Number(t.amount) })
 
-  // ── Cálculos ──────────────────────────────────────────────────────────────
   const totalLimite  = Object.values(limites).reduce((s,v) => s + v, 0)
   const totalGastado = Object.values(gastos).reduce((s,v) => s + v, 0)
   const disponible   = totalLimite - totalGastado
@@ -129,7 +120,7 @@ export default async function PresupuestosPage({
     gastado:     gastos[cat]  ?? 0,
     gastadoPrev: gastosPrev[cat] ?? 0,
     pct:         limites[cat] ? Math.min(150, ((gastos[cat] ?? 0) / limites[cat]) * 100) : 0,
-    excedido:    (gastos[cat] ?? 0) > (limites[cat] ?? 0) && (limites[cat] ?? 0) > 0,
+    excedido:    (gastos[cat] ?? 0) >= (limites[cat] ?? 0) && (limites[cat] ?? 0) > 0,
   })).filter(c => c.limite > 0 || c.gastado > 0)
 
   const nombreMes     = new Date(year, mes - 1).toLocaleString('es-CO', { month: 'long', year: 'numeric' })
@@ -138,17 +129,15 @@ export default async function PresupuestosPage({
   const enAlerta      = categoriasConData.filter(c => !c.excedido && c.pct > 80).length
 
   return (
-    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top left, rgba(245,158,11,0.04) 0%, transparent 60%)' }}>
+    <div className="space-y-6 pb-8" style={{ background: 'radial-gradient(ellipse at top left, rgba(245,158,11,0.04) 0%, transparent 60%)' }}>
 
       {/* Header */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden page-enter">
         <div className="blob-purple absolute -top-20 -right-20 opacity-40" style={{ width: '300px', height: '300px' }} />
         <div className="relative flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Presupuestos</h1>
-            <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
-              Control de gastos — {nombreMes}
-            </p>
+            <h1 className="page-title">Presupuestos</h1>
+            <p className="page-subtitle">Control de gastos — {nombreMes}</p>
           </div>
           <div className="flex items-center gap-3">
             <HelpModal moduleId="presupuestos" />
@@ -164,79 +153,79 @@ export default async function PresupuestosPage({
       </div>
 
       {/* Month navigator */}
-      <NavegadorMes mes={mes} year={year} />
+      <div className="page-enter page-enter-delay-1">
+        <NavegadorMes mes={mes} year={year} />
+      </div>
 
       {/* Main KPI + health gauge row */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-5 gap-4 page-enter page-enter-delay-2">
 
         {/* Health gauge */}
-        <div className="col-span-1 rounded-2xl p-5 flex items-center justify-center breathe-amber"
-          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+        <div className="col-span-1 card card-purple p-5 flex items-center justify-center breathe-amber">
           <HealthGaugeClient pct={pctTotal} sinDatos={sinDatos} />
         </div>
 
         {/* Presupuesto total */}
-        <div className="rounded-2xl p-5 relative overflow-hidden"
-          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+        <div className="card p-5 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
             style={{ background: '#6366f1', transform: 'translate(30%,-30%)' }} />
-          <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
+          <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
             Presupuesto total
           </p>
           <HiddenValue value={fmtCOP(totalLimite)} className="tabular-nums font-bold"
             style={{ color: '#6366f1', fontSize: '20px' }} />
-          <div className="mt-3 rounded-full overflow-hidden" style={{ height: '3px', backgroundColor: '#0f1117' }}>
-            <div className="h-full rounded-full" style={{ width: '100%', backgroundColor: '#6366f1', opacity: 0.4 }} />
+          <div className="progress-track mt-3" style={{ height: '3px' }}>
+            <div className="progress-fill" style={{ width: '100%', backgroundColor: '#6366f1', opacity: 0.4 }} />
           </div>
         </div>
 
         {/* Gastado */}
-        <div className="rounded-2xl p-5 relative overflow-hidden"
-          style={{ backgroundColor: '#1a1f2e', border: `1px solid ${pctTotal > 100 ? '#ef444430' : pctTotal > 80 ? '#f59e0b30' : '#2a3040'}` }}>
+        <div className="card p-5 relative overflow-hidden"
+          style={{ borderColor: pctTotal > 100 ? '#ef444430' : pctTotal > 80 ? '#f59e0b30' : undefined }}>
           <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
             style={{ background: pctTotal > 100 ? '#ef4444' : pctTotal > 80 ? '#f59e0b' : '#10b981', transform: 'translate(30%,-30%)' }} />
-          <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
+          <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
             Gastado
           </p>
           <HiddenValue value={fmtCOP(totalGastado)} className="tabular-nums font-bold"
             style={{ color: pctTotal > 100 ? '#ef4444' : pctTotal > 80 ? '#f59e0b' : '#10b981', fontSize: '20px' }} />
           {totalLimite > 0 && (
-            <div className="mt-3 rounded-full overflow-hidden" style={{ height: '3px', backgroundColor: '#0f1117' }}>
-              <div className="h-full rounded-full"
+            <div className="progress-track mt-3" style={{ height: '3px' }}>
+              <div className="progress-fill"
                 style={{ width: `${Math.min(100, pctTotal)}%`, backgroundColor: pctTotal > 100 ? '#ef4444' : pctTotal > 80 ? '#f59e0b' : '#10b981' }} />
             </div>
           )}
         </div>
 
         {/* Disponible */}
-        <div className="rounded-2xl p-5 relative overflow-hidden"
-          style={{ backgroundColor: '#1a1f2e', border: `1px solid ${disponible < 0 ? '#ef444430' : '#2a3040'}` }}>
+        <div className="card p-5 relative overflow-hidden"
+          style={{ borderColor: disponible < 0 ? '#ef444430' : undefined }}>
           <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
             style={{ background: disponible >= 0 ? '#00d4aa' : '#ef4444', transform: 'translate(30%,-30%)' }} />
-          <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
+          <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
             Disponible
           </p>
           <HiddenValue value={fmtCOP(disponible)} className="tabular-nums font-bold"
             style={{ color: disponible >= 0 ? '#00d4aa' : '#ef4444', fontSize: '20px' }} />
           {disponible > 0 && totalLimite > 0 && (
-            <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '6px' }}>
+            <p className="text-muted" style={{ fontSize: '11px', marginTop: '6px' }}>
               {((disponible / totalLimite) * 100).toFixed(0)}% libre
             </p>
           )}
         </div>
 
         {/* Días restantes */}
-        <div className="rounded-2xl p-5 relative overflow-hidden"
-          style={{ backgroundColor: '#1a1f2e', border: `1px solid ${urgenciaDias ? '#ef444430' : '#2a3040'}` }}>
+        <div className="card p-5 relative overflow-hidden"
+          style={{ borderColor: urgenciaDias ? '#ef444430' : undefined }}>
           <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
             style={{ background: diasColor, transform: 'translate(30%,-30%)' }} />
-          <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
+          <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
             Días restantes
           </p>
           <p className="tabular-nums font-bold" style={{ color: diasColor, fontSize: '28px' }}>
             {diasRestantes}
           </p>
-          <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '2px' }}>
+          <p className="text-muted" style={{ fontSize: '11px', marginTop: '2px' }}>
             {urgenciaDias ? '⚠️ Casi termina el mes' : `de ${daysInMonth} en total`}
           </p>
         </div>
@@ -244,7 +233,7 @@ export default async function PresupuestosPage({
 
       {/* Alertas rápidas */}
       {(excedidas > 0 || enAlerta > 0) && (
-        <div className="flex gap-3">
+        <div className="flex gap-3 page-enter page-enter-delay-3">
           {excedidas > 0 && (
             <div className="flex-1 rounded-xl px-4 py-3 flex items-center gap-3"
               style={{ backgroundColor: '#2d1515', border: '1px solid #ef444440' }}>
@@ -253,7 +242,7 @@ export default async function PresupuestosPage({
                 <p style={{ color: '#ef4444', fontSize: '13px', fontWeight: '600' }}>
                   {excedidas} categoría{excedidas > 1 ? 's' : ''} excedida{excedidas > 1 ? 's' : ''}
                 </p>
-                <p style={{ color: '#6b7280', fontSize: '11px' }}>Has superado el límite establecido</p>
+                <p className="text-muted" style={{ fontSize: '11px' }}>Has superado el límite establecido</p>
               </div>
             </div>
           )}
@@ -265,7 +254,7 @@ export default async function PresupuestosPage({
                 <p style={{ color: '#f59e0b', fontSize: '13px', fontWeight: '600' }}>
                   {enAlerta} categoría{enAlerta > 1 ? 's' : ''} en alerta
                 </p>
-                <p style={{ color: '#6b7280', fontSize: '11px' }}>Por encima del 80% del presupuesto</p>
+                <p className="text-muted" style={{ fontSize: '11px' }}>Por encima del 80% del presupuesto</p>
               </div>
             </div>
           )}
@@ -274,8 +263,7 @@ export default async function PresupuestosPage({
 
       {/* Sin presupuesto — aspirational empty state */}
       {categoriasConData.length === 0 ? (
-        <div className="rounded-2xl overflow-hidden relative breathe-purple"
-          style={{ background: 'linear-gradient(135deg, #0f1117 0%, #1a1f2e 60%, #0d1526 100%)', border: '1px solid #6366f130' }}>
+        <div className="card card-purple overflow-hidden relative breathe-purple page-enter page-enter-delay-3">
           <div className="absolute top-0 left-1/2 w-64 h-64 rounded-full opacity-[0.06] blur-3xl pointer-events-none"
             style={{ background: '#6366f1', transform: 'translate(-50%, -30%)' }} />
           <div className="relative px-8 py-12 text-center">
@@ -283,15 +271,14 @@ export default async function PresupuestosPage({
               style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)' }}>
               <span style={{ fontSize: '28px' }}>🏆</span>
             </div>
-
             <p className="text-white font-bold text-xl mb-2">
               Un presupuesto no te limita. Te da libertad.
             </p>
-            <p style={{ color: '#6b7280', fontSize: '14px', maxWidth: '400px', margin: '0 auto 6px', lineHeight: 1.6 }}>
+            <p className="text-muted" style={{ fontSize: '14px', maxWidth: '400px', margin: '0 auto 6px', lineHeight: 1.6 }}>
               Los que se adelantan a sus gastos nunca quedan cortos.
             </p>
             {Object.keys(limitesPrev).length > 0 && (
-              <p style={{ color: '#6b7280', fontSize: '13px', maxWidth: '400px', margin: '0 auto 22px', lineHeight: 1.5 }}>
+              <p className="text-muted" style={{ fontSize: '13px', maxWidth: '400px', margin: '0 auto 22px', lineHeight: 1.5 }}>
                 Puedes copiar el presupuesto de <strong style={{ color: '#6366f1' }}>{nombreMesPrev}</strong> con un clic.
               </p>
             )}
@@ -309,22 +296,21 @@ export default async function PresupuestosPage({
       ) : (
         <>
           {/* Grid de categorías */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 page-enter page-enter-delay-3">
             {categoriasConData
               .sort((a, b) => b.pct - a.pct)
               .map(({ cat, limite, gastado, gastadoPrev, pct, excedido }) => {
-                const barColor    = getBarColor(pct, excedido)
+                const barColor    = gastado >= limite ? '#ef4444' : '#00d4aa'
                 const deltaVsPrev = gastadoPrev > 0 ? ((gastado - gastadoPrev) / gastadoPrev) * 100 : null
                 const mejoro      = deltaVsPrev !== null && deltaVsPrev < 0
                 const quedan      = Math.max(0, limite - gastado)
-
+                const cardVariant = gastado >= limite ? 'card-red' : 'card-green'
                 const cardAnimClass = excedido ? '' : pct > 60 ? 'breathe-amber' : ''
+
                 return (
                   <div key={cat}
-                    className={`rounded-2xl p-5 transition-all${cardAnimClass ? ` ${cardAnimClass}` : ''}`}
+                    className={`card ${cardVariant} p-5 transition-all${cardAnimClass ? ` ${cardAnimClass}` : ''}`}
                     style={{
-                      backgroundColor: '#1a1f2e',
-                      border: `1px solid ${excedido ? '#ef444440' : pct > 80 ? '#f59e0b30' : '#2a3040'}`,
                       ...(excedido ? { boxShadow: '0 0 12px 2px rgba(239,68,68,0.12)' } : {}),
                     }}>
                     <div className="flex items-start justify-between mb-4">
@@ -336,7 +322,7 @@ export default async function PresupuestosPage({
                         <div>
                           <p className="text-white font-semibold text-sm">{cat}</p>
                           {limite > 0 && (
-                            <p style={{ color: '#6b7280', fontSize: '11px' }}>
+                            <p className="text-muted" style={{ fontSize: '11px' }}>
                               Límite: <HiddenValue value={fmtCOP(limite)} className="tabular-nums" />
                             </p>
                           )}
@@ -371,12 +357,12 @@ export default async function PresupuestosPage({
                     </div>
 
                     <div className="flex justify-between">
-                      <span style={{ color: '#6b7280', fontSize: '12px' }}>
+                      <span className="text-muted" style={{ fontSize: '12px' }}>
                         Gastado:{' '}
                         <HiddenValue value={fmtCOP(gastado)} className="tabular-nums font-medium text-white" />
                       </span>
                       {limite > 0 && (
-                        <span style={{ color: '#6b7280', fontSize: '12px' }}>
+                        <span className="text-muted" style={{ fontSize: '12px' }}>
                           Queda:{' '}
                           <HiddenValue value={fmtCOP(quedan)} className="tabular-nums font-medium"
                             style={{ color: excedido ? '#ef4444' : barColor }} />
@@ -390,15 +376,14 @@ export default async function PresupuestosPage({
 
           {/* Comparativo mes anterior */}
           {Object.keys(gastosPrev).length > 0 && (
-            <div className="rounded-2xl overflow-hidden"
-              style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-              <div className="px-6 py-4" style={{ borderBottom: '1px solid #1e2535' }}>
+            <div className="card overflow-hidden page-enter page-enter-delay-4">
+              <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 <p className="text-white font-semibold">Comparativo vs {nombreMesPrev}</p>
-                <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '2px' }}>
+                <p className="text-muted" style={{ fontSize: '12px', marginTop: '2px' }}>
                   Cómo evolucionó cada categoría respecto al mes anterior
                 </p>
               </div>
-              <div className="divide-y" style={{ borderColor: '#1e2535' }}>
+              <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
                 {CATEGORIAS
                   .filter(cat => gastos[cat] || gastosPrev[cat])
                   .map(cat => {
@@ -410,18 +395,18 @@ export default async function PresupuestosPage({
                     return (
                       <div key={cat}
                         className="flex items-center justify-between px-6 py-4"
-                        style={{ borderBottom: '1px solid #1e2535' }}>
+                        style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                         <div className="flex items-center gap-3">
                           <span style={{ fontSize: '16px' }}>{ICONOS[cat] ?? '📦'}</span>
-                          <span style={{ color: '#e5e7eb', fontSize: '13px' }}>{cat}</span>
+                          <span className="text-white" style={{ fontSize: '13px' }}>{cat}</span>
                         </div>
                         <div className="flex items-center gap-6">
                           <div className="text-right">
-                            <p style={{ color: '#6b7280', fontSize: '10px' }}>{nombreMesPrev}</p>
-                            <HiddenValue value={fmtCOP(prev)} className="tabular-nums text-sm" style={{ color: '#6b7280' }} />
+                            <p className="text-muted" style={{ fontSize: '10px' }}>{nombreMesPrev}</p>
+                            <HiddenValue value={fmtCOP(prev)} className="tabular-nums text-sm text-muted" />
                           </div>
                           <div className="text-right">
-                            <p style={{ color: '#6b7280', fontSize: '10px' }}>Este mes</p>
+                            <p className="text-muted" style={{ fontSize: '10px' }}>Este mes</p>
                             <HiddenValue value={fmtCOP(actual)} className="tabular-nums text-sm font-medium text-white" />
                           </div>
                           <div className="text-right min-w-[70px]">
@@ -431,7 +416,7 @@ export default async function PresupuestosPage({
                                 {mejoro ? '↓' : '↑'} {Math.abs(pctDelta).toFixed(0)}%
                               </span>
                             ) : (
-                              <span style={{ color: '#4b5563', fontSize: '11px' }}>Nuevo</span>
+                              <span className="text-muted" style={{ fontSize: '11px' }}>Nuevo</span>
                             )}
                           </div>
                         </div>

@@ -8,9 +8,9 @@ const STEPS = [
   {
     icon:   '👋',
     color:  '#10b981',
-    title:  '¡Bienvenido a WealthHost!',
+    title:  '¡Bienvenido a WealtHost!',
     desc:   'Tu plataforma de gestión de riqueza personal. En menos de 2 minutos te mostramos todo lo que necesitas para empezar a tomar el control de tu dinero.',
-    detail: 'WealthHost consolida en un solo lugar tus cuentas, inversiones, presupuestos, metas y reportes financieros profesionales.',
+    detail: 'WealtHost consolida en un solo lugar tus cuentas, inversiones, presupuestos, metas y reportes financieros profesionales.',
   },
   {
     icon:   '💳',
@@ -38,7 +38,7 @@ const STEPS = [
     color:  '#6366f1',
     title:  'Invierte. Crece. Supera la inflación.',
     desc:   'El módulo de Inversiones es donde tu dinero empieza a trabajar para ti — no al revés. Registra acciones, CDTs, cripto y fondos en un solo lugar.',
-    detail: 'El dinero que no inviertes pierde valor cada día por la inflación. Con WealthHost, cada peso tiene un propósito. Empieza con cualquier monto — lo importante es empezar hoy.',
+    detail: 'El dinero que no inviertes pierde valor cada día por la inflación. Con WealtHost, cada peso tiene un propósito. Empieza con cualquier monto — lo importante es empezar hoy.',
   },
 ]
 

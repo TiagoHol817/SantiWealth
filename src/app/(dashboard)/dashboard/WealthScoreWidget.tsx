@@ -17,7 +17,7 @@ function PillarBar({ label, score, hint, color }: {
         <p style={{ color: '#9ca3af', fontSize: '11px' }}>{label}</p>
         <p className="tabular-nums font-bold" style={{ color, fontSize: '11px' }}>{score}</p>
       </div>
-      <div className="rounded-full overflow-hidden mb-1" style={{ height: '5px', backgroundColor: '#0f1117' }}>
+      <div className="rounded-full overflow-hidden mb-1" style={{ height: '5px', background: 'rgba(255,255,255,0.06)' }}>
         <div className="h-full rounded-full transition-all duration-700"
           style={{ width: `${score}%`, background: `linear-gradient(90deg, ${color}88, ${color})` }} />
       </div>
@@ -32,8 +32,7 @@ export default function WealthScoreWidget({ score, hasTransactions = true }: Pro
 
   if (!hasTransactions) {
     return (
-      <div className="rounded-2xl p-6 relative overflow-hidden"
-        style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+      <div className="card p-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5 blur-3xl"
           style={{ background: '#6366f1', transform: 'translate(20%,-20%)' }} />
         <div className="flex items-center justify-between mb-5">
@@ -73,8 +72,8 @@ export default function WealthScoreWidget({ score, hasTransactions = true }: Pro
   const animClass = total < 60 ? 'breathe-purple' : total < 80 ? 'breathe-amber' : ''
 
   return (
-    <div className={`rounded-2xl p-5 relative overflow-hidden${animClass ? ` ${animClass}` : ''}`}
-      style={{ backgroundColor: '#1a1f2e', border: `1px solid ${color}30` }}>
+    <div className={`card p-5 relative overflow-hidden${animClass ? ` ${animClass}` : ''}`}
+      style={{ border: `1px solid ${color}30` }}>
       <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5 blur-3xl"
         style={{ background: color, transform: 'translate(20%,-20%)' }} />
 

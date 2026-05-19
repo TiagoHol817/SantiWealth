@@ -30,7 +30,7 @@ const DENSITY_OPTIONS: { value: Density; label: string; hint: string }[] = [
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: '32px' }}>
-      <p style={{ color: '#9ca3af', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '14px' }}>
+      <p className="text-muted" style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '14px' }}>
         {title}
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -40,15 +40,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+function CardRow({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{
-      backgroundColor: '#1a1f2e',
-      border: '1px solid rgba(255,255,255,0.06)',
-      borderRadius: '12px',
-      padding: '16px 20px',
-      ...style,
-    }}>
+    <div className="card" style={{ padding: '16px 20px', ...style }}>
       {children}
     </div>
   )
@@ -56,7 +50,8 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
 
 function TogglePill({ checked, onChange }: { checked: boolean; onChange: () => void }) {
   return (
-    <div onClick={onChange} style={{ cursor: 'pointer', width: '42px', height: '24px', borderRadius: '12px', backgroundColor: checked ? '#D4AF37' : '#374151', position: 'relative', transition: 'background-color 200ms', flexShrink: 0 }}>
+    <div onClick={onChange} className={checked ? 'toggle-on' : 'toggle-off'}
+      style={{ cursor: 'pointer', width: '42px', height: '24px', borderRadius: '12px', position: 'relative', transition: 'background-color 200ms', flexShrink: 0 }}>
       <div style={{ position: 'absolute', top: '3px', left: checked ? '21px' : '3px', width: '18px', height: '18px', borderRadius: '50%', backgroundColor: '#fff', transition: 'left 200ms', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }} />
     </div>
   )
@@ -69,13 +64,8 @@ function ChipGroup<T extends string>({ options, value, onChange }: { options: { 
         <button
           key={opt.value}
           onClick={() => onChange(opt.value)}
-          style={{
-            padding: '7px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
-            border: value === opt.value ? '1px solid #D4AF37' : '1px solid rgba(255,255,255,0.08)',
-            backgroundColor: value === opt.value ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.02)',
-            color: value === opt.value ? '#D4AF37' : '#6b7280',
-            cursor: 'pointer', transition: 'all 150ms ease',
-          }}
+          className={`chart-tab${value === opt.value ? ' chart-tab-active' : ''}`}
+          style={{ padding: '7px 18px' }}
         >
           {opt.label}
         </button>
@@ -95,24 +85,24 @@ function TabCuenta({ user }: { user: SupabaseUser | null }) {
   return (
     <>
       <Section title="Perfil">
-        <Card>
+        <CardRow>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {avatar ? (
-              <img src={avatar} alt={name} style={{ width: '56px', height: '56px', borderRadius: '50%', border: '2px solid rgba(212,175,55,0.3)', objectFit: 'cover' }} />
+              <img src={avatar} alt={name} style={{ width: '56px', height: '56px', borderRadius: '50%', border: '2px solid rgba(99,102,241,0.3)', objectFit: 'cover' }} />
             ) : (
-              <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #D4AF37, #b8922a)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f1117', fontWeight: 800, fontSize: '20px', flexShrink: 0 }}>
+              <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: '20px', flexShrink: 0 }}>
                 {initials}
               </div>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ color: '#e5e7eb', fontWeight: 700, fontSize: '17px', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</p>
+              <p className="text-white" style={{ fontWeight: 700, fontSize: '17px', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Mail size={12} color="#6b7280" />
-                <p style={{ color: '#6b7280', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{email}</p>
+                <Mail size={12} className="text-muted" />
+                <p className="text-muted" style={{ fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{email}</p>
               </div>
             </div>
           </div>
-        </Card>
+        </CardRow>
       </Section>
 
       <Section title="Detalles de la cuenta">
@@ -122,10 +112,10 @@ function TabCuenta({ user }: { user: SupabaseUser | null }) {
           { label: 'ID de usuario', value: user?.id ? user.id.slice(0, 8) + '...' : '—' },
           { label: 'Cuenta creada', value: user?.created_at ? new Date(user.created_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }) : '—' },
         ].map(row => (
-          <Card key={row.label} style={{ padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <p style={{ color: '#6b7280', fontSize: '13px' }}>{row.label}</p>
-            <p style={{ color: '#e5e7eb', fontSize: '13px', fontWeight: 500 }}>{row.value}</p>
-          </Card>
+          <CardRow key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px' }}>
+            <p className="text-muted" style={{ fontSize: '13px' }}>{row.label}</p>
+            <p className="text-white" style={{ fontSize: '13px', fontWeight: 500 }}>{row.value}</p>
+          </CardRow>
         ))}
       </Section>
     </>
@@ -145,53 +135,50 @@ function TabSeguridad({ user, onSignOut }: { user: SupabaseUser | null; onSignOu
     <>
       <Section title="Métodos de inicio de sesión">
         {providers.length === 0 && (
-          <Card><p style={{ color: '#6b7280', fontSize: '13px' }}>No hay proveedores registrados.</p></Card>
+          <CardRow><p className="text-muted" style={{ fontSize: '13px' }}>No hay proveedores registrados.</p></CardRow>
         )}
         {providers.map(p => {
           const info = PROVIDER_LABELS[p] ?? { label: p, color: '#6b7280' }
           return (
-            <Card key={p} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div key={p} className="card card-blue" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <CheckCircle2 size={16} color={info.color} />
-                <p style={{ color: '#e5e7eb', fontSize: '14px', fontWeight: 500 }}>{info.label}</p>
+                <p className="text-white" style={{ fontSize: '14px', fontWeight: 500 }}>{info.label}</p>
               </div>
-              <span style={{ fontSize: '11px', color: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', padding: '2px 8px', borderRadius: '5px', fontWeight: 600 }}>
-                Conectado
-              </span>
-            </Card>
+              <span className="badge badge-green">Conectado</span>
+            </div>
           )
         })}
       </Section>
 
       <Section title="Sesión">
-        <Card style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <CardRow style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <p style={{ color: '#e5e7eb', fontSize: '14px', fontWeight: 500, marginBottom: '2px' }}>Cerrar sesión</p>
-            <p style={{ color: '#6b7280', fontSize: '12px' }}>Finaliza tu sesión en este dispositivo</p>
+            <p className="text-white" style={{ fontSize: '14px', fontWeight: 500, marginBottom: '2px' }}>Cerrar sesión</p>
+            <p className="text-muted" style={{ fontSize: '12px' }}>Finaliza tu sesión en este dispositivo</p>
           </div>
           <button
             onClick={onSignOut}
+            className="btn-secondary flex items-center gap-2"
             style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '8px 16px', borderRadius: '9px',
+              padding: '8px 16px',
               border: '1px solid rgba(239,68,68,0.3)',
               backgroundColor: 'rgba(239,68,68,0.06)',
-              color: '#ef4444', fontSize: '13px', fontWeight: 600,
-              cursor: 'pointer', transition: 'all 150ms ease',
+              color: '#ef4444',
             }}
           >
             <LogOut size={14} /> Cerrar sesión
           </button>
-        </Card>
+        </CardRow>
       </Section>
 
       <Section title="Información de seguridad">
-        <Card>
-          <p style={{ color: '#6b7280', fontSize: '13px', lineHeight: 1.7 }}>
+        <CardRow>
+          <p className="text-muted" style={{ fontSize: '13px', lineHeight: 1.7 }}>
             Tu cuenta está protegida con autenticación de Supabase con cifrado TLS 1.3.
             Las contraseñas nunca se almacenan en texto plano. Tu sesión expira automáticamente tras períodos de inactividad.
           </p>
-        </Card>
+        </CardRow>
       </Section>
     </>
   )
@@ -222,21 +209,21 @@ function TabPreferencias() {
   return (
     <>
       <Section title="Moneda principal">
-        <Card>
-          <p style={{ color: '#e5e7eb', fontSize: '14px', fontWeight: 500, marginBottom: '6px' }}>Moneda de visualización</p>
-          <p style={{ color: '#6b7280', fontSize: '12px', marginBottom: '14px' }}>Define en qué moneda se muestran los totales de patrimonio por defecto</p>
+        <CardRow>
+          <p className="text-white" style={{ fontSize: '14px', fontWeight: 500, marginBottom: '6px' }}>Moneda de visualización</p>
+          <p className="text-muted" style={{ fontSize: '12px', marginBottom: '14px' }}>Define en qué moneda se muestran los totales de patrimonio por defecto</p>
           <ChipGroup
             options={[{ value: 'COP', label: '🇨🇴 Pesos (COP)' }, { value: 'USD', label: '🇺🇸 Dólar (USD)' }]}
             value={currency}
             onChange={saveCurrency}
           />
-        </Card>
+        </CardRow>
       </Section>
 
       <Section title="Idioma">
-        <Card>
-          <p style={{ color: '#e5e7eb', fontSize: '14px', fontWeight: 500, marginBottom: '6px' }}>Idioma de la interfaz</p>
-          <p style={{ color: '#6b7280', fontSize: '12px', marginBottom: '14px' }}>La app se muestra actualmente en español. El soporte multiidioma está en desarrollo.</p>
+        <CardRow>
+          <p className="text-white" style={{ fontSize: '14px', fontWeight: 500, marginBottom: '6px' }}>Idioma de la interfaz</p>
+          <p className="text-muted" style={{ fontSize: '12px', marginBottom: '14px' }}>La app se muestra actualmente en español. El soporte multiidioma está en desarrollo.</p>
           <ChipGroup
             options={[{ value: 'es', label: '🇨🇴 Español' }, { value: 'en', label: '🇺🇸 English' }]}
             value={language}
@@ -247,7 +234,7 @@ function TabPreferencias() {
               ⚠ Inglés próximamente disponible. Los textos de la app seguirán en español.
             </p>
           )}
-        </Card>
+        </CardRow>
       </Section>
     </>
   )
@@ -260,47 +247,50 @@ function TabApariencia() {
     <>
       <Section title="Densidad de interfaz">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {DENSITY_OPTIONS.map(opt => (
-            <button
-              key={opt.value}
-              onClick={() => update({ ui_density: opt.value })}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '12px 16px', borderRadius: '10px', textAlign: 'left',
-                border: settings.ui_density === opt.value ? '1px solid #D4AF37' : '1px solid rgba(255,255,255,0.06)',
-                backgroundColor: settings.ui_density === opt.value ? 'rgba(212,175,55,0.07)' : '#1a1f2e',
-                cursor: 'pointer', transition: 'all 150ms ease',
-              }}
-            >
-              <div>
-                <p style={{ color: settings.ui_density === opt.value ? '#D4AF37' : '#e5e7eb', fontWeight: 600, fontSize: '14px', margin: 0 }}>{opt.label}</p>
-                <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '2px' }}>{opt.hint}</p>
-              </div>
-              {settings.ui_density === opt.value && (
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#D4AF37' }} />
-              )}
-            </button>
-          ))}
+          {DENSITY_OPTIONS.map(opt => {
+            const isActive = settings.ui_density === opt.value
+            return (
+              <button
+                key={opt.value}
+                onClick={() => update({ ui_density: opt.value })}
+                className="card"
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '12px 16px', borderRadius: '10px', textAlign: 'left',
+                  border: isActive ? '1px solid rgba(99,102,241,0.35)' : undefined,
+                  cursor: 'pointer', transition: 'all 150ms ease',
+                }}
+              >
+                <div>
+                  <p className={isActive ? 'accent-primary' : 'text-white'} style={{ fontWeight: 600, fontSize: '14px', margin: 0 }}>{opt.label}</p>
+                  <p className="text-muted" style={{ fontSize: '12px', marginTop: '2px' }}>{opt.hint}</p>
+                </div>
+                {isActive && (
+                  <div className="toggle-on" style={{ width: '8px', height: '8px', borderRadius: '50%' }} />
+                )}
+              </button>
+            )
+          })}
         </div>
       </Section>
 
       <Section title="Panel de balance">
-        <Card style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <CardRow style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <p style={{ color: '#e5e7eb', fontSize: '14px', fontWeight: 500, marginBottom: '2px' }}>Variación diaria</p>
-            <p style={{ color: '#6b7280', fontSize: '12px' }}>Muestra el cambio patrimonial vs ayer en el dashboard</p>
+            <p className="text-white" style={{ fontSize: '14px', fontWeight: 500, marginBottom: '2px' }}>Variación diaria</p>
+            <p className="text-muted" style={{ fontSize: '12px' }}>Muestra el cambio patrimonial vs ayer en el dashboard</p>
           </div>
           <TogglePill
             checked={settings.show_daily_gains}
             onChange={() => update({ show_daily_gains: !settings.show_daily_gains })}
           />
-        </Card>
+        </CardRow>
       </Section>
 
       <Section title="Acento de color">
-        <Card>
-          <p style={{ color: '#e5e7eb', fontSize: '14px', fontWeight: 500, marginBottom: '6px' }}>Color de marca</p>
-          <p style={{ color: '#6b7280', fontSize: '12px', marginBottom: '14px' }}>Define el color de énfasis de la interfaz</p>
+        <CardRow>
+          <p className="text-white" style={{ fontSize: '14px', fontWeight: 500, marginBottom: '6px' }}>Color de marca</p>
+          <p className="text-muted" style={{ fontSize: '12px', marginBottom: '14px' }}>Define el color de énfasis de la interfaz</p>
           <div style={{ display: 'flex', gap: '10px' }}>
             <div
               title="Luxury Gold"
@@ -313,8 +303,8 @@ function TabApariencia() {
               }}
             />
           </div>
-          <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '10px' }}>Más opciones de acento disponibles próximamente.</p>
-        </Card>
+          <p className="text-muted" style={{ fontSize: '11px', marginTop: '10px' }}>Más opciones de acento disponibles próximamente.</p>
+        </CardRow>
       </Section>
     </>
   )
@@ -344,13 +334,11 @@ export default function SettingsPage() {
   }
 
   return (
-    <div style={{ maxWidth: '840px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '840px', margin: '0 auto' }} className="pb-8">
       {/* Page header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ color: '#e5e7eb', fontSize: '24px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '6px' }}>
-          Configuración
-        </h1>
-        <p style={{ color: '#6b7280', fontSize: '14px' }}>Gestiona tu cuenta, seguridad y preferencias de la plataforma</p>
+      <div className="page-enter" style={{ marginBottom: '32px' }}>
+        <h1 className="page-title">Configuración</h1>
+        <p className="page-subtitle">Gestiona tu cuenta, seguridad y preferencias de la plataforma</p>
       </div>
 
       <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
@@ -360,15 +348,11 @@ export default function SettingsPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              className={activeTab === tab.id ? 'chart-tab chart-tab-active' : 'chart-tab'}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                gap: '10px', padding: '10px 14px', borderRadius: '10px', width: '100%',
-                border: 'none', textAlign: 'left', cursor: 'pointer', transition: 'all 150ms ease',
-                backgroundColor: activeTab === tab.id ? 'rgba(212,175,55,0.1)' : 'transparent',
-                color: activeTab === tab.id ? '#D4AF37' : '#6b7280',
+                gap: '10px', width: '100%', textAlign: 'left',
               }}
-              onMouseEnter={e => { if (activeTab !== tab.id) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.04)' }}
-              onMouseLeave={e => { if (activeTab !== tab.id) (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 {tab.icon}

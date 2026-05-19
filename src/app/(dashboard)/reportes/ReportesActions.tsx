@@ -5,8 +5,7 @@ export default function ReportesActions() {
     <div className="flex items-center gap-2">
       <button
         onClick={() => window.print()}
-        className="shimmer-border flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-        style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#9ca3af' }}
+        className="btn-primary shimmer-border flex items-center gap-2 px-3 py-2 text-sm"
       >
         📄 Exportar PDF
       </button>
@@ -19,8 +18,7 @@ export default function ReportesActions() {
             alert('Copia la URL de tu navegador para compartir')
           })
         }}
-        className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-        style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#9ca3af' }}
+        className="btn-secondary flex items-center gap-2 px-3 py-2 text-sm"
       >
         📊 Compartir
       </button>

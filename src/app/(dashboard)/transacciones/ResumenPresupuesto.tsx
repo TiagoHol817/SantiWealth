@@ -35,7 +35,7 @@ export default async function ResumenPresupuesto() {
   })).sort((a, b) => b.pct - a.pct)
 
   return (
-    <div className="rounded-xl p-5 mb-6" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+    <div className="card p-5 mb-6">
       <div className="flex items-center justify-between mb-4">
         <p className="text-white font-medium text-sm">Presupuesto del mes</p>
         <a href="/presupuestos" style={{ color: '#10b981', fontSize: '12px' }}>Ver detalle →</a>
@@ -46,15 +46,14 @@ export default async function ResumenPresupuesto() {
           return (
             <div key={cat}>
               <div className="flex justify-between mb-1">
-                <span style={{ color: '#9ca3af', fontSize: '12px' }}>{cat}</span>
+                <span className="text-muted" style={{ fontSize: '12px' }}>{cat}</span>
                 <span style={{ color, fontSize: '12px' }}>
                   {fmtCOP(gastado)} / {fmtCOP(limite)}
                   {excedido && ' ⚠️'}
                 </span>
               </div>
-              <div className="rounded-full" style={{ backgroundColor: '#0f1117', height: '4px' }}>
-                <div className="h-full rounded-full"
-                  style={{ width: `${pct}%`, backgroundColor: color }} />
+              <div className="progress-track" style={{ height: '4px' }}>
+                <div className="progress-fill" style={{ width: `${pct}%`, backgroundColor: color }} />
               </div>
             </div>
           )

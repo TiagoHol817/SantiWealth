@@ -94,7 +94,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  console.log('[import-transactions] resolved accountId:', accountId)
   if (!accountId) {
     return NextResponse.json({ error: 'No se encontró o pudo crear la cuenta destino' }, { status: 400 })
   }
@@ -133,13 +132,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Ninguna fila válida para importar' }, { status: 400 })
   }
 
-  console.log('[import-transactions] amounts sample:',
-    rows.slice(0, 3).map(r => ({
-      description: (r as Record<string, unknown>).description,
-      amount:      (r as Record<string, unknown>).amount,
-    }))
-  )
-
   /* ── Dedup: skip rows already in DB (same user+date+description+amount) ── */
   const dates = rows.map(r => (r as Record<string, unknown>).date as string)
   const minDate = dates.reduce((a, b) => (a < b ? a : b))
@@ -162,42 +154,30 @@ export async function POST(req: NextRequest) {
     return !existingKeys.has(key)
   })
 
-  console.log('[import-transactions] dedup:', rows.length, '→', newRows.length, 'new rows')
-  console.log('[DEBUG] existingKeys sample:', [...existingKeys].slice(0, 3))
-
   if (newRows.length === 0) {
-    console.warn('[import-transactions] SKIPPED: all rows already exist in DB (dedup). skipped:', rows.length)
     return NextResponse.json({ success: true, count: 0, account_id: accountId, skipped: rows.length })
   }
 
-  const { data: insertData, error: insertError } = await supabase
-    .from('transactions')
-    .insert(newRows)
-    .select('id')
+  /* ── Batch insert in chunks of 100 ──────────────────────────────────── */
+  const BATCH_SIZE = 100
+  let totalInserted = 0
 
-  console.log('[DEBUG] insert result:', {
-    inserted: insertData?.length ?? 0,
-    error:    insertError?.message ?? null,
-    code:     insertError?.code    ?? null,
-  })
+  for (let i = 0; i < newRows.length; i += BATCH_SIZE) {
+    const batch = newRows.slice(i, i + BATCH_SIZE)
+    const { data: batchData, error: batchError } = await supabase
+      .from('transactions')
+      .insert(batch)
+      .select('id')
 
-  if (insertError) {
-    console.error('[import-transactions] INSERT ERROR:', insertError.message, insertError.code)
-    return NextResponse.json({ error: 'No se pudieron guardar las transacciones' }, { status: 500 })
+    if (batchError) {
+      console.error('[import-transactions] batch error:', batchError.code)
+      return NextResponse.json({ error: 'No se pudieron guardar las transacciones' }, { status: 500 })
+    }
+    totalInserted += batchData?.length ?? 0
   }
 
-  console.log('[import-transactions] inserted:', insertData?.length ?? newRows.length)
-
   /* ── Update account balance from last transaction's running balance ───── */
-  // Use the balance column of the last transaction (by date) as the closing
-  // balance. Fall back to the summary-level last_balance if no row has one.
   const bodyRows = body.rows as Record<string, unknown>[]
-  console.log('[DEBUG] rows sample balance values:',
-    bodyRows.slice(0, 5).map(r => ({ date: r.date, balance: r.balance, amount: r.amount, balanceType: typeof r.balance }))
-  )
-
-  // last_balance = "SALDO ACTUAL" from the PDF summary — most reliable source.
-  // Fall back to the running balance of the last transaction row.
   const rowsWithBalance = bodyRows
     .filter(r => Number(r.balance) > 0)
     .sort((a, b) => String(b.date).localeCompare(String(a.date)))
@@ -208,10 +188,6 @@ export async function POST(req: NextRequest) {
         ? Number(rowsWithBalance[0].balance)
         : null
 
-  console.log('[DEBUG] finalBalance computed:', closingBalance)
-  console.log('[DEBUG] typeof finalBalance:', typeof closingBalance)
-  console.log('[import-transactions] final balance:', closingBalance)
-
   if (accountId && closingBalance != null) {
     await supabase
       .from('accounts')
@@ -220,7 +196,5 @@ export async function POST(req: NextRequest) {
       .eq('user_id', user.id)
   }
 
-  console.log('[import-transactions] account updated:', accountId)
-
-  return NextResponse.json({ success: true, count: newRows.length, account_id: accountId })
+  return NextResponse.json({ success: true, count: totalInserted, account_id: accountId })
 }

@@ -5,19 +5,19 @@ import { cookies }         from 'next/headers'
 import LandingPage         from './landing/LandingPage'
 
 export const metadata: Metadata = {
-  title:       'WealthHost — Tu patrimonio, bajo control',
+  title:       'WealtHost — Tu patrimonio, bajo control',
   description: 'Consolida tus cuentas, inversiones, presupuestos y metas en un solo lugar. Con IA que categoriza, analiza y te dice exactamente qué hacer con tu dinero.',
   openGraph: {
-    title:       'WealthHost — Tu patrimonio, bajo control',
+    title:       'WealtHost — Tu patrimonio, bajo control',
     description: 'Finanzas personales inteligentes para Colombia.',
     url:         'https://wealthost-nu.vercel.app',
-    siteName:    'WealthHost',
+    siteName:    'WealtHost',
     locale:      'es_CO',
     type:        'website',
   },
   twitter: {
     card:        'summary_large_image',
-    title:       'WealthHost — Tu patrimonio, bajo control',
+    title:       'WealtHost — Tu patrimonio, bajo control',
     description: 'Finanzas personales inteligentes para Colombia.',
   },
 }

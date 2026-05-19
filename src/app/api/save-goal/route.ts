@@ -13,12 +13,12 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
   const { error } = await supabase
-    .from('goals')
+    .from('investment_goals')
     .insert({
       name:           sanitizeText(body.name, 120),
       target_amount:  sanitizeAmount(body.target_amount),
       current_amount: sanitizeAmount(body.current_amount) || 0,
-      deadline:       sanitizeDate(body.deadline) ?? null,
+      target_date:    sanitizeDate(body.deadline) ?? null,
       icon:           sanitizeText(body.icon, 10),
       color:          sanitizeText(body.color, 20),
       user_id:        user.id,
@@ -41,7 +41,7 @@ export async function PATCH(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
   const { error } = await supabase
-    .from('goals')
+    .from('investment_goals')
     .update({ current_amount: sanitizeAmount(body.current_amount) })
     .eq('id', body.id)
     .eq('user_id', user.id)

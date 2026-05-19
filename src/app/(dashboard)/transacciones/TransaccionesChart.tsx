@@ -22,11 +22,8 @@ const fmtCOP = (n: number) =>
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div style={{
-      backgroundColor: '#1a1f2e', border: '1px solid #2a3040',
-      borderRadius: '10px', padding: '10px 14px', fontSize: '12px',
-    }}>
-      <p style={{ color: '#9ca3af', marginBottom: '6px' }}>{label}</p>
+    <div className="card" style={{ borderRadius: '10px', padding: '10px 14px', fontSize: '12px' }}>
+      <p className="text-muted" style={{ marginBottom: '6px' }}>{label}</p>
       {payload.map((p: any) => (
         <p key={p.name} style={{ color: p.fill, marginBottom: '2px' }}>
           {p.name === 'ingresos' ? 'Ingresos' : 'Gastos'}: {fmtCOP(p.value)}
@@ -40,7 +37,7 @@ export default function TransaccionesChart({ data }: Props) {
   const [view, setView] = useState<'ambos' | 'ingresos' | 'gastos'>('ambos')
 
   return (
-    <div className="rounded-xl p-5 mb-6" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+    <div className="card p-5 mb-6">
       <div className="flex items-center justify-between mb-4">
         <p className="text-white font-medium">Evolución mensual</p>
         <div className="flex gap-1">
@@ -50,8 +47,8 @@ export default function TransaccionesChart({ data }: Props) {
               onClick={() => setView(v)}
               className="px-3 py-1 rounded-lg text-xs font-medium transition-all"
               style={{
-                backgroundColor: view === v ? '#2a3040' : 'transparent',
-                color: view === v ? '#e5e7eb' : '#6b7280',
+                backgroundColor: view === v ? 'rgba(99,102,241,0.15)' : 'transparent',
+                color: view === v ? '#a78bfa' : '#6b7280',
               }}
             >
               {v.charAt(0).toUpperCase() + v.slice(1)}

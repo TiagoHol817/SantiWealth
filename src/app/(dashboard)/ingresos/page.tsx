@@ -83,23 +83,21 @@ export default async function IngresosPage() {
   const sinIngresos = (txAll?.length ?? 0) === 0
 
   return (
-    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top left, rgba(16,185,129,0.04) 0%, transparent 60%)' }}>
+    <div className="space-y-6 pb-8">
 
       {/* Header */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden page-enter">
         <div className="blob-green absolute -top-20 -right-20 opacity-40" style={{ width: '300px', height: '300px' }} />
         <div className="relative flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Ingresos</h1>
-            <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
+            <h1 className="page-title">Ingresos</h1>
+            <p className="page-subtitle">
               Quienes conocen sus números, negocian mejor — {nombreMes}
             </p>
           </div>
           <div className="flex items-center gap-3">
             <HelpModal moduleId="ingresos" />
-            <Link href="/transacciones"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-              style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117' }}>
+            <Link href="/transacciones" className="btn-primary flex items-center gap-2 px-4 py-2 text-sm">
               + Registrar ingreso
             </Link>
           </div>
@@ -107,54 +105,56 @@ export default async function IngresosPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-4 gap-4 page-enter page-enter-delay-1">
         {[
           {
             label: 'Ingresos este mes',
             value: fmtCOP(totalMes),
             color: '#10b981',
             sub: `${txMes.length} registro${txMes.length !== 1 ? 's' : ''}`,
+            anim: 'breathe-green',
           },
           {
             label: 'Vs mes anterior',
             value: deltaVsPrev !== null ? `${deltaVsPrev >= 0 ? '+' : ''}${deltaVsPrev.toFixed(1)}%` : '—',
             color: deltaVsPrev === null ? '#6b7280' : deltaVsPrev >= 0 ? '#10b981' : '#ef4444',
             sub: totalPrevSum > 0 ? fmtCOP(totalPrevSum) : 'Sin historial',
+            anim: '',
           },
           {
             label: 'Mes más alto',
             value: mesMasAlto ? fmtCompact(mesMasAlto.total) : '—',
             color: '#6366f1',
             sub: mesMasAlto?.label ?? 'Sin historial',
+            anim: '',
           },
           {
             label: 'Mes más bajo',
             value: mesMasBajo ? fmtCompact(mesMasBajo.total) : '—',
             color: '#f59e0b',
             sub: mesMasBajo?.label ?? 'Sin historial',
+            anim: '',
           },
-        ].map((item, idx) => (
-          <div key={item.label} className={`rounded-2xl p-5 relative overflow-hidden card-interactive${idx === 0 ? ' breathe-green' : ''}`}
-            style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+        ].map((item) => (
+          <div key={item.label} className={`card p-5 relative overflow-hidden card-interactive${item.anim ? ` ${item.anim}` : ''}`}>
             <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
               style={{ background: item.color, transform: 'translate(30%,-30%)' }} />
-            <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
+            <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
               {item.label}
             </p>
             <p className="tabular-nums font-bold" style={{ color: item.color, fontSize: '20px' }}>{item.value}</p>
-            <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '4px' }}>{item.sub}</p>
+            <p className="text-muted" style={{ fontSize: '11px', marginTop: '4px' }}>{item.sub}</p>
           </div>
         ))}
       </div>
 
       {/* Proyección anual */}
       {proyeccionAnual > 0 && (
-        <div className="rounded-2xl p-5 flex items-center justify-between relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #0a2d1f 0%, #0f1117 100%)', border: '1px solid #10b98130' }}>
+        <div className="card card-green p-5 flex items-center justify-between relative overflow-hidden page-enter page-enter-delay-2">
           <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-[0.06] blur-3xl pointer-events-none"
             style={{ background: '#10b981', transform: 'translate(20%, -20%)' }} />
           <div>
-            <p style={{ color: '#6b7280', fontSize: '12px', marginBottom: '4px' }}>A este ritmo, ganarás este año</p>
+            <p className="text-muted" style={{ fontSize: '12px', marginBottom: '4px' }}>A este ritmo, ganarás este año</p>
             <HiddenValue
               value={fmtCOP(proyeccionAnual)}
               className="tabular-nums font-black"
@@ -162,10 +162,10 @@ export default async function IngresosPage() {
             />
           </div>
           <div className="text-right">
-            <p style={{ color: '#4b5563', fontSize: '11px', marginBottom: '2px' }}>Promedio mensual</p>
-            <HiddenValue value={fmtCOP(promedioMensual)} className="tabular-nums font-semibold"
-              style={{ color: '#6b7280', fontSize: '14px' }} />
-            <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '4px' }}>
+            <p className="text-muted" style={{ fontSize: '11px', marginBottom: '2px' }}>Promedio mensual</p>
+            <HiddenValue value={fmtCOP(promedioMensual)} className="tabular-nums font-semibold text-muted"
+              style={{ fontSize: '14px' }} />
+            <p className="text-muted" style={{ fontSize: '11px', marginTop: '4px' }}>
               Basado en {mesesHistorial.length} mes{mesesHistorial.length !== 1 ? 'es' : ''} de historial
             </p>
           </div>
@@ -174,11 +174,11 @@ export default async function IngresosPage() {
 
       {/* Fuentes del mes */}
       {fuentes.length > 0 && (
-        <div className="rounded-2xl p-6" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+        <div className="card card-purple p-6 page-enter page-enter-delay-3">
           <div className="flex items-center justify-between mb-5">
             <div>
               <p className="text-white font-semibold">Fuentes de ingreso</p>
-              <p style={{ color: '#6b7280', fontSize: '13px', marginTop: '2px' }}>Distribución este mes</p>
+              <p className="text-muted" style={{ fontSize: '13px', marginTop: '2px' }}>Distribución este mes</p>
             </div>
             <HiddenValue value={fmtCOP(totalMes)} className="tabular-nums font-bold"
               style={{ color: '#10b981', fontSize: '18px' }} />
@@ -197,8 +197,7 @@ export default async function IngresosPage() {
               const color = SOURCE_COLORS[i % SOURCE_COLORS.length]
               const icon  = SOURCE_ICONS[f.nombre] ?? '💰'
               return (
-                <div key={f.nombre} className="rounded-xl p-4 flex items-center justify-between"
-                  style={{ backgroundColor: '#0f1117', border: '1px solid #1e2535' }}>
+                <div key={f.nombre} className="stat-cell rounded-xl p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center"
                       style={{ backgroundColor: color + '20' }}>
@@ -207,10 +206,7 @@ export default async function IngresosPage() {
                     <div>
                       <p className="text-white text-sm font-medium">{f.nombre}</p>
                       {f.pct >= 70 && (
-                        <span className="text-xs px-1.5 py-0.5 rounded-full"
-                          style={{ backgroundColor: '#f59e0b20', color: '#f59e0b' }}>
-                          Alta dependencia
-                        </span>
+                        <span className="badge badge-amber">Alta dependencia</span>
                       )}
                     </div>
                   </div>
@@ -236,26 +232,26 @@ export default async function IngresosPage() {
       )}
 
       {/* Gráfico / lista */}
-      <IngresosClient
-        historial={mesesHistorial}
-        fuentes={todasFuentes}
-        transacciones={txAll?.slice(0, 50) ?? []}
-      />
+      <div className="page-enter page-enter-delay-4">
+        <IngresosClient
+          historial={mesesHistorial}
+          fuentes={todasFuentes}
+          transacciones={txAll?.slice(0, 50) ?? []}
+        />
+      </div>
 
       {/* Estado vacío */}
       {sinIngresos && (
-        <div className="rounded-2xl p-12 text-center breathe-green" style={{ backgroundColor: '#1a1f2e', border: '1px solid #10b98130' }}>
+        <div className="card card-green p-12 text-center breathe-green page-enter page-enter-delay-2">
           <div className="mb-5 h-14 w-14 rounded-2xl mx-auto flex items-center justify-center"
             style={{ backgroundColor: '#10b98110', border: '1px solid #10b98130' }}>
             <div className="h-3 w-3 rounded-full bg-[#10b981]/50 animate-pulse" />
           </div>
           <p className="text-white font-semibold text-lg mb-2">¿Sabes realmente cuánto generas al mes?</p>
-          <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '20px', maxWidth: '360px', margin: '0 auto 20px' }}>
+          <p className="text-muted" style={{ fontSize: '13px', marginBottom: '20px', maxWidth: '360px', margin: '0 auto 20px' }}>
             Quienes conocen sus números negocian mejor y viven sin límites.
           </p>
-          <Link href="/transacciones"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
-            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#0f1117' }}>
+          <Link href="/transacciones" className="btn-primary inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold">
             Registrar fuente de ingreso →
           </Link>
         </div>

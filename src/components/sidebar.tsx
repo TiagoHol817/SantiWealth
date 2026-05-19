@@ -2,33 +2,54 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { animate, stagger } from 'animejs'
 import { createClient } from '@/lib/supabase/client'
 import { useBalance } from '@/context/BalanceContext'
 import {
   LayoutDashboard, ArrowLeftRight, TrendingUp,
   PieChart, Target, Receipt, LogOut,
   Eye, EyeOff, Bell, X, BarChart3, Wallet,
-  Sun, Moon, PanelLeftClose, PanelLeftOpen, Settings2,
+  Sun, Moon, Settings2,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import WealtHostBrand from '@/components/WealtHostBrand'
+import type { ElementType } from 'react'
 
 interface SidebarProps {
   isCollapsed: boolean
   onToggle: () => void
 }
 
-const navItems = [
-  { href: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard, tooltip: 'Tu resumen financiero' },
-  { href: '/transacciones', label: 'Transacciones', icon: ArrowLeftRight,  tooltip: 'Ingresos y gastos'     },
-  { href: '/inversiones',   label: 'Inversiones',   icon: TrendingUp,      tooltip: 'Bolsa, cripto y CDTs'  },
-  { href: '/presupuestos',  label: 'Presupuestos',  icon: PieChart,        tooltip: 'Controla tu gasto'     },
-  { href: '/metas',         label: 'Metas',         icon: Target,          tooltip: 'Tus objetivos financieros' },
-  { href: '/costos-op',     label: 'Costos fijos',  icon: Receipt,         tooltip: 'Gastos recurrentes'    },
-  { href: '/ingresos',      label: 'Ingresos',      icon: Wallet,          tooltip: 'Fuentes de ingreso'    },
-  { href: '/reportes',      label: 'Reportes',      icon: BarChart3,       tooltip: 'Análisis y estadísticas' },
-  { href: '/settings',      label: 'Ajustes',       icon: Settings2,       tooltip: 'Configuración'         },
+const navGroups: { label?: string; items: { href: string; label: string; icon: ElementType; tooltip: string }[] }[] = [
+  {
+    items: [
+      { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Tu resumen financiero' },
+    ],
+  },
+  {
+    label: 'FINANZAS',
+    items: [
+      { href: '/transacciones', label: 'Transacciones', icon: ArrowLeftRight, tooltip: 'Ingresos y gastos'      },
+      { href: '/inversiones',   label: 'Inversiones',   icon: TrendingUp,     tooltip: 'Bolsa, cripto y CDTs'  },
+      { href: '/presupuestos',  label: 'Presupuestos',  icon: PieChart,       tooltip: 'Controla tu gasto'     },
+    ],
+  },
+  {
+    label: 'PLANIFICACIÓN',
+    items: [
+      { href: '/metas',     label: 'Metas',        icon: Target,  tooltip: 'Tus objetivos financieros' },
+      { href: '/costos-op', label: 'Costos fijos', icon: Receipt, tooltip: 'Gastos recurrentes'        },
+      { href: '/ingresos',  label: 'Ingresos',     icon: Wallet,  tooltip: 'Fuentes de ingreso'        },
+    ],
+  },
+  {
+    label: 'ANÁLISIS',
+    items: [
+      { href: '/reportes', label: 'Reportes', icon: BarChart3, tooltip: 'Análisis y estadísticas' },
+      { href: '/settings', label: 'Ajustes',  icon: Settings2, tooltip: 'Configuración'           },
+    ],
+  },
 ]
 
 type CDTAlert    = { id: string; name: string; dias: number; capital: number; vencimiento: string }
@@ -39,8 +60,6 @@ type WeekSummary = { total: number; top: { cat: string; monto: number }[]; dias:
 
 function NavTooltip({ label, tooltip, isCollapsed, children }: { label: string; tooltip?: string; isCollapsed: boolean; children: React.ReactNode }) {
   const [show, setShow] = useState(false)
-  // When expanded: show tooltip description under the label on hover
-  // When collapsed: show label as tooltip to the right
   const tooltipText = isCollapsed ? label : (tooltip ?? label)
   return (
     <div
@@ -52,11 +71,7 @@ function NavTooltip({ label, tooltip, isCollapsed, children }: { label: string; 
       {show && (
         <div
           className="pointer-events-none absolute"
-          style={
-            isCollapsed
-              ? { left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: '10px', zIndex: 200 }
-              : { left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: '8px', zIndex: 200 }
-          }
+          style={{ left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: '10px', zIndex: 200 }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{
@@ -85,7 +100,15 @@ function NavTooltip({ label, tooltip, isCollapsed, children }: { label: string; 
   )
 }
 
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+const hasHoverPointer = () =>
+  typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches
+
 export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+  const collapsed = isCollapsed
+
   const pathname = usePathname()
   const router   = useRouter()
   const { visible, toggle } = useBalance()
@@ -93,6 +116,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
+
+  const asideRef     = useRef<HTMLElement>(null)
+  const logoRef      = useRef<HTMLDivElement>(null)
+  const indicatorRef = useRef<HTMLDivElement>(null)
 
   const [cdtAlerts,   setCdtAlerts]   = useState<CDTAlert[]>([])
   const [invAlerts,   setInvAlerts]   = useState<InvAlert[]>([])
@@ -103,6 +130,86 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   const fmtCOP = (n: number) =>
     new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n)
+
+  // ── Set initial opacity to 0 before first paint to prevent flash ─────────
+  useLayoutEffect(() => {
+    if (prefersReducedMotion()) return
+    const aside = asideRef.current
+    if (!aside) return
+    aside.querySelectorAll<HTMLElement>('.sidebar-logo, .nav-item, .nav-section-label, .sidebar-logout')
+      .forEach(el => { el.style.opacity = '0' })
+  }, [])
+
+  // ── Entrance stagger on mount ─────────────────────────────────────────────
+  useEffect(() => {
+    if (prefersReducedMotion()) return
+    const aside = asideRef.current
+    if (!aside) return
+
+    const a1 = animate(aside.querySelectorAll('.sidebar-logo'), {
+      translateX: [-12, 0],
+      opacity:    [0, 1],
+      duration:   400,
+      ease:       'out(3)',
+    })
+    const a2 = animate(aside.querySelectorAll('.nav-section-label'), {
+      opacity:    [0, 1],
+      translateY: [-6, 0],
+      duration:   300,
+      ease:       'out(3)',
+      delay:      stagger(60, { start: 60 }),
+    })
+    const a3 = animate(aside.querySelectorAll('.nav-item'), {
+      translateX: [-12, 0],
+      opacity:    [0, 1],
+      duration:   400,
+      ease:       'out(3)',
+      delay:      stagger(40, { start: 120 }),
+    })
+    const a4 = animate(aside.querySelectorAll('.sidebar-logout'), {
+      opacity:  [0, 1],
+      duration: 300,
+      ease:     'out(3)',
+      delay:    500,
+    })
+
+    return () => { a1.cancel(); a2.cancel(); a3.cancel(); a4.cancel() }
+  }, [])
+
+  // ── Active indicator scaleY on route change ───────────────────────────────
+  useEffect(() => {
+    if (prefersReducedMotion()) return
+    if (!indicatorRef.current) return
+    const a = animate(indicatorRef.current, {
+      scaleY:   [0, 1],
+      duration: 250,
+      ease:     'out(4)',
+    })
+    return () => { a.cancel() }
+  }, [pathname])
+
+  // ── Section label subtle breathe (after entrance settles) ─────────────────
+  useEffect(() => {
+    if (prefersReducedMotion()) return
+    const aside = asideRef.current
+    if (!aside) return
+    let breatheAnim: ReturnType<typeof animate> | undefined
+    const timer = setTimeout(() => {
+      const labels = aside.querySelectorAll('.nav-section-label')
+      if (!labels.length) return
+      breatheAnim = animate(labels, {
+        opacity:   0.7,
+        duration:  1500,
+        ease:      'inOut(2)',
+        loop:      true,
+        alternate: true,
+      })
+    }, 800)
+    return () => {
+      clearTimeout(timer)
+      breatheAnim?.cancel()
+    }
+  }, [])
 
   useEffect(() => {
     async function loadAll() {
@@ -200,15 +307,15 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const invColor = (pct: number) => Math.abs(pct) >= 4 ? '#ef4444' : Math.abs(pct) >= 3 ? '#f59e0b' : '#6366f1'
   const budColor = (pct: number) => pct >= 100 ? '#ef4444' : '#f59e0b'
 
-  const notifLeft = isCollapsed ? '80px' : '270px'
+  const notifLeft = collapsed ? '80px' : '270px'
 
   return (
     <aside
-      className="flex flex-col h-screen fixed left-0 top-0"
+      ref={asideRef}
+      className="flex flex-col h-screen fixed left-0 top-0 overflow-hidden"
       style={{
-        width: isCollapsed ? '64px' : '256px',
-        transition: 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)',
-        overflow: 'hidden',
+        width: collapsed ? '64px' : '256px',
+        transition: 'width 300ms cubic-bezier(0.4,0,0.2,1)',
         backgroundColor: '#0d1117',
         borderRight: '1px solid var(--wh-border, #1e2535)',
         zIndex: 50,
@@ -217,52 +324,59 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       {/* Header */}
       <div
         style={{
-          padding: isCollapsed ? '16px 0' : '16px 12px',
+          padding: collapsed ? '16px 0' : '16px 12px',
           borderBottom: '1px solid var(--wh-border, #1e2535)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: isCollapsed ? 'center' : 'space-between',
+          justifyContent: collapsed ? 'center' : 'space-between',
           minHeight: '72px',
           transition: 'padding 300ms ease',
         }}
       >
         {/* Brand — hidden when collapsed */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '10px',
-          overflow: 'hidden',
-          maxWidth: isCollapsed ? '0px' : '160px',
-          opacity: isCollapsed ? 0 : 1,
-          transition: 'max-width 300ms ease, opacity 200ms ease',
-          whiteSpace: 'nowrap',
-        }}>
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-base flex-shrink-0"
-            style={{
-              background: 'linear-gradient(135deg, #D4AF37, #b8922a)',
-              color: '#000',
-              boxShadow: '0 2px 8px rgba(212,175,55,0.3)',
-            }}>
+        <div
+          className="sidebar-logo"
+          style={{
+            display: 'flex', alignItems: 'center', gap: '10px',
+            overflow: 'hidden',
+            maxWidth: collapsed ? '0px' : '160px',
+            opacity: collapsed ? 0 : 1,
+            transition: 'max-width 300ms ease, opacity 200ms ease',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <div
+            ref={logoRef}
+            className="logo-avatar w-9 h-9 rounded-xl flex items-center justify-center font-black text-base flex-shrink-0"
+            style={{ color: '#ffffff', cursor: 'default' }}
+            onMouseEnter={() => {
+              if (prefersReducedMotion() || !hasHoverPointer()) return
+              if (logoRef.current) animate(logoRef.current, { rotate: 3, scale: 1.04, duration: 200, ease: 'out(3)' })
+            }}
+            onMouseLeave={() => {
+              if (prefersReducedMotion()) return
+              if (logoRef.current) animate(logoRef.current, { rotate: 0, scale: 1, duration: 200, ease: 'out(3)' })
+            }}
+          >
             W
           </div>
           <div>
             <WealtHostBrand size="sm" />
-            <p style={{ color: '#4b5563', fontSize: '10px', margin: 0, letterSpacing: '0.02em' }}>Finanzas personales</p>
+            <p className="brand-subtitle" style={{ margin: 0 }}>Finanzas personales</p>
           </div>
         </div>
 
-        {/* Icon cluster when collapsed */}
-        {isCollapsed && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-base"
-              style={{ background: 'linear-gradient(135deg, #D4AF37, #b8922a)', color: '#000' }}>
-              W
-            </div>
+        {/* W icon when collapsed */}
+        {collapsed && (
+          <div className="logo-avatar w-8 h-8 rounded-xl flex items-center justify-center font-black text-base"
+            style={{ color: '#ffffff' }}>
+            W
           </div>
         )}
 
         {/* Action buttons — shown when expanded */}
-        {!isCollapsed && (
+        {!collapsed && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-            {/* Bell */}
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setShowAlerts(v => !v)}
@@ -278,8 +392,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 )}
               </button>
             </div>
-
-            {/* Balance toggle */}
             <button
               onClick={toggle}
               className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:bg-white/10"
@@ -287,8 +399,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             >
               {visible ? <Eye size={13} /> : <EyeOff size={13} />}
             </button>
-
-            {/* Theme toggle */}
             {mounted && (
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -299,41 +409,24 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
               </button>
             )}
-
           </div>
         )}
       </div>
 
-      {/* Toggle button */}
+      {/* ── Collapse toggle button */}
       <button
         onClick={onToggle}
-        style={{
-          position: 'absolute',
-          top: '22px',
-          right: isCollapsed ? '50%' : '12px',
-          transform: isCollapsed ? 'translateX(50%)' : 'none',
-          width: '28px',
-          height: '28px',
-          borderRadius: '8px',
-          border: 'none',
-          backgroundColor: 'transparent',
-          cursor: 'pointer',
-          display: isCollapsed ? 'flex' : 'none',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#4b5563',
-          transition: 'all 200ms ease',
-          zIndex: 10,
-        }}
-        title={isCollapsed ? 'Expandir' : 'Colapsar'}
+        className="sidebar-toggle-btn"
+        title={collapsed ? 'Expandir' : 'Colapsar'}
+        style={{ alignSelf: 'flex-end', marginBottom: '8px', marginTop: '8px', marginRight: collapsed ? 'auto' : '8px', marginLeft: collapsed ? 'auto' : undefined }}
       >
-        {isCollapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
+        {collapsed ? '›' : '‹'}
       </button>
 
-      {/* Collapsed icon row */}
-      {isCollapsed && (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', padding: '12px 0 8px' }}>
-          <NavTooltip label="Notificaciones" isCollapsed={isCollapsed}>
+      {/* Collapsed icon row — action buttons */}
+      {collapsed && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', padding: '4px 0 8px' }}>
+          <NavTooltip label="Notificaciones" isCollapsed={collapsed}>
             <button
               onClick={() => setShowAlerts(v => !v)}
               className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10"
@@ -348,7 +441,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               )}
             </button>
           </NavTooltip>
-          <NavTooltip label={visible ? 'Ocultar saldos' : 'Mostrar saldos'} isCollapsed={isCollapsed}>
+          <NavTooltip label={visible ? 'Ocultar saldos' : 'Mostrar saldos'} isCollapsed={collapsed}>
             <button onClick={toggle}
               className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10"
               style={{ color: visible ? '#4b5563' : '#D4AF37' }}>
@@ -356,7 +449,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             </button>
           </NavTooltip>
           {mounted && (
-            <NavTooltip label={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'} isCollapsed={isCollapsed}>
+            <NavTooltip label={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'} isCollapsed={collapsed}>
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                 className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10"
@@ -372,15 +465,14 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       {showAlerts && (
         <>
           <div className="fixed inset-0" style={{ zIndex: 9998 }} onClick={() => setShowAlerts(false)} />
-          <div className="fixed rounded-2xl shadow-2xl overflow-hidden"
+          <div className="notifications-panel fixed rounded-2xl shadow-2xl overflow-hidden"
             style={{
-              backgroundColor: '#1a1f2e', border: '1px solid #2a3040',
               width: '320px', top: '70px', left: notifLeft,
               maxHeight: '85vh', overflowY: 'auto', zIndex: 9999,
               transition: 'left 300ms cubic-bezier(0.4, 0, 0.2, 1)',
             }}>
-            <div className="flex items-center justify-between px-4 py-3 sticky top-0"
-              style={{ borderBottom: '1px solid #1e2535', backgroundColor: '#1a1f2e' }}>
+            <div className="notifications-panel flex items-center justify-between px-4 py-3 sticky top-0"
+              style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               <div className="flex items-center gap-2">
                 <Bell size={14} color={badgeColor} />
                 <p className="text-white font-semibold text-sm">Notificaciones</p>
@@ -400,7 +492,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
             {totalAlertas === 0 ? (
               <div className="px-4 py-8 text-center">
-                <p className="text-3xl mb-2">✅</p>
+                <p style={{ color: '#6b7280', fontSize: '24px', marginBottom: '8px' }}>✓</p>
                 <p className="text-white font-medium text-sm mb-1">Todo en orden</p>
                 <p style={{ color: '#6b7280', fontSize: '12px' }}>No hay alertas pendientes</p>
               </div>
@@ -421,7 +513,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                             </div>
                           ))}
                         </div>
-                        <p style={{ color: '#4b5563', fontSize: '10px', marginTop: '8px' }}>💡 Úsalo para planear la semana que viene</p>
+                        <p style={{ color: '#4b5563', fontSize: '10px', marginTop: '8px' }}>Úsalo para planear la semana que viene</p>
                       </div>
                     </div>
                   </div>
@@ -445,7 +537,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                               </span>
                             </div>
                             <p style={{ color: '#6b7280', fontSize: '11px', marginTop: '2px' }}>
-                              {a.name} · {sube ? '📈 Subiendo' : '📉 Cayendo'}
+                              {a.name} · {sube ? '↑ Subiendo' : '↓ Cayendo'}
                               {!sube && Math.abs(a.pct) >= 3 && ' — oportunidad de compra'}
                             </p>
                           </div>
@@ -477,7 +569,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                               <div className="h-full rounded-full" style={{ width: `${Math.min(100, a.pct)}%`, backgroundColor: color }} />
                             </div>
                             <p style={{ color: '#6b7280', fontSize: '11px' }}>
-                              {excedido ? `⚠️ Excediste en ${fmtCOP(a.gastado - a.limite)}` : `Quedan ${fmtCOP(a.limite - a.gastado)} disponibles`}
+                              {excedido ? `Excediste en ${fmtCOP(a.gastado - a.limite)}` : `Quedan ${fmtCOP(a.limite - a.gastado)} disponibles`}
                             </p>
                           </div>
                         </Link>
@@ -487,7 +579,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 )}
                 {goalAlerts.length > 0 && (
                   <div>
-                    <SectionLabel label="Metas — casi listas 🎉" color="#10b981" />
+                    <SectionLabel label="Metas — casi listas" color="#10b981" />
                     {goalAlerts.map(a => (
                       <Link key={a.id} href="/metas" onClick={() => setShowAlerts(false)}
                         className="flex items-center justify-between px-4 py-3 hover:bg-white/[0.03] transition-all"
@@ -506,7 +598,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                               style={{ width: `${a.pct}%`, background: 'linear-gradient(90deg, #10b981, #6366f1)' }} />
                           </div>
                           <p style={{ color: '#6b7280', fontSize: '11px' }}>
-                            {a.pct >= 95 ? `🔥 ¡Casi! Solo faltan ${fmtCOP(a.falta)}` : `💪 Vas muy bien, faltan ${fmtCOP(a.falta)}`}
+                            {a.pct >= 95 ? `Solo faltan ${fmtCOP(a.falta)}` : `Vas muy bien, faltan ${fmtCOP(a.falta)}`}
                           </p>
                         </div>
                       </Link>
@@ -539,8 +631,8 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 )}
               </>
             )}
-            <div className="px-4 py-3 sticky bottom-0"
-              style={{ backgroundColor: '#1a1f2e', borderTop: '1px solid #1e2535' }}>
+            <div className="notifications-panel px-4 py-3 sticky bottom-0"
+              style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
               <p style={{ color: '#4b5563', fontSize: '10px', textAlign: 'center' }}>Actualizado al abrir la app</p>
             </div>
           </div>
@@ -548,53 +640,74 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       )}
 
       {/* Nav */}
-      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-        {navItems.map(item => {
-          const active = pathname === item.href || pathname.startsWith(item.href + '/')
-          const Icon   = item.icon
-          return (
-            <NavTooltip key={item.href} label={item.label} tooltip={item.tooltip} isCollapsed={isCollapsed}>
-              <Link
-                href={item.href}
-                className={`flex items-center rounded-xl text-sm font-medium relative nav-item${active ? ' nav-item-active' : ''}`}
-                style={{
-                  gap: isCollapsed ? '0' : '10px',
-                  padding: isCollapsed ? '10px' : '9px 12px',
-                  justifyContent: isCollapsed ? 'center' : 'flex-start',
-                  color: active ? '#D4AF37' : '#6b7280',
-                }}
-              >
-                {active && !isCollapsed && (
-                  <div className="absolute left-0 top-1/2 w-0.5 h-5 rounded-r-full"
-                    style={{ backgroundColor: '#D4AF37', transform: 'translateY(-50%)' }} />
-                )}
-                <Icon size={17} strokeWidth={active ? 2.2 : 1.8} style={{ flexShrink: 0 }} />
-                <span style={{
-                  maxWidth: isCollapsed ? '0px' : '160px',
-                  opacity: isCollapsed ? 0 : 1,
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                  transition: 'max-width 300ms ease, opacity 200ms ease',
-                }}>
-                  {item.label}
-                </span>
-              </Link>
-            </NavTooltip>
-          )
-        })}
+      <nav className="flex-1 px-2 py-2 overflow-y-auto">
+        {navGroups.map((group, gi) => (
+          <div key={gi}>
+            {group.label && !collapsed && (
+              <p className="nav-section-label">{group.label}</p>
+            )}
+            <div className="space-y-0.5">
+              {group.items.map(item => {
+                const active = pathname === item.href || pathname.startsWith(item.href + '/')
+                const Icon   = item.icon
+                return (
+                  <NavTooltip key={item.href} label={item.label} tooltip={item.tooltip} isCollapsed={collapsed}>
+                    <Link
+                      href={item.href}
+                      title={collapsed ? item.tooltip : undefined}
+                      className={`flex items-center rounded-xl text-sm font-medium relative nav-item transition-all${active ? ' nav-item-active' : ''}`}
+                      style={{
+                        gap:            collapsed ? '0' : '10px',
+                        padding:        collapsed ? '10px' : '9px 12px',
+                        justifyContent: collapsed ? 'center' : 'flex-start',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (active || !hasHoverPointer() || prefersReducedMotion()) return
+                        animate(e.currentTarget, { translateX: 3, duration: 150, ease: 'out(3)' })
+                      }}
+                      onMouseLeave={(e) => {
+                        if (active || prefersReducedMotion()) return
+                        animate(e.currentTarget, { translateX: 0, duration: 150, ease: 'out(3)' })
+                      }}
+                    >
+                      {active && !collapsed && (
+                        <div
+                          ref={indicatorRef}
+                          className="absolute left-0 w-0.5 h-5 rounded-r-full nav-item-indicator"
+                          style={{ top: 'calc(50% - 10px)', transformOrigin: 'center bottom' }}
+                        />
+                      )}
+                      <Icon size={17} strokeWidth={active ? 2.2 : 1.8} style={{ flexShrink: 0 }} />
+                      <span style={{
+                        maxWidth:   collapsed ? '0px' : '160px',
+                        opacity:    collapsed ? 0 : 1,
+                        overflow:   'hidden',
+                        whiteSpace: 'nowrap',
+                        transition: 'max-width 300ms cubic-bezier(0.16,1,0.3,1), opacity 200ms ease',
+                      }}>
+                        {item.label}
+                      </span>
+                    </Link>
+                  </NavTooltip>
+                )
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* Footer */}
-      <div style={{ padding: isCollapsed ? '12px 0' : '12px', borderTop: '1px solid var(--wh-border, #1e2535)' }}>
-        <NavTooltip label="Cerrar sesión" isCollapsed={isCollapsed}>
+      <div style={{ padding: collapsed ? '12px 0' : '12px', borderTop: '1px solid var(--wh-border, #1e2535)' }}>
+        <NavTooltip label="Cerrar sesión" isCollapsed={collapsed}>
           <button
             onClick={handleLogout}
-            className="flex items-center rounded-xl text-sm font-medium w-full transition-all duration-200"
+            title={collapsed ? 'Cerrar sesión' : undefined}
+            className="sidebar-logout flex items-center rounded-xl text-sm font-medium w-full transition-all duration-200"
             style={{
-              gap: isCollapsed ? '0' : '10px',
-              padding: isCollapsed ? '10px' : '9px 12px',
-              justifyContent: isCollapsed ? 'center' : 'flex-start',
-              color: '#6b7280',
+              gap:            collapsed ? '0' : '10px',
+              padding:        collapsed ? '10px' : '9px 12px',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              color:          '#6b7280',
             }}
             onMouseEnter={e => {
               (e.currentTarget as HTMLElement).style.backgroundColor = '#ef444415'
@@ -607,19 +720,19 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           >
             <LogOut size={17} strokeWidth={1.8} style={{ flexShrink: 0 }} />
             <span style={{
-              maxWidth: isCollapsed ? '0px' : '160px',
-              opacity: isCollapsed ? 0 : 1,
-              overflow: 'hidden',
+              maxWidth:   collapsed ? '0px' : '160px',
+              opacity:    collapsed ? 0 : 1,
+              overflow:   'hidden',
               whiteSpace: 'nowrap',
-              transition: 'max-width 300ms ease, opacity 200ms ease',
+              transition: 'max-width 300ms cubic-bezier(0.16,1,0.3,1), opacity 200ms ease',
             }}>
               Cerrar sesión
             </span>
           </button>
         </NavTooltip>
-        {!isCollapsed && (
+        {!collapsed && (
           <p className="text-center mt-2" style={{ color: '#2a3040', fontSize: '10px', letterSpacing: '0.04em' }}>
-            WealthHost · v2.0
+            WealtHost · v2.0
           </p>
         )}
       </div>

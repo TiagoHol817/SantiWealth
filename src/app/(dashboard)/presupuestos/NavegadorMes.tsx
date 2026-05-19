@@ -22,17 +22,13 @@ export default function NavegadorMes({ mes, year }: { mes: number; year: number 
 
   return (
     <div className="flex items-center gap-3 mb-6">
-      <button onClick={anterior}
-        className="px-3 py-2 rounded-lg text-sm"
-        style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#e5e7eb' }}>
+      <button onClick={anterior} className="btn-secondary px-3 py-2 text-sm">
         ← Anterior
       </button>
       <span className="text-white font-medium" style={{ minWidth: '160px', textAlign: 'center' }}>
         {MESES[mes - 1]} {year}
       </span>
-      <button onClick={siguiente}
-        className="px-3 py-2 rounded-lg text-sm"
-        style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#e5e7eb' }}>
+      <button onClick={siguiente} className="btn-secondary px-3 py-2 text-sm">
         Siguiente →
       </button>
     </div>

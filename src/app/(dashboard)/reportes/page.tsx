@@ -158,7 +158,6 @@ export default async function ReportesPage({
           text: `Gastaste ${deltaGastos.toFixed(0)}% más que el mes pasado en total`,
         })
       }
-      // Per-category insights from current month gastos
       const gastosCurrMap: Record<string, number> = {}
       const gastosPrevMap: Record<string, number> = {}
       txHist?.filter(t => t.type === 'expense').forEach(t => {
@@ -169,7 +168,6 @@ export default async function ReportesPage({
         if (m === mesActual) gastosCurrMap[t.category ?? 'Otro'] = (gastosCurrMap[t.category ?? 'Otro'] ?? 0) + amt
         if (m === mesPrev)   gastosPrevMap[t.category ?? 'Otro'] = (gastosPrevMap[t.category ?? 'Otro'] ?? 0) + amt
       })
-      // Find category with biggest spike
       let maxDelta = 0; let maxCat = ''
       Object.entries(gastosCurrMap).forEach(([cat, v]) => {
         const p = gastosPrevMap[cat] ?? 0
@@ -186,7 +184,6 @@ export default async function ReportesPage({
       }
     }
 
-    // Savings rate comparison
     const currRate = curr.ingresos > 0 ? (curr.balance / curr.ingresos) * 100 : 0
     const prevRate = prev.ingresos > 0 ? (prev.balance / prev.ingresos) * 100 : 0
     if (prevRate > 0 && currRate < prevRate - 6) {
@@ -197,7 +194,6 @@ export default async function ReportesPage({
     }
   }
 
-  // Consecutive positive months
   let posConsecutivos = 0
   for (let i = cashflowArr.length - 1; i >= 0; i--) {
     if (cashflowArr[i].balance > 0) posConsecutivos++
@@ -221,15 +217,15 @@ export default async function ReportesPage({
   }
 
   return (
-    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb' }}>
+    <div className="space-y-6 pb-8">
 
       {/* Header */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden page-enter">
         <div className="blob-purple absolute -top-20 -right-20 opacity-40" style={{ width: '300px', height: '300px' }} />
         <div className="relative flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Reportes Financieros</h1>
-            <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
+            <h1 className="page-title">Reportes Financieros</h1>
+            <p className="page-subtitle">
               Estado de resultados · Balance general · Flujo de caja
             </p>
           </div>
@@ -242,18 +238,17 @@ export default async function ReportesPage({
       </div>
 
       {/* ── INSIGHTS AUTOMÁTICOS ─────────────────────────────────────────── */}
-      <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+      <div className="card card-purple overflow-hidden page-enter page-enter-delay-1">
         <div className="px-6 py-4 flex items-center justify-between"
-          style={{ borderBottom: '1px solid #2a3040', backgroundColor: '#0f1117' }}>
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div>
             <p className="text-white font-semibold">Insights automáticos</p>
-            <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '1px' }}>
+            <p className="text-muted" style={{ fontSize: '12px', marginTop: '1px' }}>
               Generados a partir de tu historial financiero
             </p>
           </div>
           {insightsList.length > 0 && (
-            <span className="px-2.5 py-1 rounded-full text-xs font-bold"
-              style={{ backgroundColor: '#ef444420', color: '#ef4444' }}>
+            <span className="badge badge-red">
               {insightsList.length} insight{insightsList.length !== 1 ? 's' : ''}
             </span>
           )}
@@ -262,7 +257,7 @@ export default async function ReportesPage({
           {insightsList.length === 0 ? (
             <div className="text-center py-6">
               <p className="text-3xl mb-2">📊</p>
-              <p style={{ color: '#6b7280', fontSize: '13px' }}>
+              <p className="text-muted" style={{ fontSize: '13px' }}>
                 Los insights aparecerán cuando tengas suficientes transacciones registradas.
               </p>
             </div>
@@ -271,7 +266,7 @@ export default async function ReportesPage({
               {insightsList.map((insight, i) => {
                 const c = insightColors[insight.type]
                 return (
-                  <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl fade-light"
+                  <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl"
                     style={{ backgroundColor: c.bg, border: `1px solid ${c.border}` }}>
                     <span style={{ fontSize: '14px', flexShrink: 0 }}>{c.dot}</span>
                     <p style={{ color: c.text, fontSize: '13px', fontWeight: '500' }}>{insight.text}</p>
@@ -285,39 +280,37 @@ export default async function ReportesPage({
 
       {/* Empty state */}
       {(txPeriodo?.length ?? 0) === 0 && cashflowArr.length === 0 && (
-        <div className="rounded-2xl p-16 text-center"
-          style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+        <div className="card p-16 text-center page-enter page-enter-delay-2">
           <p className="text-5xl mb-4">📋</p>
           <p className="text-white font-semibold text-lg mb-2">Aún no hay datos suficientes para generar reportes.</p>
-          <p style={{ color: '#6b7280', fontSize: '13px' }}>
+          <p className="text-muted" style={{ fontSize: '13px' }}>
             Cuando registres transacciones, aquí verás tu análisis completo.
           </p>
         </div>
       )}
 
       {/* Period banner */}
-      <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
+      <div className="flex items-center gap-3 px-4 py-3 rounded-xl page-enter page-enter-delay-2"
         style={{ backgroundColor: '#6366f115', border: '1px solid #6366f130' }}>
         <span style={{ fontSize: '16px' }}>📅</span>
-        <p style={{ color: '#9ca3af', fontSize: '13px' }}>
-          Mostrando datos de <strong style={{ color: '#e5e7eb' }}>{periodoLabel[periodo] ?? label}</strong>
+        <p className="text-muted" style={{ fontSize: '13px' }}>
+          Mostrando datos de <strong className="text-white">{periodoLabel[periodo] ?? label}</strong>
           {' · '}{desde !== hasta ? `${desde} → ${hasta}` : desde}
         </p>
       </div>
 
       {/* KPIs rápidos */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-4 gap-4 page-enter page-enter-delay-2">
         {[
           { label: 'Ingresos',     value: fmtCOP(totalIngresos),   color: '#10b981', sub: `${ingresos.length} transacciones`   },
           { label: 'Gastos',       value: fmtCOP(totalGastos),     color: '#ef4444', sub: `${gastos.length} transacciones`     },
           { label: 'Pagos deuda',  value: fmtCOP(totalPagosDeuda), color: '#f59e0b', sub: `${pagosDeuda.length} transacciones` },
           { label: 'Balance neto', value: fmtCOP(utilidadNeta),    color: utilidadNeta >= 0 ? '#10b981' : '#ef4444', sub: `Margen ${margenNeto.toFixed(1)}%` },
         ].map(item => (
-          <div key={item.label} className="rounded-2xl p-5 relative overflow-hidden"
-            style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+          <div key={item.label} className="card p-5 relative overflow-hidden card-interactive">
             <div className="absolute top-0 right-0 w-16 h-16 rounded-full opacity-10 blur-xl"
               style={{ background: item.color, transform: 'translate(30%,-30%)' }} />
-            <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>
+            <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>
               {item.label}
             </p>
             <HiddenValue value={item.value} className="tabular-nums font-bold"
@@ -328,14 +321,14 @@ export default async function ReportesPage({
       </div>
 
       {/* ── ESTADO DE RESULTADOS ─────────────────────────────────────────── */}
-      <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
+      <div className="card card-purple overflow-hidden page-enter page-enter-delay-3">
         <div className="px-6 py-4 flex items-center justify-between"
-          style={{ borderBottom: '1px solid #2a3040', backgroundColor: '#0f1117' }}>
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div>
             <p className="text-white font-semibold">Estado de Resultados</p>
-            <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '1px' }}>{periodoLabel[periodo] ?? label}</p>
+            <p className="text-muted" style={{ fontSize: '12px', marginTop: '1px' }}>{periodoLabel[periodo] ?? label}</p>
           </div>
-          <span className="text-xs px-3 py-1 rounded-full font-semibold"
+          <span className="px-3 py-1 rounded-full text-xs font-semibold"
             style={{ backgroundColor: utilidadNeta >= 0 ? '#10b98120' : '#ef444420', color: utilidadNeta >= 0 ? '#10b981' : '#ef4444' }}>
             {utilidadNeta >= 0 ? '✓ Utilidad' : '✗ Pérdida'}: {fmtCOP(Math.abs(utilidadNeta))}
           </span>
@@ -343,59 +336,59 @@ export default async function ReportesPage({
 
         <div className="p-6">
           <div className="mb-4">
-            <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
+            <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
               (+) Ingresos
             </p>
             {Object.keys(ingresosPorCat).length === 0 ? (
               <p style={{ color: '#4b5563', fontSize: '13px', padding: '8px 12px' }}>Sin ingresos en este período</p>
             ) : Object.entries(ingresosPorCat).sort((a,b) => b[1]-a[1]).map(([cat, monto]) => (
-              <div key={cat} className="flex justify-between py-2 px-3 rounded-lg mb-1" style={{ backgroundColor: '#0f1117' }}>
-                <span style={{ color: '#9ca3af', fontSize: '13px' }}>{cat}</span>
+              <div key={cat} className="stat-cell flex justify-between py-2 px-3 rounded-lg mb-1">
+                <span className="text-muted" style={{ fontSize: '13px' }}>{cat}</span>
                 <HiddenValue value={fmtCOP(monto)} className="tabular-nums font-medium" style={{ color: '#10b981', fontSize: '13px' }} />
               </div>
             ))}
             <div className="flex justify-between py-2 px-3 mt-1">
-              <span style={{ color: '#e5e7eb', fontSize: '13px', fontWeight: '600' }}>Total ingresos</span>
+              <span className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>Total ingresos</span>
               <HiddenValue value={fmtCOP(totalIngresos)} className="tabular-nums font-bold" style={{ color: '#10b981', fontSize: '14px' }} />
             </div>
           </div>
 
-          <div style={{ borderTop: '1px solid #1e2535', marginBottom: '16px' }} />
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginBottom: '16px' }} />
 
           <div className="mb-4">
-            <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
+            <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
               (−) Gastos operacionales
             </p>
             {Object.keys(gastosPorCat).length === 0 ? (
               <p style={{ color: '#4b5563', fontSize: '13px', padding: '8px 12px' }}>Sin gastos en este período</p>
             ) : Object.entries(gastosPorCat).sort((a,b) => b[1]-a[1]).map(([cat, monto]) => (
-              <div key={cat} className="flex justify-between py-2 px-3 rounded-lg mb-1" style={{ backgroundColor: '#0f1117' }}>
-                <span style={{ color: '#9ca3af', fontSize: '13px' }}>{cat}</span>
+              <div key={cat} className="stat-cell flex justify-between py-2 px-3 rounded-lg mb-1">
+                <span className="text-muted" style={{ fontSize: '13px' }}>{cat}</span>
                 <HiddenValue value={fmtCOP(monto)} className="tabular-nums font-medium" style={{ color: '#ef4444', fontSize: '13px' }} />
               </div>
             ))}
             <div className="flex justify-between py-2 px-3 mt-1">
-              <span style={{ color: '#e5e7eb', fontSize: '13px', fontWeight: '600' }}>Total gastos</span>
+              <span className="text-white" style={{ fontSize: '13px', fontWeight: '600' }}>Total gastos</span>
               <HiddenValue value={fmtCOP(totalGastos)} className="tabular-nums font-bold" style={{ color: '#ef4444', fontSize: '14px' }} />
             </div>
           </div>
 
           {totalPagosDeuda > 0 && (
             <>
-              <div style={{ borderTop: '1px solid #1e2535', marginBottom: '16px' }} />
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginBottom: '16px' }} />
               <div className="mb-4">
-                <p style={{ color: '#6b7280', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
+                <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
                   (−) Pagos de deuda
                 </p>
-                <div className="flex justify-between py-2 px-3 rounded-lg mb-1" style={{ backgroundColor: '#0f1117' }}>
-                  <span style={{ color: '#9ca3af', fontSize: '13px' }}>Obligaciones financieras</span>
+                <div className="stat-cell flex justify-between py-2 px-3 rounded-lg mb-1">
+                  <span className="text-muted" style={{ fontSize: '13px' }}>Obligaciones financieras</span>
                   <HiddenValue value={fmtCOP(totalPagosDeuda)} className="tabular-nums font-medium" style={{ color: '#f59e0b', fontSize: '13px' }} />
                 </div>
               </div>
             </>
           )}
 
-          <div style={{ borderTop: '1px solid #2a3040', marginBottom: '12px' }} />
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginBottom: '12px' }} />
 
           <div className="flex justify-between items-center py-3 px-4 rounded-xl"
             style={{ backgroundColor: utilidadNeta >= 0 ? '#10b98115' : '#ef444415', border: `1px solid ${utilidadNeta >= 0 ? '#10b98130' : '#ef444430'}` }}>
@@ -403,7 +396,7 @@ export default async function ReportesPage({
               <p style={{ color: utilidadNeta >= 0 ? '#10b981' : '#ef4444', fontSize: '14px', fontWeight: '700' }}>
                 {utilidadNeta >= 0 ? '✓ Utilidad neta del período' : '✗ Pérdida neta del período'}
               </p>
-              <p style={{ color: '#6b7280', fontSize: '11px', marginTop: '2px' }}>Margen neto: {margenNeto.toFixed(1)}%</p>
+              <p className="text-muted" style={{ fontSize: '11px', marginTop: '2px' }}>Margen neto: {margenNeto.toFixed(1)}%</p>
             </div>
             <HiddenValue value={fmtCOP(Math.abs(utilidadNeta))} className="tabular-nums font-black"
               style={{ color: utilidadNeta >= 0 ? '#10b981' : '#ef4444', fontSize: '22px' }} />
@@ -412,9 +405,9 @@ export default async function ReportesPage({
       </div>
 
       {/* ── BALANCE GENERAL ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-          <div className="px-6 py-4" style={{ borderBottom: '1px solid #2a3040', backgroundColor: '#0f1117' }}>
+      <div className="grid grid-cols-2 gap-4 page-enter page-enter-delay-4">
+        <div className="card card-purple overflow-hidden">
+          <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <p className="text-white font-semibold">Activos</p>
             <HiddenValue value={fmtCOP(totalActivos)} className="tabular-nums font-black mt-1"
               style={{ color: '#10b981', fontSize: '20px' }} />
@@ -424,9 +417,9 @@ export default async function ReportesPage({
               { label: 'Efectivo / Bancos / CDTs',  value: totalBancos,   color: '#10b981' },
               { label: 'Portafolio de inversiones', value: totalInvCOP,   color: '#6366f1', sub: formatUSD(totalInvUSD) + ' USD' },
             ].map(item => (
-              <div key={item.label} className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: '#0f1117' }}>
+              <div key={item.label} className="stat-cell flex items-center justify-between p-3 rounded-xl">
                 <div>
-                  <p style={{ color: '#e5e7eb', fontSize: '13px' }}>{item.label}</p>
+                  <p className="text-white" style={{ fontSize: '13px' }}>{item.label}</p>
                   {item.sub && <p style={{ color: '#4b5563', fontSize: '11px' }}>{item.sub}</p>}
                 </div>
                 <HiddenValue value={fmtCOP(item.value)} className="tabular-nums font-semibold"
@@ -436,15 +429,15 @@ export default async function ReportesPage({
           </div>
         </div>
 
-        <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-          <div className="px-6 py-4" style={{ borderBottom: '1px solid #2a3040', backgroundColor: '#0f1117' }}>
+        <div className="card card-purple overflow-hidden">
+          <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <p className="text-white font-semibold">Pasivos + Patrimonio</p>
             <HiddenValue value={fmtCOP(totalActivos)} className="tabular-nums font-black mt-1"
               style={{ color: '#6366f1', fontSize: '20px' }} />
           </div>
           <div className="p-4 space-y-2">
-            <div className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: '#0f1117' }}>
-              <p style={{ color: '#e5e7eb', fontSize: '13px' }}>Pasivos (deudas)</p>
+            <div className="stat-cell flex items-center justify-between p-3 rounded-xl">
+              <p className="text-white" style={{ fontSize: '13px' }}>Pasivos (deudas)</p>
               <HiddenValue value={fmtCOP(totalPasivos)} className="tabular-nums font-semibold"
                 style={{ color: '#ef4444', fontSize: '14px' }} />
             </div>
@@ -461,8 +454,8 @@ export default async function ReportesPage({
                 <span style={{ color: '#4b5563' }}>Activos cubiertos</span>
                 <span style={{ color: '#6366f1' }}>{totalActivos > 0 ? Math.round((patrimonioNeto / totalActivos) * 100) : 0}%</span>
               </div>
-              <div className="rounded-full overflow-hidden" style={{ height: '5px', backgroundColor: '#0f1117' }}>
-                <div className="h-full rounded-full"
+              <div className="progress-track">
+                <div className="progress-fill"
                   style={{ width: `${totalActivos > 0 ? Math.max(0, (patrimonioNeto / totalActivos) * 100) : 0}%`, backgroundColor: '#6366f1' }} />
               </div>
             </div>
@@ -472,21 +465,17 @@ export default async function ReportesPage({
 
       {/* ── FLUJO DE CAJA ────────────────────────────────────────────────── */}
       {cashflowArr.length >= 1 && (
-        <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040' }}>
-          <div className="px-6 py-4" style={{ borderBottom: '1px solid #2a3040', backgroundColor: '#0f1117' }}>
+        <div className="card overflow-hidden page-enter page-enter-delay-5">
+          <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <p className="text-white font-semibold">Flujo de Caja histórico</p>
-            <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '1px' }}>Últimos {cashflowArr.length} meses registrados</p>
+            <p className="text-muted" style={{ fontSize: '12px', marginTop: '1px' }}>Últimos {cashflowArr.length} meses registrados</p>
           </div>
           <div className="overflow-x-auto">
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+            <table className="data-table w-full">
               <thead>
-                <tr style={{ borderBottom: '1px solid #2a3040' }}>
+                <tr>
                   {['Mes', 'Ingresos', 'Gastos', 'Deudas', 'Balance', 'Margen'].map((h, i) => (
-                    <th key={h} style={{
-                      padding: '10px 16px', fontWeight: '500', fontSize: '11px',
-                      color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em',
-                      textAlign: i === 0 ? 'left' : 'right',
-                    }}>
+                    <th key={h} style={{ textAlign: i === 0 ? 'left' : 'right' }}>
                       {h}
                     </th>
                   ))}
@@ -499,26 +488,26 @@ export default async function ReportesPage({
                   return (
                     <tr key={row.mes}
                       style={{
-                        borderBottom: i < cashflowArr.length - 1 ? '1px solid #1e2535' : 'none',
+                        borderBottom: i < cashflowArr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                         backgroundColor: isCurr ? '#10b98108' : 'transparent',
                       }}>
-                      <td style={{ padding: '10px 16px', color: isCurr ? '#10b981' : '#e5e7eb', fontWeight: isCurr ? '600' : '400' }}>
+                      <td style={{ color: isCurr ? '#10b981' : undefined, fontWeight: isCurr ? '600' : '400' }}>
                         {row.label} {isCurr && '←'}
                       </td>
-                      <td style={{ padding: '10px 16px', textAlign: 'right' }}>
+                      <td style={{ textAlign: 'right' }}>
                         <HiddenValue value={fmtCOP(row.ingresos)} className="tabular-nums" style={{ color: '#10b981' }} />
                       </td>
-                      <td style={{ padding: '10px 16px', textAlign: 'right' }}>
+                      <td style={{ textAlign: 'right' }}>
                         <HiddenValue value={fmtCOP(row.gastos)} className="tabular-nums" style={{ color: '#ef4444' }} />
                       </td>
-                      <td style={{ padding: '10px 16px', textAlign: 'right' }}>
+                      <td style={{ textAlign: 'right' }}>
                         <HiddenValue value={fmtCOP(row.deudas)} className="tabular-nums" style={{ color: '#f59e0b' }} />
                       </td>
-                      <td style={{ padding: '10px 16px', textAlign: 'right' }}>
+                      <td style={{ textAlign: 'right' }}>
                         <HiddenValue value={fmtCOP(row.balance)} className="tabular-nums font-semibold"
                           style={{ color: row.balance >= 0 ? '#10b981' : '#ef4444' }} />
                       </td>
-                      <td style={{ padding: '10px 16px', textAlign: 'right' }}>
+                      <td style={{ textAlign: 'right' }}>
                         {margin !== null ? (
                           <span className="font-semibold" style={{ color: Number(margin) >= 0 ? '#10b981' : '#ef4444', fontSize: '11px' }}>
                             {margin}%

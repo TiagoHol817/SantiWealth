@@ -33,10 +33,10 @@ interface Props {
 }
 
 export default function SmartGreeting({ userName, subtitle }: Props) {
-  const [mounted,           setMounted]           = useState(false)
-  const [timeStr,           setTimeStr]           = useState('')
-  const [tzLabel,           setTzLabel]           = useState('')
-  const [motivationalLine,  setMotivationalLine]  = useState('Resumen de tu patrimonio')
+  const [mounted,          setMounted]          = useState(false)
+  const [timeStr,          setTimeStr]          = useState('')
+  const [tzLabel,          setTzLabel]          = useState('')
+  const [motivationalLine, setMotivationalLine] = useState('Resumen de tu patrimonio')
 
   useEffect(() => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -48,7 +48,6 @@ export default function SmartGreeting({ userName, subtitle }: Props) {
     }
 
     setMounted(true)
-    // Generate motivational greeting once on mount (random — don't regenerate every minute)
     setMotivationalLine(subtitle ?? getGreeting(userName))
     update()
     const id = setInterval(update, 60_000)
@@ -58,19 +57,19 @@ export default function SmartGreeting({ userName, subtitle }: Props) {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold tracking-tight text-white" style={{ lineHeight: 1.2 }}>
-        {mounted ? 'Hola' : 'Hola'},{' '}
-        <span style={{ color: '#D4AF37', fontWeight: 600 }}>{userName}</span>
-        <span style={{ color: '#D4AF37' }}>.</span>
+      <h1 className="greeting-hola text-3xl font-bold tracking-tight" style={{ lineHeight: 1.2 }}>
+        Hola,{' '}
+        <span className="greeting-name" style={{ fontWeight: 600 }}>{userName}</span>
+        <span className="greeting-name">.</span>
       </h1>
-      <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '5px' }}>
+      <p className="greeting-subtitle" style={{ fontSize: '14px', marginTop: '5px' }}>
         {mounted ? motivationalLine : 'Resumen de tu patrimonio'}
       </p>
       <div className="flex items-center gap-1.5 mt-2" style={{ minHeight: '18px' }}>
         {mounted && (
           <>
-            <Clock size={12} style={{ color: '#4b5563' }} />
-            <span suppressHydrationWarning style={{ color: '#4b5563', fontSize: '12px' }}>
+            <Clock size={12} className="greeting-clock" />
+            <span suppressHydrationWarning className="greeting-clock" style={{ fontSize: '12px' }}>
               {timeStr} · {tzLabel}
             </span>
           </>

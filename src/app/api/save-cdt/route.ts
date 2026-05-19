@@ -14,20 +14,25 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
-    const { error } = await supabase.from('accounts').insert({
+    const startDate    = sanitizeDate(body.apertura)
+    const maturityDate = sanitizeDate(body.vencimiento)
+
+    if (!startDate || !maturityDate) {
+      return NextResponse.json({ success: false, error: 'Fechas inválidas' }, { status: 400 })
+    }
+
+    const { error } = await supabase.from('cdts').insert({
       user_id:         user.id,
-      name:            sanitizeText(body.nombre, 120),
-      type:            'other',
+      institution:     sanitizeText(body.bank ?? body.institution ?? 'Bancolombia', 100),
+      name:            sanitizeText(body.nombre, 120) || null,
+      principal:       sanitizeAmount(body.capital),
       currency:        'COP',
-      current_balance: sanitizeAmount(body.capital),
-      notes:           JSON.stringify({
-        apertura:        sanitizeDate(body.apertura)    ?? '',
-        vencimiento:     sanitizeDate(body.vencimiento) ?? '',
-        tasa_ea:         Number(body.tasa_ea)        || 0,
-        tasa_nominal:    Number(body.tasa_nominal)    || 0,
-        plazo_dias:      Number(body.plazo_dias)      || 0,
-        interes_periodo: Number(body.interes_periodo)  || 0,
-      }),
+      annual_rate_ea:  Number(body.tasa_ea) || 0,
+      start_date:      startDate,
+      maturity_date:   maturityDate,
+      accrued_interest: Number(body.interes_periodo) || 0,
+      notes:           body.tasa_nominal ? `tasa_nominal: ${Number(body.tasa_nominal)}` : null,
+      status:          'active',
     })
 
     if (error) {

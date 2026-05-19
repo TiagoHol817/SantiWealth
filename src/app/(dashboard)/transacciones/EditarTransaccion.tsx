@@ -21,14 +21,14 @@ export default function EditarTransaccion({
   id: string; amount: number; description: string; category: string
   date: string; accounts: any[]; accountId: string; type: string
 }) {
-  const [open, setOpen]     = useState(false)
+  const [open, setOpen]       = useState(false)
   const [loading, setLoading] = useState(false)
-  const [amt, setAmt]       = useState(amount.toString())
-  const [desc, setDesc]     = useState(description ?? '')
-  const [cat, setCat]       = useState(category)
-  const [dt, setDt]         = useState(date)
-  const [accId, setAccId]   = useState(accountId)
-  const [txType, setTxType] = useState(type)
+  const [amt, setAmt]         = useState(amount.toString())
+  const [desc, setDesc]       = useState(description ?? '')
+  const [cat, setCat]         = useState(category)
+  const [dt, setDt]           = useState(date)
+  const [accId, setAccId]     = useState(accountId)
+  const [txType, setTxType]   = useState(type)
 
   const router    = useRouter()
   const { toast } = useToast()
@@ -43,12 +43,12 @@ export default function EditarTransaccion({
       const supabase = createClient()
       const cleanAmt = Number(amt.toString().replace(/\./g, '').replace(/,/g, ''))
       const { error } = await supabase.from('transactions').update({
-        amount:     cleanAmt,
+        amount:      cleanAmt,
         description: desc,
-        category:   cat,
-        date:       dt,
-        account_id: accId,
-        type:       txType,
+        category:    cat,
+        date:        dt,
+        account_id:  accId,
+        type:        txType,
       }).eq('id', id)
 
       if (error) throw error
@@ -79,20 +79,10 @@ export default function EditarTransaccion({
     }
   }
 
-  const inp = {
-    width: '100%', padding: '8px 12px', borderRadius: '10px', fontSize: '13px',
-    backgroundColor: '#0f1117', border: '1px solid #2a3040', color: '#e5e7eb', outline: 'none'
-  }
-  const lbl = {
-    color: '#6b7280', fontSize: '11px', marginBottom: '4px',
-    display: 'block' as const, letterSpacing: '0.05em', textTransform: 'uppercase' as const
-  }
-
   if (!open) return (
     <button
       onClick={() => setOpen(true)}
-      className="w-8 h-8 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10"
-      style={{ color: '#4b5563' }}>
+      className="w-8 h-8 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10 text-muted">
       <Pencil size={13} />
     </button>
   )
@@ -100,14 +90,13 @@ export default function EditarTransaccion({
   return (
     <>
       <div className="fixed inset-0 z-40" style={{ backgroundColor: '#00000080' }} onClick={() => setOpen(false)} />
-      <div className="fixed z-50 rounded-2xl p-6 w-full max-w-md shadow-2xl"
-        style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }}>
+      <div className="card fixed z-50 p-6 w-full max-w-md shadow-2xl"
+        style={{ top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }}>
 
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-white font-semibold text-lg">Editar transacción</h3>
           <button onClick={() => setOpen(false)}
-            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10"
-            style={{ color: '#6b7280' }}>
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 text-muted">
             <X size={16} />
           </button>
         </div>
@@ -126,9 +115,9 @@ export default function EditarTransaccion({
               }}
               className="flex-1 py-2 rounded-xl text-sm font-medium transition-all"
               style={{
-                backgroundColor: txType === val ? color + '25' : '#0f1117',
+                backgroundColor: txType === val ? color + '25' : 'rgba(255,255,255,0.04)',
                 color:           txType === val ? color : '#6b7280',
-                border:          `1px solid ${txType === val ? color + '60' : '#2a3040'}`,
+                border:          `1px solid ${txType === val ? color + '60' : 'rgba(255,255,255,0.08)'}`,
               }}>
               {label}
             </button>
@@ -138,28 +127,28 @@ export default function EditarTransaccion({
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label style={lbl}>Monto (COP)</label>
-              <input style={inp} value={amt} onChange={e => setAmt(e.target.value)} placeholder="0" />
+              <label className="form-label">Monto (COP)</label>
+              <input className="form-input" value={amt} onChange={e => setAmt(e.target.value)} placeholder="0" />
             </div>
             <div>
-              <label style={lbl}>Fecha</label>
-              <input type="date" style={{ ...inp, colorScheme: 'dark' }} value={dt} onChange={e => setDt(e.target.value)} />
+              <label className="form-label">Fecha</label>
+              <input type="date" className="form-input" style={{ colorScheme: 'dark' }} value={dt} onChange={e => setDt(e.target.value)} />
             </div>
           </div>
           <div>
-            <label style={lbl}>Descripción</label>
-            <input style={inp} value={desc} onChange={e => setDesc(e.target.value)} placeholder="Descripción" />
+            <label className="form-label">Descripción</label>
+            <input className="form-input" value={desc} onChange={e => setDesc(e.target.value)} placeholder="Descripción" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label style={lbl}>Categoría</label>
-              <select style={inp} value={cat} onChange={e => setCat(e.target.value)}>
+              <label className="form-label">Categoría</label>
+              <select className="form-input" value={cat} onChange={e => setCat(e.target.value)}>
                 {cats.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
-              <label style={lbl}>Cuenta</label>
-              <select style={inp} value={accId} onChange={e => setAccId(e.target.value)}>
+              <label className="form-label">Cuenta</label>
+              <select className="form-input" value={accId} onChange={e => setAccId(e.target.value)}>
                 {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
@@ -173,14 +162,12 @@ export default function EditarTransaccion({
             <Trash2 size={13} /> Eliminar
           </button>
           <div className="flex gap-2">
-            <button onClick={() => setOpen(false)}
-              className="px-4 py-2 rounded-xl text-sm font-medium"
-              style={{ backgroundColor: '#0f1117', color: '#6b7280' }}>
+            <button onClick={() => setOpen(false)} className="btn-secondary px-4 py-2 text-sm">
               Cancelar
             </button>
             <button onClick={handleSave} disabled={loading}
-              className="px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2"
-              style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8922a 100%)', color: '#0f1117', opacity: loading ? 0.7 : 1 }}>
+              className="btn-primary px-4 py-2 text-sm flex items-center gap-2"
+              style={{ opacity: loading ? 0.7 : 1 }}>
               <Check size={14} />
               {loading ? 'Guardando...' : 'Guardar'}
             </button>

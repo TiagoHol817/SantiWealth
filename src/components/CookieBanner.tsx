@@ -150,7 +150,7 @@ export default function CookieBanner() {
               {/* Functional */}
               <ConsentRow
                 label="Cookies funcionales"
-                description="Recuerdan tus preferencias de vista y configuración para que cada vez que entres, WealthHost se sienta como tuyo."
+                description="Recuerdan tus preferencias de vista y configuración para que cada vez que entres, WealtHost se sienta como tuyo."
                 checked={prefs.functional}
                 locked={false}
                 onChange={v => setPrefs(p => ({ ...p, functional: v }))}

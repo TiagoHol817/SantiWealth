@@ -200,7 +200,7 @@ function Navbar() {
         {/* Logo */}
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#D4AF37', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f1117', fontWeight: 800, fontSize: '16px', flexShrink: 0 }}>W</div>
-          <span style={{ color: '#fff', fontWeight: 700, fontSize: '16px' }}>WealthHost</span>
+          <span style={{ color: '#fff', fontWeight: 700, fontSize: '16px' }}>WealtHost</span>
         </Link>
 
         {/* Desktop links */}
@@ -272,7 +272,7 @@ function HeroSection() {
 
           <FadeIn delay={160}>
             <p style={{ color: '#9ca3af', fontSize: '17px', lineHeight: 1.75, marginBottom: '36px', maxWidth: '470px' }}>
-              WealthHost consolida tus cuentas, inversiones, presupuestos y metas en un solo lugar.
+              WealtHost consolida tus cuentas, inversiones, presupuestos y metas en un solo lugar.
               Con IA que categoriza, analiza y te dice exactamente qué hacer con tu dinero.
             </p>
           </FadeIn>
@@ -378,7 +378,7 @@ const FEATURES = [
   {
     icon: '🎯', tag: 'Metas y Presupuestos', reverse: false,
     title: 'Sabe exactamente cuándo alcanzarás tus sueños',
-    body: 'Define una meta financiera y WealthHost calcula cuánto ahorrar por mes para lograrlo. Los presupuestos te avisan antes de que te pases del límite.',
+    body: 'Define una meta financiera y WealtHost calcula cuánto ahorrar por mes para lograrlo. Los presupuestos te avisan antes de que te pases del límite.',
     Visual: MockGoal,
   },
 ]
@@ -513,7 +513,7 @@ function HowItWorksSection() {
   const steps = [
     { num: '01', icon: '✨', color: '#00d4aa', title: 'Crea tu cuenta gratis',       desc: 'Sin tarjeta de crédito. En menos de 2 minutos estás dentro y listo para empezar.' },
     { num: '02', icon: '🔗', color: '#6366f1', title: 'Conecta tus finanzas',        desc: 'Importa extractos CSV de cualquier banco colombiano o agrega tus cuentas manualmente.' },
-    { num: '03', icon: '🎯', color: '#f59e0b', title: 'Toma decisiones que importan', desc: 'Con datos reales, no suposiciones. WealthHost te dice exactamente qué hacer con tu dinero.' },
+    { num: '03', icon: '🎯', color: '#f59e0b', title: 'Toma decisiones que importan', desc: 'Con datos reales, no suposiciones. WealtHost te dice exactamente qué hacer con tu dinero.' },
   ]
   return (
     <section style={{ padding: '80px 24px' }}>
@@ -646,7 +646,7 @@ const FAQS = [
   { q: '¿Es realmente gratis?', a: 'Sí. El plan gratuito incluye 3 cuentas, importación de extractos y dashboard completo. Sin tarjeta de crédito requerida.' },
   { q: '¿Mis datos financieros están seguros?', a: 'Tus datos se almacenan con encriptación de nivel bancario y nunca se venden ni se comparten con terceros. Tú tienes control total.' },
   { q: '¿Funciona con bancos colombianos?', a: 'Sí. Soportamos importación desde Bancolombia, Davivienda, Nequi, Nu, BBVA y más, en formato CSV o XLS.' },
-  { q: '¿Necesito saber de finanzas para usar WealthHost?', a: 'No. WealthHost está diseñado para que cualquier persona entienda su situación financiera sin ser experto. La IA te guía paso a paso.' },
+  { q: '¿Necesito saber de finanzas para usar WealtHost?', a: 'No. WealtHost está diseñado para que cualquier persona entienda su situación financiera sin ser experto. La IA te guía paso a paso.' },
   { q: '¿Puedo cancelar en cualquier momento?', a: 'Sí, sin penalizaciones ni trámites. Cancelas en un clic desde tu perfil y tus datos siguen siendo tuyos.' },
 ]
 
@@ -703,7 +703,7 @@ function CTASection() {
               Tu mejor decisión financiera empieza hoy
             </h2>
             <p style={{ color: '#9ca3af', fontSize: '17px', maxWidth: '500px', margin: '0 auto 36px', position: 'relative' }}>
-              Únete a las personas que ya controlan su patrimonio con WealthHost
+              Únete a las personas que ya controlan su patrimonio con WealtHost
             </p>
             <Link href="/auth/register" style={{
               display: 'inline-flex', alignItems: 'center', gap: '8px',
@@ -734,7 +734,7 @@ function Footer() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ width: '30px', height: '30px', borderRadius: '8px', backgroundColor: '#D4AF37', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f1117', fontWeight: 800, fontSize: '15px' }}>W</div>
             <div>
-              <p style={{ color: '#fff', fontWeight: 700, fontSize: '15px', margin: 0 }}>WealthHost</p>
+              <p style={{ color: '#fff', fontWeight: 700, fontSize: '15px', margin: 0 }}>WealtHost</p>
               <p style={{ color: '#4b5563', fontSize: '11px', margin: 0 }}>Finanzas personales inteligentes</p>
             </div>
           </div>
@@ -750,7 +750,7 @@ function Footer() {
         </div>
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
           <p style={{ color: '#4b5563', fontSize: '12px', textAlign: 'center' }}>
-            © 2026 WealthHost. Hecho con ❤️ en Colombia 🇨🇴
+            © 2026 WealtHost. Hecho con ❤️ en Colombia 🇨🇴
           </p>
         </div>
       </div>

@@ -864,7 +864,7 @@ export default function ImportarPage() {
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight">Importa tu historial financiero</h1>
             <p style={{ color: '#6b7280', fontSize: '13px', marginTop: '2px' }}>
-              Los que conocen sus números toman mejores decisiones. Sube tu extracto y WealthHost hace el resto.
+              Los que conocen sus números toman mejores decisiones. Sube tu extracto y WealtHost hace el resto.
             </p>
           </div>
         </div>
@@ -875,7 +875,7 @@ export default function ImportarPage() {
           <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>🔒</span>
           <p style={{ color: '#6b7280', fontSize: '12px', lineHeight: 1.7 }}>
             Al subir este archivo confirmas que es tu propio extracto bancario y autorizas a{' '}
-            <strong style={{ color: '#9ca3af' }}>WealthHost</strong> procesarlo exclusivamente para tu cuenta
+            <strong style={{ color: '#9ca3af' }}>WealtHost</strong> procesarlo exclusivamente para tu cuenta
             personal. Tus datos nunca se comparten ni se venden. Cumplimos con la{' '}
             <strong style={{ color: '#9ca3af' }}>Ley 1581 de 2012</strong> de Protección de Datos de Colombia.
           </p>
@@ -1061,7 +1061,7 @@ export default function ImportarPage() {
                 ¡{selectedRows.length} transacciones importadas!
               </p>
               <p style={{ color: 'rgba(229,231,235,0.5)', fontSize: '13px', lineHeight: 1.7, marginBottom: '20px' }}>
-                Tu historial financiero ya está en WealthHost.<br />
+                Tu historial financiero ya está en WealtHost.<br />
                 Los que conocen sus números, deciden mejor.
               </p>
               <div className="flex gap-3 justify-center">

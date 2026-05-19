@@ -34,7 +34,7 @@ function RadialProgress({ pct, color, size = 120 }: { pct: number; color: string
   const dash = (Math.min(pct, 100) / 100) * circ
   return (
     <svg width={size} height={size} viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r={r} fill="none" stroke="#0f1117" strokeWidth="8" />
+      <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="8" />
       <circle cx="50" cy="50" r={r} fill="none"
         stroke={color} strokeWidth="8"
         strokeDasharray={`${dash} ${circ}`}
@@ -42,7 +42,7 @@ function RadialProgress({ pct, color, size = 120 }: { pct: number; color: string
         transform="rotate(-90 50 50)"
         style={{ filter: `drop-shadow(0 0 6px ${color}88)` }} />
       <text x="50" y="50" textAnchor="middle" dominantBaseline="central"
-        fill={color} fontSize="18" fontWeight="bold" fontFamily="Roboto, sans-serif">
+        fill={color} fontSize="18" fontWeight="bold" fontFamily="inherit">
         {Math.min(pct, 100)}%
       </text>
     </svg>
@@ -65,9 +65,9 @@ function HitosBadges({ pct }: { pct: number }) {
           <div key={h.pct}
             className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all"
             style={{
-              backgroundColor: alcanzado ? h.color + '25' : '#1e2535',
+              backgroundColor: alcanzado ? h.color + '25' : 'rgba(255,255,255,0.05)',
               color:           alcanzado ? h.color        : '#4b5563',
-              border:          `1px solid ${alcanzado ? h.color + '50' : '#2a3040'}`,
+              border:          `1px solid ${alcanzado ? h.color + '50' : 'rgba(255,255,255,0.08)'}`,
             }}>
             {alcanzado && <span style={{ fontSize: '9px' }}>✓</span>}
             {h.label}
@@ -106,7 +106,6 @@ export default async function MetasPage() {
   const now    = new Date()
   const mesStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
-  // Last 6 months for streak computation
   const hace6 = new Date(now)
   hace6.setMonth(hace6.getMonth() - 5)
   const desdeHace6 = `${hace6.getFullYear()}-${String(hace6.getMonth() + 1).padStart(2,'0')}-01`
@@ -122,7 +121,6 @@ export default async function MetasPage() {
   const gastosMes   = txMes?.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0) ?? 0
   const ahorroMes   = Math.max(0, ingresosMes - gastosMes)
 
-  // Compute streak (consecutive months with positive balance, most recent first)
   const monthlyBalance: Record<string, number> = {}
   txRecent?.forEach(t => {
     const m = t.date.slice(0, 7)
@@ -143,7 +141,6 @@ export default async function MetasPage() {
   const pctGlobal     = totalMeta ? Math.min(100, Math.round((totalAhorrado / totalMeta) * 100)) : 0
   const faltaTotal    = Math.max(0, totalMeta - totalAhorrado)
 
-  // Avg months to reach goals (only non-completed with ahorroMes > 0)
   const mesesPromedioArr = (goals ?? [])
     .filter(g => Number(g.current_amount) < Number(g.target_amount) && ahorroMes > 0)
     .map(g => Math.ceil((Number(g.target_amount) - Number(g.current_amount)) / ahorroMes))
@@ -152,19 +149,18 @@ export default async function MetasPage() {
     : null
 
   return (
-    <div className="space-y-6 pb-8" style={{ color: '#e5e7eb', background: 'radial-gradient(ellipse at top right, rgba(99,102,241,0.05) 0%, transparent 55%)' }}>
+    <div className="space-y-6 pb-8" style={{ background: 'radial-gradient(ellipse at top right, rgba(99,102,241,0.05) 0%, transparent 55%)' }}>
 
       {/* Header */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden page-enter">
         <div className="blob-amber absolute -top-20 -right-20 opacity-40" style={{ width: '300px', height: '300px' }} />
         <div className="relative flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Metas Financieras</h1>
+            <h1 className="page-title">Metas Financieras</h1>
             <div className="flex items-center gap-3 mt-1">
-              <p style={{ color: '#6b7280', fontSize: '14px' }}>Tu carrera hacia la libertad financiera</p>
+              <p className="page-subtitle">Tu carrera hacia la libertad financiera</p>
               {racha >= 2 && (
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
-                  style={{ backgroundColor: '#f59e0b20', color: '#f59e0b', border: '1px solid #f59e0b30' }}>
+                <span className="badge badge-amber flex items-center gap-1">
                   🔥 {racha} meses ahorrando consecutivos
                 </span>
               )}
@@ -178,8 +174,7 @@ export default async function MetasPage() {
       </div>
 
       {/* Resumen global */}
-      <div className="rounded-2xl p-6 relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%)', border: '1px solid #2a3040' }}>
+      <div className="card card-purple p-6 relative overflow-hidden page-enter page-enter-delay-1">
         <div className="absolute top-0 right-0 w-72 h-72 rounded-full opacity-5 blur-3xl"
           style={{ background: '#6366f1', transform: 'translate(20%,-20%)' }} />
         <div className="flex items-center gap-8">
@@ -187,50 +182,49 @@ export default async function MetasPage() {
           <div className="flex-1">
             <div className="grid grid-cols-4 gap-4 mb-4">
               <div>
-                <p style={{ color: '#6b7280', fontSize: '11px', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                <p className="text-muted" style={{ fontSize: '11px', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '8px' }}>
                   Total a ahorrar
                 </p>
                 <HiddenValue value={fmtCOP(totalMeta)} className="tabular-nums font-bold"
                   style={{ color: '#6366f1', fontSize: '18px' }} />
               </div>
               <div>
-                <p style={{ color: '#6b7280', fontSize: '11px', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                <p className="text-muted" style={{ fontSize: '11px', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '8px' }}>
                   Total ahorrado
                 </p>
                 <HiddenValue value={fmtCOP(totalAhorrado)} className="tabular-nums font-bold"
                   style={{ color: '#10b981', fontSize: '18px' }} />
               </div>
               <div>
-                <p style={{ color: '#6b7280', fontSize: '11px', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                <p className="text-muted" style={{ fontSize: '11px', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '8px' }}>
                   Completadas
                 </p>
                 <p className="tabular-nums font-bold" style={{ color: '#f59e0b', fontSize: '18px' }}>
-                  {completadas} <span style={{ color: '#4b5563', fontSize: '14px' }}>/ {goals?.length ?? 0}</span>
+                  {completadas} <span className="text-muted" style={{ fontSize: '14px' }}>/ {goals?.length ?? 0}</span>
                 </p>
               </div>
               {mesesPromedio !== null && (
                 <div>
-                  <p style={{ color: '#6b7280', fontSize: '11px', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  <p className="text-muted" style={{ fontSize: '11px', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '8px' }}>
                     Tiempo promedio
                   </p>
                   <p className="tabular-nums font-bold" style={{ color: '#D4AF37', fontSize: '18px' }}>
-                    {mesesPromedio} <span style={{ color: '#4b5563', fontSize: '12px' }}>meses</span>
+                    {mesesPromedio} <span className="text-muted" style={{ fontSize: '12px' }}>meses</span>
                   </p>
                 </div>
               )}
             </div>
             {ahorroMes > 0 && (
-              <div className="rounded-xl px-4 py-3 flex items-center justify-between"
-                style={{ backgroundColor: '#0f1117', border: '1px solid #1e2535' }}>
+              <div className="stat-cell rounded-xl px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span style={{ color: '#10b981', fontSize: '14px' }}>💡</span>
-                  <p style={{ color: '#9ca3af', fontSize: '12px' }}>
+                  <p className="text-muted" style={{ fontSize: '12px' }}>
                     Capacidad de ahorro este mes:
                     <strong style={{ color: '#10b981', marginLeft: '6px' }}>{fmtCOP(ahorroMes)}</strong>
                   </p>
                 </div>
                 {faltaTotal > 0 && (
-                  <p style={{ color: '#4b5563', fontSize: '11px' }}>
+                  <p className="text-muted" style={{ fontSize: '11px' }}>
                     Cubre el {Math.min(100, Math.round((ahorroMes / faltaTotal) * 100))}% de lo que falta
                   </p>
                 )}
@@ -242,18 +236,17 @@ export default async function MetasPage() {
 
       {/* Empty state — race themed */}
       {!goals || goals.length === 0 ? (
-        <div className="rounded-2xl overflow-hidden relative breathe-purple"
-          style={{ background: 'linear-gradient(135deg, #0f1117 0%, #1a1f2e 50%, #0d1526 100%)', border: '1px solid #2a3040' }}>
+        <div className="card card-purple overflow-hidden relative breathe-purple page-enter page-enter-delay-2">
           <div className="absolute top-0 left-1/2 w-64 h-64 rounded-full opacity-[0.06] blur-3xl pointer-events-none"
             style={{ background: '#6366f1', transform: 'translate(-50%, -30%)' }} />
 
-          {/* CSS starting line */}
-          <div style={{ position: 'relative', height: '6px', backgroundColor: '#1e2535', overflow: 'hidden' }}>
+          {/* Starting line */}
+          <div style={{ position: 'relative', height: '6px', background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
             {Array.from({ length: 20 }).map((_, i) => (
               <div key={i} style={{
                 position: 'absolute', top: 0, left: `${i * 5}%`,
                 width: '2.5%', height: '100%',
-                backgroundColor: i % 2 === 0 ? '#e5e7eb' : 'transparent',
+                backgroundColor: i % 2 === 0 ? 'rgba(255,255,255,0.15)' : 'transparent',
               }} />
             ))}
           </div>
@@ -262,25 +255,25 @@ export default async function MetasPage() {
             <p className="text-white font-bold text-2xl mb-3 tracking-tight">
               Los que ganan en grande empezaron con una cifra en mente
             </p>
-            <p style={{ color: '#6b7280', fontSize: '14px', maxWidth: '400px', margin: '0 auto 28px', lineHeight: 1.6 }}>
+            <p className="text-muted" style={{ fontSize: '14px', maxWidth: '400px', margin: '0 auto 28px', lineHeight: 1.6 }}>
               ¿Cuál es la tuya? Ponla aquí y la app trabaja contigo para llegar.
             </p>
             <GoalForm />
           </div>
 
-          {/* Finish line visual at bottom */}
-          <div style={{ position: 'relative', height: '6px', backgroundColor: '#1e2535', overflow: 'hidden' }}>
+          {/* Finish line */}
+          <div style={{ position: 'relative', height: '6px', background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
             {Array.from({ length: 20 }).map((_, i) => (
               <div key={i} style={{
                 position: 'absolute', top: 0, left: `${i * 5}%`,
                 width: '2.5%', height: '100%',
-                backgroundColor: i % 2 === 0 ? '#D4AF37' : 'transparent',
+                backgroundColor: i % 2 === 0 ? '#D4AF3740' : 'transparent',
               }} />
             ))}
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 page-enter page-enter-delay-2">
           {goals.map((goal, goalIndex) => {
             const current    = Number(goal.current_amount)
             const target     = Number(goal.target_amount)
@@ -314,7 +307,6 @@ export default async function MetasPage() {
                 })()
               : null
 
-            // Monthly savings needed to reach goal by deadline
             let mensualNecesario: number | null = null
             let diasLabel: string | null = null
             let diasUrgente = false
@@ -332,10 +324,12 @@ export default async function MetasPage() {
             const motivacion     = getMotivacion(pct)
             const motivacionColor = getMotivacionColor(pct)
 
+            const cardVariant = goal.is_featured ? 'card-purple' : completada ? 'card-green' : 'card-green'
+
             return (
               <div key={goal.id}
-                className={`rounded-2xl p-6 relative overflow-hidden${goalAnimClass ? ` ${goalAnimClass}` : ''}`}
-                style={{ backgroundColor: '#1a1f2e', border: `1px solid ${completada ? color + '60' : '#2a3040'}` }}>
+                className={`card ${cardVariant} p-6 relative overflow-hidden${goalAnimClass ? ` ${goalAnimClass}` : ''}`}
+                style={{ ...(completada ? { borderColor: color + '60' } : {}) }}>
                 <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5 blur-3xl"
                   style={{ background: color, transform: 'translate(20%,-20%)' }} />
 
@@ -356,19 +350,15 @@ export default async function MetasPage() {
                           <div className="flex items-center gap-2 mb-1">
                             <p className="text-white font-bold text-xl">{goal.name}</p>
                             {completada && (
-                              <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                                style={{ backgroundColor: '#10b98120', color: '#10b981' }}>
-                                ✓ Completada
-                              </span>
+                              <span className="badge badge-green">✓ Completada</span>
                             )}
                             {goal.is_featured && !completada && (
-                              <span className="text-xs px-2 py-0.5 rounded-full font-semibold flex items-center gap-1"
-                                style={{ backgroundColor: '#6366f120', color: '#6366f1' }}>
+                              <span className="badge badge-purple flex items-center gap-1">
                                 📌 En Dashboard
                               </span>
                             )}
                           </div>
-                          <p style={{ color: '#6b7280', fontSize: '13px' }}>
+                          <p className="text-muted" style={{ fontSize: '13px' }}>
                             Meta: <HiddenValue value={fmtCOP(target)} className="tabular-nums text-white" />
                           </p>
                         </div>
@@ -406,14 +396,14 @@ export default async function MetasPage() {
 
                     {/* Metrics grid */}
                     <div className="grid grid-cols-4 gap-2 mb-3">
-                      <div className="rounded-xl p-2.5" style={{ backgroundColor: '#0f1117' }}>
-                        <p style={{ color: '#4b5563', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ahorrado</p>
+                      <div className="stat-cell rounded-xl p-2.5">
+                        <p className="text-muted" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ahorrado</p>
                         <HiddenValue value={fmtCompact(current)} className="tabular-nums font-semibold"
                           style={{ color, fontSize: '13px', marginTop: '2px' }} />
                       </div>
                       {!completada && (
-                        <div className="rounded-xl p-2.5" style={{ backgroundColor: '#0f1117' }}>
-                          <p style={{ color: '#4b5563', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Falta</p>
+                        <div className="stat-cell rounded-xl p-2.5">
+                          <p className="text-muted" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Falta</p>
                           <HiddenValue value={fmtCompact(falta)} className="tabular-nums font-semibold"
                             style={{ color: '#ef4444', fontSize: '13px', marginTop: '2px' }} />
                         </div>
@@ -421,14 +411,14 @@ export default async function MetasPage() {
                       {mensualNecesario !== null && !completada && (
                         <div className="rounded-xl p-2.5"
                           style={{ backgroundColor: '#2d1f0a', border: '1px solid #f59e0b20' }}>
-                          <p style={{ color: '#4b5563', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Necesitas/mes</p>
+                          <p className="text-muted" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Necesitas/mes</p>
                           <HiddenValue value={fmtCompact(mensualNecesario)} className="tabular-nums font-semibold"
                             style={{ color: '#f59e0b', fontSize: '13px', marginTop: '2px' }} />
                         </div>
                       )}
                       {proximoHito && !completada && (
-                        <div className="rounded-xl p-2.5" style={{ backgroundColor: '#0f1117' }}>
-                          <p style={{ color: '#4b5563', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Próximo hito</p>
+                        <div className="stat-cell rounded-xl p-2.5">
+                          <p className="text-muted" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Próximo hito</p>
                           <p className="tabular-nums font-semibold" style={{ color: proximoHito.color, fontSize: '12px', marginTop: '2px' }}>
                             {proximoHito.label}
                           </p>
@@ -436,8 +426,8 @@ export default async function MetasPage() {
                       )}
                       {diasLabel && (
                         <div className="rounded-xl p-2.5"
-                          style={{ backgroundColor: diasUrgente ? '#2d1f0a' : '#0f1117', border: diasUrgente ? '1px solid #f59e0b30' : 'none' }}>
-                          <p style={{ color: '#4b5563', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Límite</p>
+                          style={{ backgroundColor: diasUrgente ? '#2d1f0a' : undefined, border: diasUrgente ? '1px solid #f59e0b30' : undefined }}>
+                          <p className="text-muted" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Límite</p>
                           <p className="font-semibold" style={{ color: diasUrgente ? '#f59e0b' : '#9ca3af', fontSize: '12px', marginTop: '2px' }}>
                             {diasLabel}
                           </p>
@@ -447,41 +437,40 @@ export default async function MetasPage() {
 
                     {/* Aporte plan */}
                     {!completada && (contribAmt > 0 || fechaAhorro) && (
-                      <div className="rounded-xl p-3 mt-1"
-                        style={{ backgroundColor: '#0a0d14', border: '1px solid #1e2535' }}>
-                        <p style={{ color: '#6b7280', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+                      <div className="stat-cell rounded-xl p-3 mt-1">
+                        <p className="text-muted" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
                           📅 Plan de aportes
                         </p>
                         <div className="grid grid-cols-3 gap-2">
                           {contribAmt > 0 && (
                             <div>
-                              <p style={{ color: '#4b5563', fontSize: '10px' }}>{FREQ_LABEL[contribFreq] ?? 'mensual'}</p>
+                              <p className="text-muted" style={{ fontSize: '10px' }}>{FREQ_LABEL[contribFreq] ?? 'mensual'}</p>
                               <HiddenValue value={fmtCompact(contribAmt)} className="tabular-nums font-semibold"
                                 style={{ color: '#6366f1', fontSize: '13px' }} />
                             </div>
                           )}
                           {mensualPlan > 0 && mensualPlan !== contribAmt && (
                             <div>
-                              <p style={{ color: '#4b5563', fontSize: '10px' }}>Equiv. mensual</p>
+                              <p className="text-muted" style={{ fontSize: '10px' }}>Equiv. mensual</p>
                               <HiddenValue value={fmtCompact(mensualPlan)} className="tabular-nums font-semibold"
                                 style={{ color: '#9ca3af', fontSize: '13px' }} />
                             </div>
                           )}
                           {fechaPlan && (
                             <div>
-                              <p style={{ color: '#4b5563', fontSize: '10px' }}>Según tu plan</p>
+                              <p className="text-muted" style={{ fontSize: '10px' }}>Según tu plan</p>
                               <p className="font-semibold" style={{ color: '#D4AF37', fontSize: '13px' }}>{fechaPlan}</p>
                             </div>
                           )}
                           {fechaAhorro && !fechaPlan && (
                             <div>
-                              <p style={{ color: '#4b5563', fontSize: '10px' }}>Con ahorro del mes</p>
+                              <p className="text-muted" style={{ fontSize: '10px' }}>Con ahorro del mes</p>
                               <p className="font-semibold" style={{ color: '#f59e0b', fontSize: '13px' }}>{fechaAhorro}</p>
                             </div>
                           )}
                           {mesesPlan !== null && (
                             <div>
-                              <p style={{ color: '#4b5563', fontSize: '10px' }}>Meses restantes</p>
+                              <p className="text-muted" style={{ fontSize: '10px' }}>Meses restantes</p>
                               <p className="tabular-nums font-bold" style={{ color, fontSize: '16px' }}>{mesesPlan}</p>
                             </div>
                           )}
