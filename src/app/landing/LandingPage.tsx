@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link    from 'next/link'
-import FadeIn  from '@/components/ui/FadeIn'
+import Link        from 'next/link'
+import { useTheme } from 'next-themes'
+import { Sun, Moon } from 'lucide-react'
+import FadeIn      from '@/components/ui/FadeIn'
 
-/* ── Mock UI cards ──────────────────────────────────────────────────── */
+/* ── Mock UI cards (decorative dark previews — intentionally fixed dark) ── */
 const CARD: React.CSSProperties = {
   background: 'rgba(26,31,46,0.92)', backdropFilter: 'blur(12px)',
   border: '1px solid rgba(255,255,255,0.09)', borderRadius: '18px',
@@ -171,67 +173,79 @@ function MockScoreGauge() {
 
 /* ── Navbar ─────────────────────────────────────────────────────────── */
 function Navbar() {
-  const [scrolled, setScrolled]   = useState(false)
-  const [menuOpen, setMenuOpen]   = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [mounted, setMounted]   = useState(false)
+  const { theme, setTheme }     = useTheme()
 
   useEffect(() => {
+    setMounted(true)
     const fn = () => setScrolled(window.scrollY > 24)
     window.addEventListener('scroll', fn, { passive: true })
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  const linkStyle: React.CSSProperties = {
-    color: '#9ca3af', fontSize: '14px', textDecoration: 'none',
-    transition: 'color 0.2s',
-  }
-  const hover = (e: React.MouseEvent<HTMLAnchorElement>, on: boolean) =>
-    (e.currentTarget.style.color = on ? '#fff' : '#9ca3af')
-
   return (
-    <nav style={{
-      position: 'sticky', top: 0, zIndex: 50,
-      backgroundColor: scrolled ? 'rgba(15,17,23,0.88)' : 'transparent',
-      backdropFilter: scrolled ? 'blur(16px)' : 'none',
-      borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
-      transition: 'all 0.3s ease',
-    }}>
+    <nav
+      className={scrolled ? 'lp-navbar-scrolled' : ''}
+      style={{ position: 'sticky', top: 0, zIndex: 50, transition: 'all 0.3s ease' }}
+    >
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 
         {/* Logo */}
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#D4AF37', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f1117', fontWeight: 800, fontSize: '16px', flexShrink: 0 }}>W</div>
-          <span style={{ color: '#fff', fontWeight: 700, fontSize: '16px' }}>WealtHost</span>
+          <span style={{ fontWeight: 700, fontSize: '16px' }}>WealtHost</span>
         </Link>
 
         {/* Desktop links */}
-        <div className="lp-nav-links">
-          <a href="#precios" style={linkStyle} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Precios</a>
-          <Link href="/login" style={linkStyle} onMouseEnter={e => hover(e, true)} onMouseLeave={e => hover(e, false)}>Iniciar sesión</Link>
-          <Link href="/auth/register" style={{
-            backgroundColor: '#00d4aa', color: '#0f1117',
-            padding: '8px 20px', borderRadius: '10px',
-            fontWeight: 700, fontSize: '14px', textDecoration: 'none',
-            transition: 'opacity 0.2s',
-          }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+        <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
+          <a href="#precios" className="lp-link">Precios</a>
+          <Link href="/login" className="lp-link">Iniciar sesión</Link>
+
+          {/* Theme toggle */}
+          {mounted && (
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="sidebar-toggle-btn"
+              style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              aria-label="Cambiar tema"
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+          )}
+
+          <Link href="/auth/register" className="lp-cta-teal">
             Empezar gratis →
           </Link>
         </div>
 
         {/* Hamburger */}
-        <button className="lp-hamburger" onClick={() => setMenuOpen(!menuOpen)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: '22px', lineHeight: 1 }}>
+        <button
+          className="lp-hamburger"
+          onClick={() => setMenuOpen(!menuOpen)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: '22px', lineHeight: 1 }}
+        >
           {menuOpen ? '✕' : '☰'}
         </button>
       </div>
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div style={{ backgroundColor: 'rgba(15,17,23,0.97)', backdropFilter: 'blur(16px)', padding: '16px 24px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <a href="#precios" onClick={() => setMenuOpen(false)} style={{ color: '#9ca3af', fontSize: '15px', textDecoration: 'none' }}>Precios</a>
-          <Link href="/login" onClick={() => setMenuOpen(false)} style={{ color: '#9ca3af', fontSize: '15px', textDecoration: 'none' }}>Iniciar sesión</Link>
-          <Link href="/auth/register" onClick={() => setMenuOpen(false)} style={{ backgroundColor: '#00d4aa', color: '#0f1117', padding: '13px', borderRadius: '10px', fontWeight: 700, fontSize: '14px', textDecoration: 'none', textAlign: 'center' }}>
+        <div className="lp-mobile-menu">
+          <a href="#precios" onClick={() => setMenuOpen(false)} className="lp-link" style={{ fontSize: '15px' }}>Precios</a>
+          <Link href="/login" onClick={() => setMenuOpen(false)} className="lp-link" style={{ fontSize: '15px' }}>Iniciar sesión</Link>
+          {mounted && (
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="sidebar-toggle-btn"
+              style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              aria-label="Cambiar tema"
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+          )}
+          <Link href="/auth/register" onClick={() => setMenuOpen(false)} className="lp-cta-teal" style={{ padding: '13px', borderRadius: '10px', justifyContent: 'center' }}>
             Empezar gratis →
           </Link>
         </div>
@@ -253,64 +267,36 @@ function HeroSection() {
 
         {/* Left: copy */}
         <div>
-          <FadeIn delay={0}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', border: '1px solid rgba(0,212,170,0.35)', backgroundColor: 'rgba(0,212,170,0.06)', padding: '6px 14px', borderRadius: '20px', marginBottom: '28px', boxShadow: '0 0 20px rgba(0,212,170,0.1)' }}>
-              <span style={{ color: '#00d4aa', fontSize: '13px', fontWeight: 600 }}>✦ Finanzas personales inteligentes</span>
-            </div>
-          </FadeIn>
+          <div className="page-enter" style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', border: '1px solid rgba(0,212,170,0.35)', backgroundColor: 'rgba(0,212,170,0.06)', padding: '6px 14px', borderRadius: '20px', marginBottom: '28px', boxShadow: '0 0 20px rgba(0,212,170,0.1)' }}>
+            <span style={{ color: '#00d4aa', fontSize: '13px', fontWeight: 600 }}>✦ Finanzas personales inteligentes</span>
+          </div>
 
-          <FadeIn delay={80}>
-            <h1 style={{
-              fontSize: 'clamp(38px, 5.5vw, 66px)', fontWeight: 800, lineHeight: 1.08,
-              letterSpacing: '-0.03em', marginBottom: '24px',
-              background: 'linear-gradient(135deg, #ffffff 0%, #ffffff 35%, #00d4aa 68%, #6366f1 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>
-              Tu patrimonio,<br />bajo control.
-            </h1>
-          </FadeIn>
+          <h1 className="lp-hero-heading page-enter page-enter-delay-1">
+            Tu patrimonio,<br />bajo control.
+          </h1>
 
-          <FadeIn delay={160}>
-            <p style={{ color: '#9ca3af', fontSize: '17px', lineHeight: 1.75, marginBottom: '36px', maxWidth: '470px' }}>
-              WealtHost consolida tus cuentas, inversiones, presupuestos y metas en un solo lugar.
-              Con IA que categoriza, analiza y te dice exactamente qué hacer con tu dinero.
-            </p>
-          </FadeIn>
+          <p className="text-muted page-enter page-enter-delay-2" style={{ fontSize: '17px', lineHeight: 1.75, marginBottom: '36px', maxWidth: '470px' }}>
+            WealtHost consolida tus cuentas, inversiones, presupuestos y metas en un solo lugar.
+            Con IA que categoriza, analiza y te dice exactamente qué hacer con tu dinero.
+          </p>
 
-          <FadeIn delay={240}>
-            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '28px' }}>
-              <Link href="/auth/register" style={{
-                display: 'inline-flex', alignItems: 'center',
-                backgroundColor: '#00d4aa', color: '#0f1117',
-                padding: '0 28px', height: '52px', borderRadius: '14px',
-                fontWeight: 700, fontSize: '15px', textDecoration: 'none',
-                boxShadow: '0 0 36px rgba(0,212,170,0.35)',
-              }}>
-                Empezar gratis — es gratis
-              </Link>
-              <a href="#features" style={{
-                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                border: '1px solid rgba(255,255,255,0.14)',
-                backgroundColor: 'rgba(255,255,255,0.04)',
-                color: '#e5e7eb', padding: '0 24px', height: '52px', borderRadius: '14px',
-                fontWeight: 500, fontSize: '15px', textDecoration: 'none',
-                backdropFilter: 'blur(8px)',
-              }}>
-                Ver demo →
-              </a>
-            </div>
-          </FadeIn>
+          <div className="page-enter page-enter-delay-3" style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '28px' }}>
+            <Link href="/auth/register" className="lp-hero-cta">
+              Empezar gratis — es gratis
+            </Link>
+            <a href="#features" className="lp-hero-secondary">
+              Ver demo →
+            </a>
+          </div>
 
-          <FadeIn delay={320}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              {['Diseñado para Colombia 🇨🇴', 'Sin tarjeta de crédito', 'Cancela cuando quieras'].map((t, i) => (
-                <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {i > 0 && <span style={{ color: '#2a3040' }}>·</span>}
-                  <span style={{ color: '#6b7280', fontSize: '13px' }}>{t}</span>
-                </span>
-              ))}
-            </div>
-          </FadeIn>
+          <div className="page-enter page-enter-delay-4" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {['Diseñado para Colombia 🇨🇴', 'Sin tarjeta de crédito', 'Cancela cuando quieras'].map((t, i) => (
+              <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {i > 0 && <span style={{ color: '#2a3040' }}>·</span>}
+                <span className="text-muted" style={{ fontSize: '13px' }}>{t}</span>
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* Right: mock card */}
@@ -333,10 +319,7 @@ function StatsBar() {
     <FadeIn>
       <section style={{ padding: '0 24px 80px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div className="lp-stats-grid" style={{
-            background: 'rgba(26,31,46,0.7)', backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px',
-          }}>
+          <div className="lp-stats-panel lp-stats-grid">
             {[
               { num: '$0',   label: 'Costo para empezar' },
               { num: '9',    label: 'Módulos financieros' },
@@ -345,13 +328,9 @@ function StatsBar() {
               <div key={i} style={{
                 textAlign: 'center', padding: '32px 24px',
                 borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none',
-              }}>
-                <p style={{
-                  fontSize: 'clamp(32px, 4vw, 50px)', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '8px',
-                  background: 'linear-gradient(135deg, #00d4aa, #6366f1)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}>{s.num}</p>
-                <p style={{ color: '#6b7280', fontSize: '13px' }}>{s.label}</p>
+              }} className={i > 0 ? 'lp-stat-divider' : ''}>
+                <p className="lp-stat-num">{s.num}</p>
+                <p className="text-muted" style={{ fontSize: '13px' }}>{s.label}</p>
               </div>
             ))}
           </div>
@@ -389,10 +368,10 @@ function FeaturesSection() {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <FadeIn>
           <div style={{ textAlign: 'center', marginBottom: '72px' }}>
-            <h2 style={{ color: '#fff', fontSize: 'clamp(26px, 3.5vw, 44px)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '14px' }}>
+            <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 44px)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '14px' }}>
               Todo lo que necesitas para ganar con tu dinero
             </h2>
-            <p style={{ color: '#6b7280', fontSize: '16px', maxWidth: '500px', margin: '0 auto' }}>
+            <p className="text-muted" style={{ fontSize: '16px', maxWidth: '500px', margin: '0 auto' }}>
               Cada módulo está diseñado para que tomes mejores decisiones financieras
             </p>
           </div>
@@ -411,10 +390,10 @@ function FeaturesSection() {
                       {f.tag}
                     </span>
                   </div>
-                  <h3 style={{ color: '#fff', fontSize: 'clamp(22px, 2.5vw, 32px)', fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: '16px' }}>
+                  <h3 style={{ fontSize: 'clamp(22px, 2.5vw, 32px)', fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: '16px' }}>
                     {f.title}
                   </h3>
-                  <p style={{ color: '#9ca3af', fontSize: '15px', lineHeight: 1.78 }}>{f.body}</p>
+                  <p className="text-muted" style={{ fontSize: '15px', lineHeight: 1.78 }}>{f.body}</p>
                 </div>
                 <div className="lp-feature-col" style={{ display: 'flex', justifyContent: 'center' }}>
                   <div style={{ position: 'relative' }}>
@@ -434,28 +413,23 @@ function FeaturesSection() {
 /* ── Wealth Score ───────────────────────────────────────────────────── */
 function WealthScoreSection() {
   const pillars = [
-    { icon: '💰', label: 'Tasa de ahorro',       score: 85, color: '#10b981' },
-    { icon: '📈', label: 'Activos productivos',   score: 72, color: '#6366f1' },
-    { icon: '🛡️', label: 'Fondo de emergencia',  score: 91, color: '#00d4aa' },
-    { icon: '📊', label: 'Control de gastos',     score: 88, color: '#f59e0b' },
+    { icon: '💰', label: 'Tasa de ahorro',      score: 85, color: '#10b981' },
+    { icon: '📈', label: 'Activos productivos',  score: 72, color: '#6366f1' },
+    { icon: '🛡️', label: 'Fondo de emergencia', score: 91, color: '#00d4aa' },
+    { icon: '📊', label: 'Control de gastos',    score: 88, color: '#f59e0b' },
   ]
   return (
     <section style={{ padding: '80px 24px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <FadeIn>
-          <div className="breathe-purple" style={{
-            background: 'rgba(26,31,46,0.7)', backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(99,102,241,0.25)', borderRadius: '24px',
-            padding: 'clamp(32px,5vw,56px) clamp(24px,5vw,48px)',
-            position: 'relative', overflow: 'hidden',
-          }}>
+          <div className="lp-panel-purple breathe-purple">
             <div style={{ position: 'absolute', top: 0, right: 0, width: '360px', height: '360px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)', transform: 'translate(30%,-30%)', pointerEvents: 'none' }} />
 
             <div style={{ textAlign: 'center', marginBottom: '48px', position: 'relative' }}>
-              <h2 style={{ color: '#fff', fontSize: 'clamp(24px, 3vw, 40px)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '14px' }}>
+              <h2 style={{ fontSize: 'clamp(24px, 3vw, 40px)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '14px' }}>
                 El Wealth Score: tu calificación financiera
               </h2>
-              <p style={{ color: '#9ca3af', fontSize: '16px', maxWidth: '520px', margin: '0 auto' }}>
+              <p className="text-muted" style={{ fontSize: '16px', maxWidth: '520px', margin: '0 auto' }}>
                 Un número del 0 al 100 que refleja qué tan sana está tu vida financiera.
                 Sube tu score tomando mejores decisiones.
               </p>
@@ -465,14 +439,14 @@ function WealthScoreSection() {
               {/* Left pillars */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                 {pillars.slice(0, 2).map((p, i) => (
-                  <div key={i} style={{ backgroundColor: 'rgba(15,17,23,0.6)', borderRadius: '14px', padding: '16px 20px' }}>
+                  <div key={i} className="lp-pillar-card">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                       <span style={{ fontSize: '18px' }}>{p.icon}</span>
-                      <span style={{ color: '#9ca3af', fontSize: '13px', flex: 1 }}>{p.label}</span>
+                      <span className="text-muted" style={{ fontSize: '13px', flex: 1 }}>{p.label}</span>
                       <span style={{ color: p.color, fontWeight: 700, fontSize: '13px' }}>{p.score}</span>
                     </div>
-                    <div style={{ backgroundColor: '#0f1117', borderRadius: '3px', height: '5px', overflow: 'hidden' }}>
-                      <div style={{ width: `${p.score}%`, height: '100%', background: `linear-gradient(90deg, ${p.color}60, ${p.color})`, borderRadius: '3px' }} />
+                    <div className="progress-track">
+                      <div className="progress-fill" style={{ width: `${p.score}%`, background: `linear-gradient(90deg, ${p.color}60, ${p.color})` }} />
                     </div>
                   </div>
                 ))}
@@ -482,20 +456,20 @@ function WealthScoreSection() {
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
                 <MockScoreGauge />
                 <p style={{ color: '#10b981', fontWeight: 700, fontSize: '14px', textAlign: 'center' }}>Excelente</p>
-                <p style={{ color: '#4b5563', fontSize: '11px', textAlign: 'center' }}>Tu salud financiera</p>
+                <p className="text-muted" style={{ fontSize: '11px', textAlign: 'center' }}>Tu salud financiera</p>
               </div>
 
               {/* Right pillars */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                 {pillars.slice(2, 4).map((p, i) => (
-                  <div key={i} style={{ backgroundColor: 'rgba(15,17,23,0.6)', borderRadius: '14px', padding: '16px 20px' }}>
+                  <div key={i} className="lp-pillar-card">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                       <span style={{ fontSize: '18px' }}>{p.icon}</span>
-                      <span style={{ color: '#9ca3af', fontSize: '13px', flex: 1 }}>{p.label}</span>
+                      <span className="text-muted" style={{ fontSize: '13px', flex: 1 }}>{p.label}</span>
                       <span style={{ color: p.color, fontWeight: 700, fontSize: '13px' }}>{p.score}</span>
                     </div>
-                    <div style={{ backgroundColor: '#0f1117', borderRadius: '3px', height: '5px', overflow: 'hidden' }}>
-                      <div style={{ width: `${p.score}%`, height: '100%', background: `linear-gradient(90deg, ${p.color}60, ${p.color})`, borderRadius: '3px' }} />
+                    <div className="progress-track">
+                      <div className="progress-fill" style={{ width: `${p.score}%`, background: `linear-gradient(90deg, ${p.color}60, ${p.color})` }} />
                     </div>
                   </div>
                 ))}
@@ -520,7 +494,7 @@ function HowItWorksSection() {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <FadeIn>
           <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-            <h2 style={{ color: '#fff', fontSize: 'clamp(26px, 3.5vw, 44px)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '14px' }}>
+            <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 44px)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '14px' }}>
               En 3 pasos, toma el control
             </h2>
           </div>
@@ -530,17 +504,13 @@ function HowItWorksSection() {
           <div style={{ position: 'absolute', top: '38px', left: '18%', right: '18%', height: '1px', background: 'linear-gradient(90deg, transparent, rgba(0,212,170,0.3) 30%, rgba(99,102,241,0.3) 70%, transparent)', pointerEvents: 'none' }} />
           {steps.map((s, i) => (
             <FadeIn key={i} delay={i * 120}>
-              <div style={{
-                background: 'rgba(26,31,46,0.6)', backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px',
-                padding: '32px 28px', textAlign: 'center',
-              }}>
+              <div className="lp-step-card">
                 <div style={{ width: '56px', height: '56px', borderRadius: '16px', backgroundColor: s.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', margin: '0 auto 18px' }}>
                   {s.icon}
                 </div>
                 <p style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', color: s.color, marginBottom: '8px', textTransform: 'uppercase' }}>{s.num}</p>
-                <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: 700, marginBottom: '10px', lineHeight: 1.3 }}>{s.title}</h3>
-                <p style={{ color: '#6b7280', fontSize: '14px', lineHeight: 1.65 }}>{s.desc}</p>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '10px', lineHeight: 1.3 }}>{s.title}</h3>
+                <p className="text-muted" style={{ fontSize: '14px', lineHeight: 1.65 }}>{s.desc}</p>
               </div>
             </FadeIn>
           ))}
@@ -584,52 +554,48 @@ function PricingSection() {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <FadeIn>
           <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-            <h2 style={{ color: '#fff', fontSize: 'clamp(26px, 3.5vw, 44px)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '12px' }}>
+            <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 44px)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '12px' }}>
               Empieza gratis. Escala cuando crezcas.
             </h2>
-            <p style={{ color: '#6b7280', fontSize: '16px' }}>Sin sorpresas. Sin letra pequeña.</p>
+            <p className="text-muted" style={{ fontSize: '16px' }}>Sin sorpresas. Sin letra pequeña.</p>
           </div>
         </FadeIn>
 
         <div className="lp-plans-grid">
           {PLANS.map((plan, i) => (
             <FadeIn key={i} delay={i * 90}>
-              <div
-                className={plan.featured ? 'breathe-purple' : ''}
-                style={{
-                  background: plan.featured ? 'rgba(99,102,241,0.07)' : 'rgba(26,31,46,0.7)',
-                  backdropFilter: 'blur(12px)',
-                  border: `1px solid ${plan.featured ? 'rgba(99,102,241,0.35)' : 'rgba(255,255,255,0.07)'}`,
-                  borderRadius: '20px', padding: '28px',
-                }}>
+              <div className={plan.featured ? 'lp-pricing-card-featured breathe-purple' : 'lp-pricing-card'}>
                 <div style={{ marginBottom: '12px' }}>
                   <span style={{ backgroundColor: plan.accent + '20', color: plan.accent, padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>
                     {plan.badge}
                   </span>
                 </div>
-                <p style={{ color: '#fff', fontSize: '20px', fontWeight: 800, letterSpacing: '-0.01em', marginBottom: '2px' }}>{plan.name}</p>
-                <p style={{ color: '#6b7280', fontSize: '12px', marginBottom: '12px', lineHeight: 1.4 }}>{plan.tagline}</p>
-                <p style={{ color: '#fff', fontSize: '22px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '4px' }}>{plan.price}</p>
+                <p style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '-0.01em', marginBottom: '2px' }}>{plan.name}</p>
+                <p className="text-muted" style={{ fontSize: '12px', marginBottom: '12px', lineHeight: 1.4 }}>{plan.tagline}</p>
+                <p style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '4px' }}>{plan.price}</p>
                 <div style={{ height: '20px', marginBottom: '20px' }}>
-                  {plan.priceSub && <p style={{ color: '#6b7280', fontSize: '12px' }}>{plan.priceSub}</p>}
+                  {plan.priceSub && <p className="text-muted" style={{ fontSize: '12px' }}>{plan.priceSub}</p>}
                 </div>
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginBottom: '20px' }} />
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {plan.features.map((f, j) => (
                     <li key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                       <span style={{ color: plan.accent, fontSize: '14px', flexShrink: 0, marginTop: '1px' }}>✓</span>
-                      <span style={{ color: '#9ca3af', fontSize: '14px', lineHeight: 1.4 }}>{f}</span>
+                      <span className="text-muted" style={{ fontSize: '14px', lineHeight: 1.4 }}>{f}</span>
                     </li>
                   ))}
                 </ul>
-                <Link href="/auth/register" style={{
-                  display: 'block', textAlign: 'center',
-                  backgroundColor: plan.featured ? plan.accent : 'transparent',
-                  color: plan.featured ? '#0f1117' : plan.accent,
-                  border: `1px solid ${plan.accent}`,
-                  padding: '12px', borderRadius: '12px',
-                  fontWeight: 600, fontSize: '14px', textDecoration: 'none',
-                }}>
+                <Link
+                  href="/auth/register"
+                  style={{
+                    display: 'block', textAlign: 'center',
+                    backgroundColor: plan.featured ? plan.accent : 'transparent',
+                    border: `1px solid ${plan.accent}`,
+                    padding: '12px', borderRadius: '12px',
+                    fontWeight: 600, fontSize: '14px', textDecoration: 'none',
+                    color: plan.featured ? '#0f1117' : plan.accent,
+                  }}
+                >
                   {plan.cta}
                 </Link>
               </div>
@@ -656,24 +622,24 @@ function FAQSection() {
     <section style={{ padding: '80px 24px' }}>
       <div style={{ maxWidth: '760px', margin: '0 auto' }}>
         <FadeIn>
-          <h2 style={{ color: '#fff', fontSize: 'clamp(24px, 3.5vw, 40px)', fontWeight: 800, letterSpacing: '-0.02em', textAlign: 'center', marginBottom: '48px' }}>
+          <h2 style={{ fontSize: 'clamp(24px, 3.5vw, 40px)', fontWeight: 800, letterSpacing: '-0.02em', textAlign: 'center', marginBottom: '48px' }}>
             Preguntas frecuentes
           </h2>
         </FadeIn>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {FAQS.map((faq, i) => (
             <FadeIn key={i} delay={i * 50}>
-              <div style={{ background: 'rgba(26,31,46,0.6)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', overflow: 'hidden' }}>
+              <div className="card" style={{ overflow: 'hidden', padding: 0 }}>
                 <button
                   onClick={() => setOpen(open === i ? null : i)}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', background: 'none', border: 'none', cursor: 'pointer', color: '#fff', fontSize: '15px', fontWeight: 600, textAlign: 'left', gap: '12px' }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '15px', fontWeight: 600, textAlign: 'left', gap: '12px' }}
                 >
                   {faq.q}
-                  <span style={{ color: '#6b7280', fontSize: '20px', flexShrink: 0, fontWeight: 300, transform: open === i ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s ease' }}>+</span>
+                  <span className="text-muted" style={{ fontSize: '20px', flexShrink: 0, fontWeight: 300, transform: open === i ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s ease' }}>+</span>
                 </button>
                 {open === i && (
                   <div style={{ padding: '0 22px 18px' }}>
-                    <p style={{ color: '#9ca3af', fontSize: '14px', lineHeight: 1.72 }}>{faq.a}</p>
+                    <p className="text-muted" style={{ fontSize: '14px', lineHeight: 1.72 }}>{faq.a}</p>
                   </div>
                 )}
               </div>
@@ -691,31 +657,18 @@ function CTASection() {
     <section style={{ padding: '80px 24px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <FadeIn>
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(0,212,170,0.1) 0%, rgba(99,102,241,0.1) 100%)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(0,212,170,0.2)',
-            borderRadius: '28px', padding: 'clamp(48px,8vw,80px) clamp(24px,6vw,48px)',
-            textAlign: 'center', position: 'relative', overflow: 'hidden',
-          }}>
+          <div className="lp-cta-panel">
             <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,212,170,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <h2 style={{ color: '#fff', fontSize: 'clamp(26px, 3.5vw, 48px)', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '16px', position: 'relative' }}>
+            <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 48px)', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '16px', position: 'relative' }}>
               Tu mejor decisión financiera empieza hoy
             </h2>
-            <p style={{ color: '#9ca3af', fontSize: '17px', maxWidth: '500px', margin: '0 auto 36px', position: 'relative' }}>
+            <p className="text-muted" style={{ fontSize: '17px', maxWidth: '500px', margin: '0 auto 36px', position: 'relative' }}>
               Únete a las personas que ya controlan su patrimonio con WealtHost
             </p>
-            <Link href="/auth/register" style={{
-              display: 'inline-flex', alignItems: 'center', gap: '8px',
-              backgroundColor: '#00d4aa', color: '#0f1117',
-              padding: '0 40px', height: '56px', borderRadius: '14px',
-              fontWeight: 700, fontSize: '16px', textDecoration: 'none',
-              boxShadow: '0 0 44px rgba(0,212,170,0.4)',
-              position: 'relative',
-            }}>
+            <Link href="/auth/register" className="lp-cta-main">
               Crear cuenta gratis →
             </Link>
-            <p style={{ color: '#4b5563', fontSize: '13px', marginTop: '18px', position: 'relative' }}>
+            <p className="text-muted" style={{ fontSize: '13px', marginTop: '18px', position: 'relative' }}>
               Gratis para siempre · Sin tarjeta · 2 minutos para empezar
             </p>
           </div>
@@ -728,28 +681,24 @@ function CTASection() {
 /* ── Footer ─────────────────────────────────────────────────────────── */
 function Footer() {
   return (
-    <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 24px' }}>
+    <footer className="lp-footer">
       <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div className="lp-footer-row">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ width: '30px', height: '30px', borderRadius: '8px', backgroundColor: '#D4AF37', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f1117', fontWeight: 800, fontSize: '15px' }}>W</div>
             <div>
-              <p style={{ color: '#fff', fontWeight: 700, fontSize: '15px', margin: 0 }}>WealtHost</p>
-              <p style={{ color: '#4b5563', fontSize: '11px', margin: 0 }}>Finanzas personales inteligentes</p>
+              <p style={{ fontWeight: 700, fontSize: '15px', margin: 0 }}>WealtHost</p>
+              <p className="text-muted" style={{ fontSize: '11px', margin: 0 }}>Finanzas personales inteligentes</p>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '28px', flexWrap: 'wrap' }}>
             {[{ l: 'Precios', h: '#precios' }, { l: 'Privacidad', h: '#' }, { l: 'Términos', h: '#' }, { l: 'Contacto', h: '#' }].map(({ l, h }) => (
-              <a key={l} href={h} style={{ color: '#6b7280', fontSize: '13px', textDecoration: 'none', transition: 'color 0.2s' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#9ca3af')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#6b7280')}>
-                {l}
-              </a>
+              <a key={l} href={h} className="lp-footer-link">{l}</a>
             ))}
           </div>
         </div>
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
-          <p style={{ color: '#4b5563', fontSize: '12px', textAlign: 'center' }}>
+          <p className="text-muted" style={{ fontSize: '12px', textAlign: 'center' }}>
             © 2026 WealtHost. Hecho con ❤️ en Colombia 🇨🇴
           </p>
         </div>
@@ -761,7 +710,7 @@ function Footer() {
 /* ── Root ───────────────────────────────────────────────────────────── */
 export default function LandingPage() {
   return (
-    <div style={{ backgroundColor: '#0f1117', minHeight: '100vh', color: '#e5e7eb' }}>
+    <div className="lp-root">
       <Navbar />
       <main>
         <HeroSection />

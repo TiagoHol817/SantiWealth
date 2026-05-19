@@ -12,15 +12,15 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "SantiWealth — Finanzas personales inteligentes",
+  title: "WealtHost — Finanzas personales inteligentes",
   description: "Controla tu dinero, inversiones y metas con IA. Gratis para empezar. Hecho para Colombia.",
   metadataBase: new URL('https://wealthost-nu.vercel.app'),
   alternates: { canonical: '/' },
   openGraph: {
-    title: "SantiWealth — Finanzas personales inteligentes",
+    title: "WealtHost — Finanzas personales inteligentes",
     description: "Controla tu dinero, inversiones y metas con IA. Gratis para empezar. Hecho para Colombia.",
     url: 'https://wealthost-nu.vercel.app',
-    siteName: 'SantiWealth',
+    siteName: 'WealtHost',
     locale: 'es_CO',
     type: 'website',
   },
