@@ -1477,26 +1477,30 @@ html.light .lp-footer-link { color: #9a7355; }
 html.light .lp-footer-link:hover { color: #5a3a1a; }
 
 /* Teal CTA buttons (rendered as <a>) — keep text dark in both modes */
+a.lp-cta-teal,
 .lp-cta-teal {
+  color: #0f1117 !important;
+  background: #00d4aa;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
-  background: #00d4aa;
-  color: #0f1117;
   padding: 8px 20px;
-  border-radius: 10px;
-  font-weight: 700;
   font-size: 14px;
+  font-weight: 700;
   text-decoration: none;
   transition: opacity 0.2s;
 }
+a.lp-cta-teal:hover,
 .lp-cta-teal:hover { opacity: 0.85; }
+html.light a.lp-cta-teal,
 html.light .lp-cta-teal { color: #0f1117 !important; }
 
+a.lp-hero-cta,
 .lp-hero-cta {
+  color: #0f1117 !important;
   display: inline-flex;
   align-items: center;
   background: #00d4aa;
-  color: #0f1117;
   padding: 0 28px;
   height: 52px;
   border-radius: 14px;
@@ -1505,15 +1509,17 @@ html.light .lp-cta-teal { color: #0f1117 !important; }
   text-decoration: none;
   box-shadow: 0 0 36px rgba(0,212,170,0.35);
 }
+html.light a.lp-hero-cta,
 html.light .lp-hero-cta { color: #0f1117 !important; }
 
+a.lp-hero-secondary,
 .lp-hero-secondary {
+  color: #e5e7eb !important;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   border: 1px solid rgba(255,255,255,0.14);
   background: rgba(255,255,255,0.04);
-  color: #e5e7eb;
   padding: 0 24px;
   height: 52px;
   border-radius: 14px;
@@ -1522,18 +1528,20 @@ html.light .lp-hero-cta { color: #0f1117 !important; }
   text-decoration: none;
   backdrop-filter: blur(8px);
 }
+html.light a.lp-hero-secondary,
 html.light .lp-hero-secondary {
   border-color: rgba(0,0,0,0.12);
   background: rgba(0,0,0,0.04);
   color: #1a0f00 !important;
 }
 
+a.lp-cta-main,
 .lp-cta-main {
+  color: #0f1117 !important;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   background: #00d4aa;
-  color: #0f1117;
   padding: 0 40px;
   height: 56px;
   border-radius: 14px;
@@ -1543,6 +1551,7 @@ html.light .lp-hero-secondary {
   box-shadow: 0 0 44px rgba(0,212,170,0.40);
   position: relative;
 }
+html.light a.lp-cta-main,
 html.light .lp-cta-main { color: #0f1117 !important; }
 
 /* Module icon container (features section) */
