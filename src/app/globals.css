@@ -1610,3 +1610,45 @@ html.light .lp-pricing-cta-featured {
   background: linear-gradient(135deg, #d97706 0%, #c2610c 100%);
   color: #ffffff !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   MOCK CARD LIGHT MODE ADAPTATION
+   Cards show the real app UI — adapt to match light theme
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Card container */
+.lp-mc-card {
+  background: rgba(26,31,46,0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 18px;
+  box-shadow: 0 28px 56px rgba(0,0,0,0.45);
+}
+html.light .lp-mc-card {
+  background: rgba(255,255,255,0.96) !important;
+  border-color: rgba(0,0,0,0.09) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10) !important;
+}
+
+/* Inner dark panels (progress track, savings panel, donut hole) */
+.lp-mc-inner { background-color: #0f1117; }
+html.light .lp-mc-inner { background-color: rgba(240,234,224,0.75) !important; }
+
+/* Row dividers */
+html.light .lp-mc-row { border-bottom-color: rgba(0,0,0,0.07) !important; }
+
+/* Inactive chart bars */
+.lp-mc-bar { background-color: #1e2535; }
+html.light .lp-mc-bar { background-color: rgba(0,0,0,0.08) !important; }
+
+/* Chrome text — primary label */
+.lp-mc-text  { color: #e5e7eb; }
+html.light .lp-mc-text  { color: #1a0f00 !important; }
+
+/* Chrome text — secondary / muted */
+.lp-mc-muted { color: #6b7280; }
+html.light .lp-mc-muted { color: #6b5040 !important; }
+
+/* Chrome text — faintest */
+.lp-mc-faint { color: #9ca3af; }
+html.light .lp-mc-faint { color: #9a7355 !important; }

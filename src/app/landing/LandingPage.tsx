@@ -6,18 +6,21 @@ import { useTheme } from 'next-themes'
 import { Sun, Moon } from 'lucide-react'
 import FadeIn      from '@/components/ui/FadeIn'
 
-/* ── Mock UI cards (decorative dark previews — intentionally fixed dark) ── */
-const CARD: React.CSSProperties = {
-  background: 'rgba(26,31,46,0.92)', backdropFilter: 'blur(12px)',
-  border: '1px solid rgba(255,255,255,0.09)', borderRadius: '18px',
-  boxShadow: '0 28px 56px rgba(0,0,0,0.45)',
-}
+/* ── Mock UI cards — adapt to dark/light via CSS classes ── */
+// lp-mc-card   = card container (bg + border)
+// lp-mc-text   = white chrome text  (#e5e7eb)
+// lp-mc-muted  = gray chrome text   (#6b7280, #4b5563)
+// lp-mc-faint  = faintest chrome    (#9ca3af)
+// lp-mc-inner  = inner dark panels  (#0f1117, #1a1f2e)
+// lp-mc-row    = rows with dark border-bottom (#1e2535)
+// lp-mc-bar    = inactive chart bars (#1e2535)
+// data colors (#00d4aa #10b981 #ef4444 #6366f1 #f59e0b) → keep inline
 
 function MockDashboard() {
   return (
-    <div style={{ ...CARD, padding: '24px', width: '310px', transform: 'rotate(-2deg)' }}>
+    <div className="lp-mc-card" style={{ padding: '24px', width: '310px', transform: 'rotate(-2deg)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-        <span style={{ color: '#6b7280', fontSize: '12px' }}>Patrimonio neto</span>
+        <span className="lp-mc-muted" style={{ fontSize: '12px' }}>Patrimonio neto</span>
         <span style={{ color: '#10b98180', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
           <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }} /> Live
         </span>
@@ -25,14 +28,17 @@ function MockDashboard() {
       <p style={{ color: '#00d4aa', fontSize: '28px', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}>
         $12,450,000
       </p>
-      <p style={{ color: '#4b5563', fontSize: '11px', marginBottom: '16px' }}>COP · TRM $4,180 · ↑ +$520,000 ayer</p>
+      <p className="lp-mc-muted" style={{ fontSize: '11px', marginBottom: '16px' }}>COP · TRM $4,180 · ↑ +$520,000 ayer</p>
 
       <div style={{ display: 'flex', gap: '3px', alignItems: 'flex-end', height: '38px', marginBottom: '14px' }}>
         {[28, 42, 35, 55, 47, 38, 62, 70].map((h, i, arr) => (
-          <div key={i} style={{
-            flex: 1, height: `${h}%`, borderRadius: '3px 3px 0 0',
-            backgroundColor: i === arr.length - 1 ? '#00d4aa' : i === arr.length - 2 ? '#00d4aa50' : '#1e2535',
-          }} />
+          <div key={i}
+            className={i < arr.length - 2 ? 'lp-mc-bar' : undefined}
+            style={{
+              flex: 1, height: `${h}%`, borderRadius: '3px 3px 0 0',
+              backgroundColor: i === arr.length - 1 ? '#00d4aa' : i === arr.length - 2 ? '#00d4aa50' : undefined,
+            }}
+          />
         ))}
       </div>
 
@@ -56,22 +62,22 @@ function MockTransactions() {
     { icon: '🍕', name: 'Rappi',   cat: 'Alimentación', val: '-$32,000', neg: true },
   ]
   return (
-    <div style={{ ...CARD, width: '290px', overflow: 'hidden' }}>
-      <div style={{ padding: '14px 18px', borderBottom: '1px solid #1e2535', display: 'flex', justifyContent: 'space-between' }}>
-        <p style={{ color: '#e5e7eb', fontWeight: 600, fontSize: '13px' }}>Hoy</p>
-        <p style={{ color: '#4b5563', fontSize: '11px' }}>4 movimientos</p>
+    <div className="lp-mc-card" style={{ width: '290px', overflow: 'hidden' }}>
+      <div className="lp-mc-row" style={{ padding: '14px 18px', borderBottom: '1px solid transparent', display: 'flex', justifyContent: 'space-between' }}>
+        <p className="lp-mc-text" style={{ fontWeight: 600, fontSize: '13px' }}>Hoy</p>
+        <p className="lp-mc-muted" style={{ fontSize: '11px' }}>4 movimientos</p>
       </div>
       {rows.map((r, i) => (
-        <div key={i} style={{
+        <div key={i} className={i < rows.length - 1 ? 'lp-mc-row' : undefined} style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '10px 18px',
-          borderBottom: i < rows.length - 1 ? '1px solid #1e2535' : 'none',
+          borderBottom: i < rows.length - 1 ? '1px solid transparent' : 'none',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '16px' }}>{r.icon}</span>
             <div>
-              <p style={{ color: '#e5e7eb', fontSize: '13px', fontWeight: 500 }}>{r.name}</p>
-              <p style={{ color: '#4b5563', fontSize: '10px' }}>{r.cat}</p>
+              <p className="lp-mc-text" style={{ fontSize: '13px', fontWeight: 500 }}>{r.name}</p>
+              <p className="lp-mc-muted" style={{ fontSize: '10px' }}>{r.cat}</p>
             </div>
           </div>
           <p style={{ color: r.neg ? '#ef4444' : '#10b981', fontSize: '13px', fontWeight: 600 }}>{r.val}</p>
@@ -83,9 +89,9 @@ function MockTransactions() {
 
 function MockDonut() {
   return (
-    <div style={{ ...CARD, padding: '20px', width: '250px' }}>
+    <div className="lp-mc-card" style={{ padding: '20px', width: '250px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
-        <p style={{ color: '#e5e7eb', fontWeight: 600, fontSize: '13px' }}>Portafolio</p>
+        <p className="lp-mc-text" style={{ fontWeight: 600, fontSize: '13px' }}>Portafolio</p>
         <p style={{ color: '#6366f1', fontSize: '13px', fontWeight: 700 }}>$2,450 USD</p>
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
@@ -94,9 +100,9 @@ function MockDonut() {
           background: 'conic-gradient(#6366f1 0deg 216deg, #f59e0b 216deg 306deg, #10b981 306deg 360deg)',
           position: 'relative',
         }}>
-          <div style={{
+          <div className="lp-mc-inner" style={{
             position: 'absolute', inset: '14px', borderRadius: '50%',
-            backgroundColor: '#1a1f2e', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <span style={{ fontSize: '18px' }}>📈</span>
           </div>
@@ -106,7 +112,7 @@ function MockDonut() {
         <div key={l} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
             <div style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: c }} />
-            <span style={{ color: '#9ca3af', fontSize: '12px' }}>{l}</span>
+            <span className="lp-mc-faint" style={{ fontSize: '12px' }}>{l}</span>
           </div>
           <span style={{ color: c, fontSize: '12px', fontWeight: 600 }}>{p}</span>
         </div>
@@ -117,30 +123,30 @@ function MockDonut() {
 
 function MockGoal() {
   return (
-    <div style={{ ...CARD, padding: '20px', width: '280px', border: '1px solid rgba(99,102,241,0.3)' }}>
+    <div className="lp-mc-card" style={{ padding: '20px', width: '280px', border: '1px solid rgba(99,102,241,0.3)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
         <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#6366f120', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>🏠</div>
         <div style={{ flex: 1 }}>
-          <p style={{ color: '#e5e7eb', fontWeight: 600, fontSize: '13px' }}>Casa propia</p>
-          <p style={{ color: '#6b7280', fontSize: '11px' }}>Meta: $100,000,000 COP</p>
+          <p className="lp-mc-text" style={{ fontWeight: 600, fontSize: '13px' }}>Casa propia</p>
+          <p className="lp-mc-muted" style={{ fontSize: '11px' }}>Meta: $100,000,000 COP</p>
         </div>
         <span style={{ backgroundColor: '#6366f120', color: '#6366f1', padding: '3px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 700 }}>72%</span>
       </div>
-      <div style={{ backgroundColor: '#0f1117', borderRadius: '5px', height: '7px', overflow: 'hidden', marginBottom: '8px' }}>
+      <div className="lp-mc-inner" style={{ borderRadius: '5px', height: '7px', overflow: 'hidden', marginBottom: '8px' }}>
         <div style={{ width: '72%', height: '100%', background: 'linear-gradient(90deg, #6366f160, #6366f1)', borderRadius: '5px' }} />
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
         <span style={{ color: '#6366f1', fontSize: '12px', fontWeight: 600 }}>$72,000,000</span>
-        <span style={{ color: '#4b5563', fontSize: '11px' }}>$28M restante</span>
+        <span className="lp-mc-muted" style={{ fontSize: '11px' }}>$28M restante</span>
       </div>
-      <div style={{ backgroundColor: '#0f1117', borderRadius: '10px', padding: '10px 14px', display: 'flex', justifyContent: 'space-between' }}>
+      <div className="lp-mc-inner" style={{ borderRadius: '10px', padding: '10px 14px', display: 'flex', justifyContent: 'space-between' }}>
         <div>
-          <p style={{ color: '#4b5563', fontSize: '10px' }}>Ahorra/mes</p>
+          <p className="lp-mc-muted" style={{ fontSize: '10px' }}>Ahorra/mes</p>
           <p style={{ color: '#f59e0b', fontSize: '13px', fontWeight: 700 }}>$2,333,333</p>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <p style={{ color: '#4b5563', fontSize: '10px' }}>Llegas en</p>
-          <p style={{ color: '#9ca3af', fontSize: '13px', fontWeight: 600 }}>Jun 2026</p>
+          <p className="lp-mc-muted" style={{ fontSize: '10px' }}>Llegas en</p>
+          <p className="lp-mc-faint" style={{ fontSize: '13px', fontWeight: 600 }}>Jun 2026</p>
         </div>
       </div>
     </div>
