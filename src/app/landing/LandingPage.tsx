@@ -194,7 +194,7 @@ function Navbar() {
 
         {/* Logo */}
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#D4AF37', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f1117', fontWeight: 800, fontSize: '16px', flexShrink: 0 }}>W</div>
+          <div className="logo-avatar" style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f1117', fontWeight: 800, fontSize: '16px', flexShrink: 0 }}>W</div>
           <span style={{ fontWeight: 700, fontSize: '16px' }}>WealtHost</span>
         </Link>
 
@@ -383,12 +383,8 @@ function FeaturesSection() {
               <div className={f.reverse ? 'lp-feature-rev' : 'lp-feature-row'}>
                 <div className="lp-feature-col">
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '22px' }}>
-                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(99,102,241,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>
-                      {f.icon}
-                    </div>
-                    <span style={{ color: '#6366f1', fontSize: '12px', fontWeight: 600, backgroundColor: 'rgba(99,102,241,0.1)', padding: '4px 12px', borderRadius: '20px', letterSpacing: '0.03em' }}>
-                      {f.tag}
-                    </span>
+                    <div className="lp-module-icon">{f.icon}</div>
+                    <span className="lp-module-badge">{f.tag}</span>
                   </div>
                   <h3 style={{ fontSize: 'clamp(22px, 2.5vw, 32px)', fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: '16px' }}>
                     {f.title}
@@ -398,7 +394,7 @@ function FeaturesSection() {
                 <div className="lp-feature-col" style={{ display: 'flex', justifyContent: 'center' }}>
                   <div style={{ position: 'relative' }}>
                     <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '240px', height: '240px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%)', filter: 'blur(16px)', pointerEvents: 'none' }} />
-                    <f.Visual />
+                    <div className="lp-mockup-card"><f.Visual /></div>
                   </div>
                 </div>
               </div>
@@ -585,19 +581,25 @@ function PricingSection() {
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href="/auth/register"
-                  style={{
-                    display: 'block', textAlign: 'center',
-                    backgroundColor: plan.featured ? plan.accent : 'transparent',
-                    border: `1px solid ${plan.accent}`,
-                    padding: '12px', borderRadius: '12px',
-                    fontWeight: 600, fontSize: '14px', textDecoration: 'none',
-                    color: plan.featured ? '#0f1117' : plan.accent,
-                  }}
-                >
-                  {plan.cta}
-                </Link>
+                {plan.featured ? (
+                  <Link href="/auth/register" className="lp-pricing-cta-featured">
+                    {plan.cta}
+                  </Link>
+                ) : (
+                  <Link
+                    href="/auth/register"
+                    style={{
+                      display: 'block', textAlign: 'center',
+                      backgroundColor: 'transparent',
+                      border: `1px solid ${plan.accent}`,
+                      padding: '12px', borderRadius: '12px',
+                      fontWeight: 600, fontSize: '14px', textDecoration: 'none',
+                      color: plan.accent,
+                    }}
+                  >
+                    {plan.cta}
+                  </Link>
+                )}
               </div>
             </FadeIn>
           ))}
@@ -685,7 +687,7 @@ function Footer() {
       <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div className="lp-footer-row">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '30px', height: '30px', borderRadius: '8px', backgroundColor: '#D4AF37', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f1117', fontWeight: 800, fontSize: '15px' }}>W</div>
+            <div className="logo-avatar" style={{ width: '30px', height: '30px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f1117', fontWeight: 800, fontSize: '15px' }}>W</div>
             <div>
               <p style={{ fontWeight: 700, fontSize: '15px', margin: 0 }}>WealtHost</p>
               <p className="text-muted" style={{ fontSize: '11px', margin: 0 }}>Finanzas personales inteligentes</p>

@@ -1544,3 +1544,58 @@ html.light .lp-hero-secondary {
   position: relative;
 }
 html.light .lp-cta-main { color: #0f1117 !important; }
+
+/* Module icon container (features section) */
+.lp-module-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(99,102,241,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+html.light .lp-module-icon { background: rgba(194,97,12,0.12); }
+
+/* Module badge (Transacciones / Inversiones / Metas) */
+.lp-module-badge {
+  color: #6366f1;
+  background: rgba(99,102,241,0.10);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+html.light .lp-module-badge {
+  color: #c2610c;
+  background: rgba(194,97,12,0.10);
+}
+
+/* Mock card wrapper — intentionally dark product previews */
+.lp-mockup-card { display: contents; }
+html.light .lp-mockup-card {
+  display: block;
+  border-radius: 18px;
+  box-shadow: 0 28px 56px rgba(0,0,0,0.15);
+}
+
+/* Pricing featured CTA button */
+.lp-pricing-cta-featured {
+  display: block;
+  text-align: center;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
+  border: none;
+}
+html.light .lp-pricing-cta-featured {
+  background: linear-gradient(135deg, #d97706 0%, #c2610c 100%);
+  color: #ffffff !important;
+}
