@@ -1294,8 +1294,27 @@ html.light [class*="border-violet"] { border-color: rgba(217,119,6,0.30) !import
    ═══════════════════════════════════════════════════════════════ */
 
 /* Root */
-.lp-root { background: #0f1117; min-height: 100vh; color: #e5e7eb; }
-html.light .lp-root { background: #fffcf8; color: #1a0f00; }
+.lp-root { background: transparent; min-height: 100vh; color: #e5e7eb; }
+html.light .lp-root { background: transparent; color: #1a0f00; }
+
+/* Landing body gradient (no dashboard layout wrapper here) */
+body:has(.lp-root) {
+  background:
+    radial-gradient(ellipse 70% 120% at 0% 50%,
+      rgba(13,31,60,1) 0%,
+      rgba(17,24,39,0.95) 35%,
+      rgba(15,17,23,1) 60%,
+      rgba(10,13,26,1) 100%) !important;
+}
+html.light body:has(.lp-root) {
+  background:
+    radial-gradient(ellipse 70% 120% at 0% 50%,
+      rgba(255,180,80,0.22) 0%,
+      rgba(255,210,140,0.12) 25%,
+      rgba(245,235,220,0.10) 50%,
+      #f2ede6 70%,
+      #ede8e0 100%) !important;
+}
 html.light .lp-root h2,
 html.light .lp-root h3 { color: #1a0f00; }
 
