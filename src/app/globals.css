@@ -1478,11 +1478,11 @@ html.light .lp-footer {
 html.light .lp-footer-link { color: #9a7355; }
 html.light .lp-footer-link:hover { color: #5a3a1a; }
 
-/* Teal CTA buttons (rendered as <a>) — keep text dark in both modes */
+/* Navbar CTA button — indigo/violet gradient matches dark theme */
 a.lp-cta-teal,
 .lp-cta-teal {
-  color: #0f1117 !important;
-  background: #00d4aa;
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   border-radius: 10px;
   display: inline-flex;
   align-items: center;
@@ -1491,11 +1491,16 @@ a.lp-cta-teal,
   font-weight: 700;
   text-decoration: none;
   transition: opacity 0.2s;
+  box-shadow: 0 0 18px rgba(99,102,241,0.35);
 }
 a.lp-cta-teal:hover,
-.lp-cta-teal:hover { opacity: 0.85; }
+.lp-cta-teal:hover { opacity: 0.88; }
 html.light a.lp-cta-teal,
-html.light .lp-cta-teal { color: #0f1117 !important; }
+html.light .lp-cta-teal {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #d97706 0%, #c2610c 100%);
+  box-shadow: 0 0 18px rgba(217,119,6,0.30);
+}
 
 a.lp-hero-cta,
 .lp-hero-cta {
