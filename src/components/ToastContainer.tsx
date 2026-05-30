@@ -78,7 +78,10 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
 
   return (
     <div
-      onClick={onDismiss}
+      // Only dismiss on click when there's NO action button — otherwise the
+      // toast becomes too easy to dismiss accidentally before the user can
+      // hit "Deshacer".
+      onClick={toast.action ? undefined : onDismiss}
       style={{
         position: 'relative',
         display: 'flex',
@@ -89,7 +92,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
         background: cfg.bg,
         border: `1px solid ${cfg.border}`,
         boxShadow: `0 4px 24px rgba(0,0,0,0.4)`,
-        cursor: 'pointer',
+        cursor: toast.action ? 'default' : 'pointer',
         minWidth: '280px',
         maxWidth: '380px',
         opacity: visible ? 1 : 0,
@@ -140,6 +143,35 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
           </p>
         )}
       </div>
+
+      {/* Action button (e.g. "Deshacer") */}
+      {toast.action && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            toast.action!.onClick()
+            onDismiss()
+          }}
+          style={{
+            background: `${cfg.color}22`,
+            border:     `1px solid ${cfg.color}55`,
+            color:      cfg.color,
+            padding:    '5px 10px',
+            borderRadius: '8px',
+            fontSize:   '12px',
+            fontWeight: 700,
+            cursor:     'pointer',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+            transition: 'background 150ms',
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = `${cfg.color}44` }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = `${cfg.color}22` }}
+        >
+          {toast.action.label}
+        </button>
+      )}
 
       {/* Barra de progreso */}
       <ProgressBar duration={toast.duration ?? 4000} color={cfg.color} />

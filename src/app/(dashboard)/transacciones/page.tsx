@@ -6,6 +6,8 @@ import ResumenPresupuesto from './ResumenPresupuesto'
 import TransaccionesChart from './TransaccionesChart'
 import HelpModal from '@/components/help/HelpModal'
 import QuickAddFAB from '@/components/QuickAddFAB'
+import ScreenshotImportButton from '@/components/ScreenshotImportButton'
+import TransactionDeleteButton from '@/components/TransactionDeleteButton'
 import Link from 'next/link'
 
 const fmtCOP = (n: number) =>
@@ -60,11 +62,13 @@ export default async function TransaccionesPage({
   const { data: transactions } = await supabase
     .from('transactions')
     .select('id, user_id, account_id, type, amount, category, description, date, accounts!transactions_account_id_fkey(name)')
+    .is('deleted_at', null)
     .order('date', { ascending: false })
 
   const { data: txChart } = await supabase
     .from('transactions')
     .select('date, amount, type')
+    .is('deleted_at', null)
     .gte('date', desde)
 
   const chartMap: Record<string, { ingresos: number; gastos: number }> = {}
@@ -132,6 +136,7 @@ export default async function TransaccionesPage({
           </div>
           <div className="flex items-center gap-3">
             <HelpModal moduleId="transacciones" />
+            <ScreenshotImportButton />
             <Link
               href="/transacciones/importar"
               className="btn-secondary flex items-center gap-2 px-3 py-2 text-sm"
@@ -297,6 +302,10 @@ export default async function TransaccionesPage({
                         accounts={accounts}
                         accountId={t.account_id}
                         type={t.type}
+                      />
+                      <TransactionDeleteButton
+                        txId={t.id}
+                        label={t.description || t.category || 'Movimiento'}
                       />
                     </div>
                   </div>

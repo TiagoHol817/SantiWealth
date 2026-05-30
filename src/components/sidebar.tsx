@@ -10,7 +10,7 @@ import {
   LayoutDashboard, ArrowLeftRight, TrendingUp,
   PieChart, Target, Receipt, LogOut,
   Eye, EyeOff, Bell, X, BarChart3, Wallet,
-  Sun, Moon, Settings2,
+  Sun, Moon, Settings2, Trash2, Landmark, PiggyBank,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import WealtHostBrand from '@/components/WealtHostBrand'
@@ -30,24 +30,27 @@ const navGroups: { label?: string; items: { href: string; label: string; icon: E
   {
     label: 'FINANZAS',
     items: [
-      { href: '/transacciones', label: 'Transacciones', icon: ArrowLeftRight, tooltip: 'Ingresos y gastos'      },
-      { href: '/inversiones',   label: 'Inversiones',   icon: TrendingUp,     tooltip: 'Bolsa, cripto y CDTs'  },
-      { href: '/presupuestos',  label: 'Presupuestos',  icon: PieChart,       tooltip: 'Controla tu gasto'     },
+      { href: '/transacciones', label: 'Transacciones', icon: ArrowLeftRight, tooltip: 'Ingresos y gastos'   },
+      { href: '/inversiones',   label: 'Inversiones',   icon: TrendingUp,     tooltip: 'Bolsa, ETFs y cripto' },
+      { href: '/cdts',          label: 'CDTs',          icon: Landmark,       tooltip: 'Certificados de depósito a término' },
+      { href: '/presupuestos',  label: 'Presupuestos',  icon: PieChart,       tooltip: 'Controla tu gasto'    },
     ],
   },
   {
     label: 'PLANIFICACIÓN',
     items: [
-      { href: '/metas',     label: 'Metas',        icon: Target,  tooltip: 'Tus objetivos financieros' },
-      { href: '/costos-op', label: 'Costos fijos', icon: Receipt, tooltip: 'Gastos recurrentes'        },
-      { href: '/ingresos',  label: 'Ingresos',     icon: Wallet,  tooltip: 'Fuentes de ingreso'        },
+      { href: '/metas',     label: 'Metas',             icon: Target,    tooltip: 'Tus objetivos financieros'              },
+      { href: '/ahorros',   label: 'Ahorro programado', icon: PiggyBank, tooltip: 'Planes de ahorro con depósitos periódicos' },
+      { href: '/costos-op', label: 'Costos fijos',      icon: Receipt,   tooltip: 'Gastos recurrentes'                      },
+      { href: '/ingresos',  label: 'Ingresos',          icon: Wallet,    tooltip: 'Fuentes de ingreso'                      },
     ],
   },
   {
     label: 'ANÁLISIS',
     items: [
-      { href: '/reportes', label: 'Reportes', icon: BarChart3, tooltip: 'Análisis y estadísticas' },
-      { href: '/settings', label: 'Ajustes',  icon: Settings2, tooltip: 'Configuración'           },
+      { href: '/reportes',                  label: 'Reportes', icon: BarChart3, tooltip: 'Análisis y estadísticas' },
+      { href: '/settings',                  label: 'Ajustes',  icon: Settings2, tooltip: 'Configuración'           },
+      { href: '/configuracion/papelera',    label: 'Papelera', icon: Trash2,    tooltip: 'Elementos eliminados (30 días)' },
     ],
   },
 ]
@@ -611,7 +614,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     {cdtAlerts.map(a => {
                       const color = a.dias <= 7 ? '#ef4444' : a.dias <= 15 ? '#f59e0b' : '#6366f1'
                       return (
-                        <Link key={a.id} href="/inversiones?tab=renta-fija" onClick={() => setShowAlerts(false)}
+                        <Link key={a.id} href="/cdts" onClick={() => setShowAlerts(false)}
                           className="flex items-center justify-between px-4 py-3 hover:bg-white/[0.03] transition-all"
                           style={{ borderBottom: '1px solid #1e2535' }}>
                           <div>

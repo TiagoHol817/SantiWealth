@@ -6,6 +6,7 @@ import { ToastProvider } from '@/context/ToastContext'
 import { SettingsProvider } from '@/context/SettingsContext'
 import ToastContainer from '@/components/ToastContainer'
 import OnboardingWizard from '@/components/help/OnboardingWizard'
+import DemoBanner from '@/components/DemoBanner'
 
 export default async function DashboardLayout({
   children,
@@ -35,6 +36,7 @@ export default async function DashboardLayout({
         </BalanceProvider>
       </SettingsProvider>
       <ToastContainer />
+      <DemoBanner email={user.email} />
     </ToastProvider>
   )
 }

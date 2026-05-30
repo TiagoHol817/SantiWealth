@@ -4,21 +4,39 @@ import { createContext, useContext, useState, useCallback, ReactNode } from 'rea
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
 
+export interface ToastAction {
+  label:   string
+  onClick: () => void
+}
+
 export interface Toast {
-  id: string
-  type: ToastType
-  title: string
-  message?: string
+  id:        string
+  type:      ToastType
+  title:     string
+  message?:  string
   duration?: number
+  action?:   ToastAction
 }
 
 interface ToastContextValue {
   toasts: Toast[]
   toast: {
     success: (title: string, message?: string) => void
-    error: (title: string, message?: string) => void
+    error:   (title: string, message?: string) => void
     warning: (title: string, message?: string) => void
-    info: (title: string, message?: string) => void
+    info:    (title: string, message?: string) => void
+    /**
+     * Show a toast with an action button (e.g. "Deshacer").
+     * The default duration is 10 s — long enough to react to a destructive
+     * operation but short enough to dismiss itself.
+     */
+    withAction: (opts: {
+      type?:     ToastType
+      title:     string
+      message?:  string
+      action:    ToastAction
+      duration?: number
+    }) => void
   }
   dismiss: (id: string) => void
 }
@@ -32,17 +50,27 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts(prev => prev.filter(t => t.id !== id))
   }, [])
 
-  const addToast = useCallback((type: ToastType, title: string, message?: string, duration = 4000) => {
-    const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-    setToasts(prev => [...prev, { id, type, title, message, duration }])
-    setTimeout(() => dismiss(id), duration)
-  }, [dismiss])
+  const addToast = useCallback(
+    (type: ToastType, title: string, message?: string, duration = 4000, action?: ToastAction) => {
+      const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+      setToasts(prev => [...prev, { id, type, title, message, duration, action }])
+      setTimeout(() => dismiss(id), duration)
+    },
+    [dismiss]
+  )
 
   const toast = {
     success: (title: string, message?: string) => addToast('success', title, message),
     error:   (title: string, message?: string) => addToast('error',   title, message, 6000),
     warning: (title: string, message?: string) => addToast('warning', title, message),
     info:    (title: string, message?: string) => addToast('info',    title, message),
+    withAction: (opts: {
+      type?:     ToastType
+      title:     string
+      message?:  string
+      action:    ToastAction
+      duration?: number
+    }) => addToast(opts.type ?? 'info', opts.title, opts.message, opts.duration ?? 10_000, opts.action),
   }
 
   return (

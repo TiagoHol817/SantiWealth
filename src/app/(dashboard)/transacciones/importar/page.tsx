@@ -824,7 +824,7 @@ export default function ImportarPage() {
                   } catch { /* non-blocking */ }
                   setRegisteringInvestments(false)
                   setShowInvestmentBanner(false)
-                  router.push('/inversiones?tab=renta-fija')
+                  router.push('/cdts')
                 }}
                 disabled={registeringInvestments}
                 className="flex-1 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"

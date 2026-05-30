@@ -531,8 +531,17 @@ export default function OnboardingPage() {
     setSaving(true)
     setSaveError(false)
 
+    // Total declared in broker-type accounts = initial investment portfolio
+    const initialInvestment = data.accounts
+      .filter(a => a.type === 'broker')
+      .reduce((s, a) => s + (Number(a.balance) || 0), 0)
+
     try {
-      await completeOnboarding({ base_currency: data.currency, country: data.country })
+      await completeOnboarding({
+        base_currency:      data.currency,
+        country:            data.country,
+        initial_investment: initialInvestment > 0 ? initialInvestment : undefined,
+      })
     } catch (err) {
       console.error('[onboarding] completeOnboarding failed:', err)
       setSaving(false)
@@ -540,35 +549,74 @@ export default function OnboardingPage() {
       return
     }
 
+    // ── Map UI account types to schema enum (account_type) ────────────────
+    // Schema enum values: bank | brokerage | crypto | cash | liability | other
+    // The UI exposes: bank | cash | broker | other  (no "investment", which was
+    // an old alias that produced silent insert failures against the new enum).
+    const mapAccountType = (uiType: string): 'bank' | 'brokerage' | 'cash' | 'other' => {
+      if (uiType === 'broker' || uiType === 'investment') return 'brokerage'
+      if (uiType === 'cash')   return 'cash'
+      if (uiType === 'other')  return 'other'
+      return 'bank'
+    }
+
     try {
       const supabase = createClient()
-      for (const acc of data.accounts) {
-        const balance = Number(acc.balance)
-        if (balance > 0 || acc.name.trim()) {
-          await supabase.from('accounts').insert({
-            name:            acc.name.trim() || 'Cuenta',
-            type:            acc.type === 'broker' ? 'investment' : acc.type === 'other' ? 'other' : acc.type,
-            currency:        data.currency,
-            current_balance: balance,
-          })
+
+      // ── Accounts insert (batched so any error halts the flow) ────────────
+      const accountsToInsert = data.accounts
+        .filter((acc) => Number(acc.balance) > 0 || acc.name.trim())
+        .map((acc) => ({
+          user_id:         user.id,                    // RLS rejects rows without this
+          name:            acc.name.trim() || 'Cuenta',
+          type:            mapAccountType(acc.type),
+          currency:        data.currency,
+          current_balance: Number(acc.balance) || 0,
+          is_active:       true,
+        }))
+
+      if (accountsToInsert.length > 0) {
+        const { error: accountsError } = await supabase
+          .from('accounts')
+          .insert(accountsToInsert)
+
+        if (accountsError) {
+          console.error('[onboarding] accounts insert failed:', accountsError.message)
+          setSaving(false)
+          setSaveError(true)
+          return
         }
       }
 
+      // ── Investment goals insert ──────────────────────────────────────────
+      // Schema column is `target_currency` (enum: USD | COP), NOT `currency`.
+      // Using the wrong column name was failing silently for every user.
       const goalAmount = Number(data.goalAmount)
       if (data.goalName.trim() && goalAmount > 0) {
-        await supabase.from('investment_goals').insert({
-          name:           data.goalName.trim(),
-          target_amount:  goalAmount,
-          current_amount: 0,
-          icon:           data.goalIcon || '🎯',
-          color:          '#D4AF37',
-          currency:       data.currency,
-          is_featured:    true,
+        const { error: goalError } = await supabase.from('investment_goals').insert({
+          user_id:         user.id,                    // RLS — same reason as above
+          name:            data.goalName.trim(),
+          target_amount:   goalAmount,
+          current_amount:  0,
+          icon:            data.goalIcon || '🎯',
+          color:           '#D4AF37',
+          target_currency: data.currency === 'USD' ? 'USD' : 'COP',
+          is_featured:     true,
           ...(data.goalDate ? { target_date: data.goalDate } : {}),
         })
+
+        if (goalError) {
+          console.error('[onboarding] investment_goals insert failed:', goalError.message)
+          setSaving(false)
+          setSaveError(true)
+          return
+        }
       }
     } catch (err) {
-      console.error('[onboarding] Non-critical save failed:', err)
+      console.error('[onboarding] save failed:', err)
+      setSaving(false)
+      setSaveError(true)
+      return
     }
 
     trigger('onboarding_complete')

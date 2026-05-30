@@ -9,6 +9,16 @@ const nextConfig: NextConfig = {
   // Silencia el warning de Turbopack
   turbopack: {},
 
+  // Legacy CDT routes — module was split out of /inversiones into /cdts.
+  // We can't rewrite by query string (Next.js redirects only key on path),
+  // so this only covers anyone who saved /inversiones/cdts/* as a bookmark.
+  async redirects() {
+    return [
+      { source: '/inversiones/cdts',           destination: '/cdts', permanent: true },
+      { source: '/inversiones/cdts/:path*',    destination: '/cdts', permanent: true },
+    ]
+  },
+
   // Deshabilita el header X-Powered-By
   poweredByHeader: false,
 
@@ -31,11 +41,30 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+              // blob: lets Tesseract.js spawn its OCR worker (the worker
+              // script is fetched, blob-wrapped, then instantiated).
+              // cdn.jsdelivr.net is the primary Tesseract.js CDN (v5);
+              // unpkg.com stays allowlisted as a fallback.
+              // tessdata.projectnaptha.com hosts the spa/eng language data.
+              // 'unsafe-eval' is required so the WASM module can compile.
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://cdn.jsdelivr.net https://unpkg.com https://tessdata.projectnaptha.com",
+              // script-src-elem is what modern Chromium consults for <script src>
+              // loads. Mirroring the CDN allowlist here means we don't depend on
+              // the script-src fallback. 'unsafe-eval' is deliberately omitted
+              // because it only applies to script-src, not script-src-elem.
+              "script-src-elem 'self' 'unsafe-inline' blob: https://cdn.jsdelivr.net https://unpkg.com https://tessdata.projectnaptha.com",
+              // Explicit worker-src so the browser doesn't have to fall back
+              // to script-src (cleaner, modern CSP). Tesseract uses blob: URLs.
+              "worker-src 'self' blob:",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://query1.finance.yahoo.com https://datos.gov.co",
-              "img-src 'self' data: https://*.supabase.co",
+              // tessdata.projectnaptha.com → Spanish/English language data.
+              // cdn.jsdelivr.net           → primary Tesseract.js v5 CDN.
+              // unpkg.com                  → Tesseract fallback CDN.
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://query1.finance.yahoo.com https://datos.gov.co https://tessdata.projectnaptha.com https://cdn.jsdelivr.net https://unpkg.com",
+              // blob: is required so URL.createObjectURL() previews of
+              // user-selected files (e.g. screenshot import modal) can render.
+              "img-src 'self' data: blob: https://*.supabase.co",
               "frame-src 'none'",
               "object-src 'none'",
               "base-uri 'self'",

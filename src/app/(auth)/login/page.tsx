@@ -46,6 +46,16 @@ export default function LoginPage() {
   const [lang, setLang]             = useState<'es' | 'en'>('es')
   const [showLang, setShowLang]     = useState(false)
 
+  // Clear any stale Supabase tokens from localStorage on login page load.
+  // This prevents "Refresh Token Not Found" loops after a session expires.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      Object.keys(localStorage)
+        .filter(key => key.includes('supabase') || key.startsWith('sb-'))
+        .forEach(key => localStorage.removeItem(key))
+    }
+  }, [])
+
   // Read ?error= from URL (redirected from OAuth callback)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)

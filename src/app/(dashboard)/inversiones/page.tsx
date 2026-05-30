@@ -1,10 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import HiddenValue from '@/components/HiddenValue'
 import DonutChartClient from './DonutChartClient'
-import InversionesTabNav from './InversionesTabNav'
-import CDTUploader from '../cdts/CDTUploader'
 import { getTRM } from '@/lib/services/currency'
 import HelpModal from '@/components/help/HelpModal'
+import PositionRowActions from '@/components/PositionRowActions'
+import { Plus } from 'lucide-react'
 
 interface PriceData {
   price: number; prevClose: number; dayChange: number
@@ -37,8 +37,6 @@ async function getPrices(tickers: string[]): Promise<Record<string, PriceData>> 
 
 const fmtUSD  = (n: number, dec = 2) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: dec }).format(n)
-const fmtCOP  = (n: number) =>
-  new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n)
 const fmtPct  = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`
 const fmtSh   = (n: number) => n % 1 === 0 ? n.toString() : n.toFixed(4)
 
@@ -62,24 +60,79 @@ function DayRangeBar({ low, high, current, color }: { low: number; high: number;
   )
 }
 
-export default async function InversionesPage({
-  searchParams
-}: {
-  searchParams: Promise<{ tab?: string }>
-}) {
-  const params    = await searchParams
-  const activeTab = params.tab ?? 'portafolio'
-
+export default async function InversionesPage() {
   const supabase  = await createClient()
   const trmResult = await getTRM()
   const trm       = trmResult.rate
 
   // ── Portafolio ────────────────────────────────────────────────────────────
-  const { data: investments } = await supabase.from('investments').select('*')
-  const tickers  = investments?.map(i => i.ticker) ?? []
+  // There is no `investments` table in the schema — that was a legacy name.
+  // Positions are derived from `investment_assets` (catalog) + `investment_transactions`
+  // (the source of truth for shares & cost basis). We aggregate per asset on the fly
+  // instead of relying on `portfolio_positions`, which is unmaintained by any trigger.
+  const [{ data: assets }, { data: txs }] = await Promise.all([
+    supabase
+      .from('investment_assets')
+      .select('id, name, ticker, asset_type, currency, is_active')
+      .eq('is_active', true)
+      .is('deleted_at', null),
+    supabase
+      .from('investment_transactions')
+      .select('asset_id, type, shares, price_usd, fee_usd, total_usd')
+      .eq('is_active', true),
+  ])
+
+  type TxRow = {
+    asset_id:  string
+    type:      string
+    shares:    number | string | null
+    price_usd: number | string | null
+    fee_usd:   number | string | null
+    total_usd: number | string | null
+  }
+
+  // Roll up buys & sells per asset.
+  const byAsset = new Map<string, { sharesBuy: number; usdBuy: number; sharesSell: number; usdSell: number }>()
+  for (const tx of (txs ?? []) as TxRow[]) {
+    const key = tx.asset_id
+    if (!byAsset.has(key)) byAsset.set(key, { sharesBuy: 0, usdBuy: 0, sharesSell: 0, usdSell: 0 })
+    const agg     = byAsset.get(key)!
+    const shares  = Number(tx.shares) || 0
+    const total   = Number(tx.total_usd) || (Number(tx.price_usd) * shares + (Number(tx.fee_usd) || 0))
+
+    if (tx.type === 'buy' || tx.type === 'transfer_in') {
+      agg.sharesBuy  += shares
+      agg.usdBuy     += total
+    } else if (tx.type === 'sell' || tx.type === 'transfer_out') {
+      agg.sharesSell += shares
+      agg.usdSell    += total
+    }
+  }
+
+  const investments = (assets ?? [])
+    .map((a) => {
+      const agg       = byAsset.get(a.id) ?? { sharesBuy: 0, usdBuy: 0, sharesSell: 0, usdSell: 0 }
+      const netShares = agg.sharesBuy - agg.sharesSell
+      // Cost basis = average buy price weighted by shares (FIFO would be more accurate
+      // but requires per-lot tracking — this is good enough for the dashboard rollup).
+      const avgCost  = agg.sharesBuy > 0 ? agg.usdBuy / agg.sharesBuy : 0
+      const invested = netShares * avgCost
+      return {
+        id:       a.id,
+        ticker:   a.ticker,
+        name:     a.name,
+        type:     a.asset_type, // 'stock' | 'crypto' | 'etf' | 'fund' | 'real_estate'
+        shares:   netShares,
+        invested,
+        avg_cost: avgCost,
+      }
+    })
+    .filter((inv) => inv.shares > 0)
+
+  const tickers  = investments.map((i) => i.ticker)
   const prices   = await getPrices(tickers)
 
-  const rows = (investments?.map(inv => {
+  const rows = investments.map((inv) => {
     const pd       = prices[inv.ticker]
     const price    = pd?.price ?? 0
     const mktVal   = price * Number(inv.shares)
@@ -88,7 +141,7 @@ export default async function InversionesPage({
     const gain     = mktVal - invested
     const gainPct  = invested > 0 ? (gain / invested) * 100 : 0
     return { ...inv, price, mktVal, gain, gainPct, avgCost, pd }
-  }) ?? []).sort((a, b) => b.mktVal - a.mktVal)
+  }).sort((a, b) => b.mktVal - a.mktVal)
 
   const totalMktVal    = rows.reduce((s, r) => s + r.mktVal, 0)
   const totalInvested  = rows.reduce((s, r) => s + Number(r.invested), 0)
@@ -116,74 +169,13 @@ export default async function InversionesPage({
     }
   })
 
-  // ── CDTs ─────────────────────────────────────────────────────────────────
-  const [{ data: cdtAccounts }, { data: cdtsImported }] = await Promise.all([
-    supabase.from('accounts').select('*').eq('type', 'other').ilike('name', '%CDT%'),
-    supabase.from('cdts').select('*').order('start_date', { ascending: false }),
-  ])
-
-  const today = new Date()
-
-  const cdtsFromAccounts = (cdtAccounts ?? []).map(a => {
-    const meta         = typeof a.notes === 'string' ? JSON.parse(a.notes) : (a.notes ?? {})
-    const vencimiento  = new Date(meta.vencimiento)
-    const apertura     = new Date(meta.apertura)
-    const diasRestantes = Math.ceil((vencimiento.getTime() - today.getTime()) / 86400000)
-    const diasTotales  = Math.max(1, Math.ceil((vencimiento.getTime() - apertura.getTime()) / 86400000))
-    const progreso     = Math.min(100, Math.max(0, Math.round(((diasTotales - diasRestantes) / diasTotales) * 100)))
-    const capital      = Number(a.current_balance) || 0
-    const rendTotal    = capital * ((meta.tasa_ea ?? 0) / 100) * (diasTotales / 365)
-    const rendActual   = capital * ((meta.tasa_ea ?? 0) / 100) * ((diasTotales - Math.max(0, diasRestantes)) / 365)
-    return {
-      id: a.id, name: a.name, meta, diasRestantes, diasTotales, progreso,
-      capital, rendTotal, rendActual,
-      vencido: diasRestantes <= 0, urgente: diasRestantes > 0 && diasRestantes <= 15,
-      source: 'account' as const,
-    }
-  })
-
-  const cdtsFromTable = (cdtsImported ?? []).map(c => {
-    const endDate    = c.end_date ?? c.start_date
-    const apertura   = new Date(c.start_date)
-    const vencim     = new Date(endDate)
-    const diasRestantes = Math.ceil((vencim.getTime() - today.getTime()) / 86400000)
-    const diasTotales   = Math.max(1, Math.ceil((vencim.getTime() - apertura.getTime()) / 86400000))
-    const progreso   = Math.min(100, Math.max(0, Math.round(((diasTotales - diasRestantes) / diasTotales) * 100)))
-    const capital    = Number(c.capital)
-    const tasaEa     = Number(c.interest_rate ?? 0)
-    const rendTotal  = capital * (tasaEa / 100) * (diasTotales / 365)
-    const rendActual = capital * (tasaEa / 100) * ((diasTotales - Math.max(0, diasRestantes)) / 365)
-    const meta = {
-      apertura:        c.start_date,
-      vencimiento:     endDate,
-      tasa_ea:         tasaEa,
-      tasa_nominal:    tasaEa,
-      plazo_dias:      c.term_days ?? diasTotales,
-      interes_periodo: Number(c.interest_earned ?? 0),
-    }
-    return {
-      id: c.id as string,
-      name: `${c.bank}${c.investment_id ? ' #' + String(c.investment_id).slice(-6) : ' (importado)'}`,
-      meta, diasRestantes, diasTotales, progreso,
-      capital, rendTotal, rendActual,
-      vencido: diasRestantes <= 0, urgente: diasRestantes > 0 && diasRestantes <= 15,
-      source: 'cdts' as const,
-    }
-  })
-
-  const cdts = [...cdtsFromAccounts, ...cdtsFromTable]
-    .sort((a, b) => a.diasRestantes - b.diasRestantes)
-
-  const totalCapitalCDT = cdts.reduce((s, c) => s + c.capital, 0)
-  const totalRendCDT    = cdts.reduce((s, c) => s + c.rendTotal, 0)
-  const totalActualCDT  = cdts.reduce((s, c) => s + c.rendActual, 0)
-  const proximoVenc     = cdts.find(c => !c.vencido)
+  // ── CDT data moved to /cdts module ───────────────────────────────────────
+  // Renta-fija logic (cdts table + legacy accounts of CDT type) now lives in
+  // src/app/(dashboard)/cdts/page.tsx so this page focuses on the market-priced
+  // portfolio (stocks, ETFs, crypto).
 
   const isTotalPos = totalGain >= 0
   const isDayPos   = totalDayChange >= 0
-
-  const fmtDate = (d: string) =>
-    new Date(d).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
 
   return (
     <div className="space-y-6 pb-8" style={{ background: 'radial-gradient(ellipse at top right, rgba(99,102,241,0.05) 0%, transparent 60%)' }}>
@@ -198,27 +190,24 @@ export default async function InversionesPage({
           </div>
           <div className="flex items-center gap-3">
             <HelpModal moduleId="inversiones" />
-            <a href="/inversiones/importar"
-              className="px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-              style={{ backgroundColor: 'rgba(245,158,11,0.10)', border: '1px solid #f59e0b40', color: '#f59e0b' }}>
-              ← Importar CDT
-            </a>
-            <a href="/inversiones"
-              className="px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
-              style={{ backgroundColor: 'rgba(16,185,129,0.10)', border: '1px solid #10b98140', color: '#10b981' }}>
-              ↻ Actualizar
+            <a
+              href="/inversiones/agregar"
+              className="btn-primary inline-flex items-center gap-2"
+              style={{ padding: '10px 18px', fontSize: '13px' }}
+            >
+              <Plus size={14} />
+              Agregar inversión
             </a>
           </div>
         </div>
       </div>
 
       {/* KPIs globales */}
-      <div className="grid grid-cols-4 gap-4 page-enter page-enter-delay-1">
+      <div className="grid grid-cols-3 gap-4 page-enter page-enter-delay-1">
         {[
-          { label: 'Valor de mercado',   value: fmtUSD(totalMktVal),    color: '#e5e7eb', sub: `Invertido: ${fmtUSD(totalInvested)}`,   animClass: 'breathe-green' },
-          { label: 'Ganancia total',     value: fmtUSD(totalGain),      color: isTotalPos ? '#10b981' : '#ef4444', sub: fmtPct(totalGainPct), animClass: isTotalPos ? 'breathe-green' : '' },
-          { label: 'Cambio hoy',         value: fmtUSD(totalDayChange), color: isDayPos   ? '#10b981' : '#ef4444', sub: fmtPct(totalDayPct),  animClass: '' },
-          { label: 'CDTs — Capital',     value: fmtCOP(totalCapitalCDT), color: '#f59e0b', sub: `Rendimiento: ${fmtCOP(totalActualCDT)}`, animClass: '' },
+          { label: 'Valor de mercado', value: fmtUSD(totalMktVal),    color: '#e5e7eb', sub: `Invertido: ${fmtUSD(totalInvested)}`,                animClass: 'breathe-green' },
+          { label: 'Ganancia total',   value: fmtUSD(totalGain),      color: isTotalPos ? '#10b981' : '#ef4444', sub: fmtPct(totalGainPct), animClass: isTotalPos ? 'breathe-green' : '' },
+          { label: 'Cambio hoy',       value: fmtUSD(totalDayChange), color: isDayPos   ? '#10b981' : '#ef4444', sub: fmtPct(totalDayPct),  animClass: '' },
         ].map(item => (
           <div key={item.label} className={`card p-5 relative overflow-hidden${item.animClass ? ` ${item.animClass}` : ''}`}>
             <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
@@ -235,11 +224,8 @@ export default async function InversionesPage({
         ))}
       </div>
 
-      {/* Tab Navigation */}
-      <InversionesTabNav activeTab={activeTab} cdtCount={cdts.length} proximoVenc={proximoVenc?.diasRestantes} />
-
-      {/* ══ TAB: PORTAFOLIO ══════════════════════════════════════════════════ */}
-      {activeTab === 'portafolio' && rows.length === 0 && (
+      {/* Empty state */}
+      {rows.length === 0 && (
         <div className="card rounded-2xl overflow-hidden relative page-enter page-enter-delay-2">
           <div className="absolute top-0 left-1/2 w-96 h-96 rounded-full opacity-[0.07] blur-3xl pointer-events-none"
             style={{ background: '#6366f1', transform: 'translate(-50%, -40%)' }} />
@@ -263,7 +249,7 @@ export default async function InversionesPage({
               {[
                 { icon: '📊', title: 'Portafolio en vivo', desc: 'Precios actualizados de Yahoo Finance cada minuto' },
                 { icon: '💱', title: 'Doble moneda', desc: 'Todo convertido a COP y USD con TRM del día' },
-                { icon: '🎯', title: 'Camino a $100K USD', desc: 'Rastrea tu avance hacia la meta de patrimonio neto' },
+                { icon: '🎯', title: 'Tu portafolio empieza aquí', desc: 'Registra acciones, ETFs, cripto, CDTs o finca raíz — WealtHost calcula tu rendimiento en tiempo real.' },
               ].map(card => (
                 <div key={card.title} className="stat-cell p-4">
                   <p style={{ fontSize: '22px', marginBottom: '8px' }}>{card.icon}</p>
@@ -285,7 +271,7 @@ export default async function InversionesPage({
         </div>
       )}
 
-      {activeTab === 'portafolio' && rows.length > 0 && (
+      {rows.length > 0 && (
         <>
           {/* Donut + distribución */}
           <div className="card card-purple p-6 relative overflow-hidden page-enter page-enter-delay-2">
@@ -386,18 +372,21 @@ export default async function InversionesPage({
                               {fmtSh(Number(row.shares))} unidades
                             </p>
                           </div>
-                          <div className="text-right">
-                            <HiddenValue value={fmtUSD(row.mktVal)} className="tabular-nums font-bold"
-                              style={{ color: g.color, fontSize: '16px' }} />
-                            <div className="flex items-center justify-end gap-1.5 mt-0.5">
-                              <span style={{ color: isPos ? '#10b981' : '#ef4444', fontSize: '11px', fontWeight: '600' }}>
-                                {isPos ? '▲' : '▼'} {fmtUSD(Math.abs(row.gain))}
-                              </span>
-                              <span className="tabular-nums text-xs px-1.5 py-0.5 rounded-full"
-                                style={{ backgroundColor: isPos ? '#10b98120' : '#ef444420', color: isPos ? '#10b981' : '#ef4444' }}>
-                                {fmtPct(row.gainPct)}
-                              </span>
+                          <div className="flex items-start gap-2">
+                            <div className="text-right">
+                              <HiddenValue value={fmtUSD(row.mktVal)} className="tabular-nums font-bold"
+                                style={{ color: g.color, fontSize: '16px' }} />
+                              <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                                <span style={{ color: isPos ? '#10b981' : '#ef4444', fontSize: '11px', fontWeight: '600' }}>
+                                  {isPos ? '▲' : '▼'} {fmtUSD(Math.abs(row.gain))}
+                                </span>
+                                <span className="tabular-nums text-xs px-1.5 py-0.5 rounded-full"
+                                  style={{ backgroundColor: isPos ? '#10b98120' : '#ef444420', color: isPos ? '#10b981' : '#ef4444' }}>
+                                  {fmtPct(row.gainPct)}
+                                </span>
+                              </div>
                             </div>
+                            <PositionRowActions assetId={row.id} label={`${row.ticker} · ${row.name}`} />
                           </div>
                         </div>
                         <div className="grid grid-cols-3 gap-3 mb-2">
@@ -439,115 +428,6 @@ export default async function InversionesPage({
               })}
             </div>
           ))}
-        </>
-      )}
-
-      {/* ══ TAB: RENTA FIJA (CDTs) ═══════════════════════════════════════════ */}
-      {activeTab === 'renta-fija' && (
-        <>
-          <div className="flex items-center justify-between">
-            <p className="text-muted" style={{ fontSize: '13px' }}>
-              {cdts.length} CDT{cdts.length !== 1 ? 's' : ''} activo{cdts.length !== 1 ? 's' : ''}
-            </p>
-            <CDTUploader cdts={cdtsFromAccounts.map(c => ({ id: c.id, name: c.name, notes: c.meta, current_balance: c.capital }))} />
-          </div>
-
-          {/* KPIs CDTs */}
-          <div className="grid grid-cols-3 gap-4 page-enter page-enter-delay-1">
-            {[
-              { label: 'Capital total',          value: fmtCOP(totalCapitalCDT), color: '#e5e7eb' },
-              { label: 'Rendimiento proyectado', value: fmtCOP(totalRendCDT),    color: '#10b981' },
-              { label: 'Rendimiento acumulado',  value: fmtCOP(totalActualCDT),  color: '#6366f1' },
-            ].map(item => (
-              <div key={item.label} className="card p-5 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl"
-                  style={{ background: item.color, transform: 'translate(30%,-30%)' }} />
-                <p className="text-muted" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
-                  {item.label}
-                </p>
-                <HiddenValue value={item.value} className="tabular-nums font-bold"
-                  style={{ color: item.color, fontSize: '22px' }} />
-              </div>
-            ))}
-          </div>
-
-          {/* Alerta próximo vencimiento */}
-          {proximoVenc !== undefined && proximoVenc.diasRestantes <= 30 && (
-            <div className="rounded-2xl px-5 py-4 flex items-center gap-3"
-              style={{ backgroundColor: proximoVenc.diasRestantes <= 7 ? '#2d1515' : '#2d1f0a', border: `1px solid ${proximoVenc.diasRestantes <= 7 ? '#ef444440' : '#f59e0b40'}` }}>
-              <span style={{ fontSize: '20px' }}>{proximoVenc.diasRestantes <= 7 ? '🚨' : '⚠️'}</span>
-              <p style={{ color: proximoVenc.diasRestantes <= 7 ? '#ef4444' : '#f59e0b', fontSize: '13px', fontWeight: '600' }}>
-                Próximo vencimiento en {proximoVenc.diasRestantes} días — {proximoVenc.name}
-              </p>
-            </div>
-          )}
-
-          {/* Lista CDTs */}
-          <div className="space-y-4 page-enter page-enter-delay-2">
-            {cdts.length === 0 ? (
-              <div className="card p-16 text-center">
-                <p className="text-4xl mb-4">📄</p>
-                <p className="text-white font-semibold mb-2">Sin CDTs registrados</p>
-                <p className="text-muted" style={{ fontSize: '13px' }}>Agrega tu primer CDT con el botón de arriba</p>
-              </div>
-            ) : cdts.map(cdt => {
-              const color = cdt.vencido ? '#ef4444' : cdt.urgente ? '#f59e0b' : '#10b981'
-              return (
-                <div key={cdt.id} className="card p-6 relative overflow-hidden"
-                  style={{ borderColor: cdt.vencido ? '#ef444440' : cdt.urgente ? '#f59e0b40' : undefined }}>
-                  <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-5 blur-3xl"
-                    style={{ background: color, transform: 'translate(20%,-20%)' }} />
-                  <div className="flex items-start justify-between mb-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm"
-                        style={{ backgroundColor: color + '20', color }}>CDT</div>
-                      <div>
-                        <h3 className="text-white font-semibold text-lg">{cdt.name}</h3>
-                        <p className="text-muted" style={{ fontSize: '12px' }}>
-                          {fmtDate(cdt.meta.apertura)} → {fmtDate(cdt.meta.vencimiento)}
-                        </p>
-                      </div>
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold"
-                        style={{ backgroundColor: color + '20', color }}>
-                        {cdt.vencido ? 'Vencido' : cdt.urgente ? `⚠️ Vence en ${cdt.diasRestantes} días` : `${cdt.diasRestantes} días restantes`}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <HiddenValue value={fmtCOP(cdt.capital)} className="tabular-nums font-bold text-white" style={{ fontSize: '20px' }} />
-                      <p className="text-muted" style={{ fontSize: '12px' }}>Capital</p>
-                    </div>
-                  </div>
-                  <div className="mb-4">
-                    <div className="flex justify-between mb-2">
-                      <p className="text-muted" style={{ fontSize: '12px' }}>Progreso del plazo</p>
-                      <p className="tabular-nums font-semibold" style={{ color, fontSize: '12px' }}>{cdt.progreso}%</p>
-                    </div>
-                    <div className="progress-track" style={{ height: '8px' }}>
-                      <div className="progress-fill" style={{ width: `${cdt.progreso}%`, backgroundColor: color }} />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 gap-3">
-                    {[
-                      { label: 'Tasa EA',           value: `${cdt.meta.tasa_ea}%`,      isAmt: false },
-                      { label: 'Tasa Nominal',       value: `${cdt.meta.tasa_nominal}%`, isAmt: false },
-                      { label: 'Rendimiento total',  value: fmtCOP(cdt.rendTotal),       isAmt: true  },
-                      { label: 'Acumulado hoy',      value: fmtCOP(cdt.rendActual),      isAmt: true  },
-                    ].map(item => (
-                      <div key={item.label} className="stat-cell p-3">
-                        <p className="text-muted" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
-                          {item.label}
-                        </p>
-                        {item.isAmt
-                          ? <HiddenValue value={item.value} className="tabular-nums font-semibold" style={{ color, fontSize: '14px' }} />
-                          : <p className="tabular-nums font-semibold" style={{ color, fontSize: '14px' }}>{item.value}</p>
-                        }
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
         </>
       )}
     </div>

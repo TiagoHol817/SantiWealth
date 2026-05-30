@@ -104,7 +104,7 @@ export default function ImportarCDTPage() {
       }
 
       setDone(true)
-      setTimeout(() => router.push('/inversiones?tab=renta-fija'), 2000)
+      setTimeout(() => router.push('/cdts'), 2000)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'No se pudo completar la importación.')
     } finally {
@@ -121,7 +121,7 @@ export default function ImportarCDTPage() {
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Link
-          href="/inversiones?tab=renta-fija"
+          href="/cdts"
           className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all hover:opacity-80"
           style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', color: '#9ca3af' }}>
           <ArrowLeft size={14} /> Volver

@@ -47,7 +47,7 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
 
   // Always use the fixed production URL — never request.url, which can resolve
   // to a Vercel preview deployment hash that no longer exists.
@@ -56,8 +56,14 @@ export async function proxy(request: NextRequest) {
   const publicRoutes = ['/login', '/landing']
   const isPublic = publicRoutes.some(r => pathname.startsWith(r))
 
-  if (!isPublic && !user) {
-    return NextResponse.redirect(`${siteUrl}/login`)
+  if (!isPublic && (!user || authError)) {
+    // Clear all stale Supabase auth cookies so the browser doesn't keep
+    // replaying an invalid refresh token on every request.
+    const response = NextResponse.redirect(`${siteUrl}/login`)
+    request.cookies.getAll()
+      .filter(c => c.name.includes('supabase') || c.name.startsWith('sb-'))
+      .forEach(c => response.cookies.delete(c.name))
+    return response
   }
 
   if (user && pathname === '/login') {
