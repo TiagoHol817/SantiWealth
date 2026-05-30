@@ -4,6 +4,7 @@ import DonutChartClient from './DonutChartClient'
 import { getTRM } from '@/lib/services/currency'
 import HelpModal from '@/components/help/HelpModal'
 import PositionRowActions from '@/components/PositionRowActions'
+import ScreenshotImportInvestmentsButton from '@/components/ScreenshotImportInvestmentsButton'
 import { Plus } from 'lucide-react'
 
 interface PriceData {
@@ -188,8 +189,9 @@ export default async function InversionesPage() {
             <h1 className="page-title">Inversiones</h1>
             <p className="page-subtitle">Portafolio en tiempo real · Actualiza cada 60s</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3" style={{ flexWrap: 'wrap' }}>
             <HelpModal moduleId="inversiones" />
+            <ScreenshotImportInvestmentsButton />
             <a
               href="/inversiones/agregar"
               className="btn-primary inline-flex items-center gap-2"

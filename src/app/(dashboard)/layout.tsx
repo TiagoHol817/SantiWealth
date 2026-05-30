@@ -2,9 +2,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import AppShell from '@/components/AppShell'
 import { BalanceProvider } from '@/context/BalanceContext'
-import { ToastProvider } from '@/context/ToastContext'
 import { SettingsProvider } from '@/context/SettingsContext'
-import ToastContainer from '@/components/ToastContainer'
+import ToastWrapper from '@/components/ToastWrapper'
 import OnboardingWizard from '@/components/help/OnboardingWizard'
 import DemoBanner from '@/components/DemoBanner'
 
@@ -28,15 +27,14 @@ export default async function DashboardLayout({
   if (!settings?.onboarding_completed) redirect('/onboarding')
 
   return (
-    <ToastProvider>
+    <ToastWrapper>
       <SettingsProvider>
         <BalanceProvider>
           <AppShell>{children}</AppShell>
           <OnboardingWizard />
         </BalanceProvider>
       </SettingsProvider>
-      <ToastContainer />
       <DemoBanner email={user.email} />
-    </ToastProvider>
+    </ToastWrapper>
   )
 }

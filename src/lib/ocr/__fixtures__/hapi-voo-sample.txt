@@ -1,0 +1,10 @@
+VOO
+Mis inversiones
+Activos totales        6.95906
+Valor de mercado       $4,837.03
+Costo promedio         $616.455547587403
+Monto invertido        $4,289.95
+Retorno total         +$547.08 (+12.75%)
+Bloqueados             0.00
+Ventas pendientes      0.00
+Disponible             6.95906

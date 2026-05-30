@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, Plus, Pencil, Pin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -25,6 +25,7 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
   const isEdit = !!editGoal
   const [open, setOpen]     = useState(false)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [form, setForm]     = useState({
     name:                  editGoal?.name                  ?? '',
     target_amount:         String(editGoal?.target_amount  ?? ''),
@@ -42,6 +43,22 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
 
   const set = (k: string, v: string | boolean) => setForm(f => ({ ...f, [k]: v }))
 
+  // Esc-to-close + body scroll lock while modal is open. Matches the
+  // ScreenshotImportModal pattern so all modals in the app behave the same.
+  useEffect(() => {
+    if (!open) return
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [open])
+
+  useEffect(() => { if (!open) setSaveError(null) }, [open])
+
   const contribAmt  = Number(form.contribution_amount) || 0
   const freq        = FRECUENCIAS.find(f => f.value === form.contribution_freq)!
   const mensualEfec = contribAmt * freq.factor
@@ -57,21 +74,41 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
 
   async function guardar() {
     setSaving(true)
+    setSaveError(null)
     try {
       const supabase = createClient()
 
-      if (form.is_featured && !editGoal?.is_featured) {
-        const { data: { user } } = await supabase.auth.getUser()
-        await supabase.from('investment_goals')
-          .update({ is_featured: false })
-          .eq('user_id', user!.id)
-          .eq('is_featured', true)
+      // Authenticated user — required for both featured-unset and insert.
+      // RLS still scopes everything, but we need the id explicitly for the
+      // user_id column on insert (RLS doesn't auto-fill it).
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) {
+        setSaveError('Tu sesión expiró. Inicia sesión otra vez.')
+        return
       }
 
+      if (form.is_featured && !editGoal?.is_featured) {
+        const { error: unfeatureErr } = await supabase.from('investment_goals')
+          .update({ is_featured: false })
+          .eq('user_id', user.id)
+          .eq('is_featured', true)
+        if (unfeatureErr) {
+          // Log but don't block — featured flag is a soft constraint.
+          console.warn('[metas] failed to unset previous featured:', unfeatureErr.message)
+        }
+      }
+
+      // Schema-aligned payload:
+      //   - target_currency is the column name (enum: USD | COP), NOT 'currency'.
+      //   - goal_type defaults to 'investment' but we set it explicitly to
+      //     'savings' for personal savings goals (closer to user intent).
+      //   - All other columns are validated/defaulted on the DB side.
       const payload = {
-        name:                 form.name,
+        name:                 form.name.trim(),
         target_amount:        Number(form.target_amount),
         current_amount:       Number(form.current_amount) || 0,
+        target_currency:      'COP' as const,
+        goal_type:            'savings' as const,
         target_date:          form.target_date || null,
         icon:                 form.icon,
         color:                form.color,
@@ -81,13 +118,26 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
       }
 
       if (isEdit) {
-        const { error } = await supabase.from('investment_goals').update(payload).eq('id', editGoal!.id)
-        if (error) throw error
+        const { error } = await supabase
+          .from('investment_goals')
+          .update(payload)
+          .eq('id', editGoal!.id)
+          .eq('user_id', user.id)
+        if (error) {
+          console.error('[metas] update failed:', error.message)
+          setSaveError('No se pudo guardar la meta. Intenta de nuevo.')
+          return
+        }
         toast.success('Meta actualizada', `${form.name} se guardó correctamente.`)
       } else {
-        const { data: { user } } = await supabase.auth.getUser()
-        const { error } = await supabase.from('investment_goals').insert({ ...payload, user_id: user!.id })
-        if (error) throw error
+        const { error } = await supabase
+          .from('investment_goals')
+          .insert({ ...payload, user_id: user.id })
+        if (error) {
+          console.error('[metas] insert failed:', error.message)
+          setSaveError('No se pudo guardar la meta. Intenta de nuevo.')
+          return
+        }
         toast.success('Meta creada', `${form.name} fue creada exitosamente.`)
         trigger('goal_created')
       }
@@ -99,11 +149,9 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
         contribution_amount:'', contribution_freq:'mensual',
       })
       router.refresh()
-    } catch (e: any) {
-      toast.error(
-        isEdit ? 'Error al actualizar meta' : 'Error al crear meta',
-        e?.message ?? 'Ocurrió un error inesperado.'
-      )
+    } catch (err) {
+      console.error('[metas] guardar threw:', err)
+      setSaveError('Error de conexión. Intenta de nuevo.')
     } finally {
       setSaving(false)
     }
@@ -138,12 +186,21 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
 
   return (
     <>
-      <div className="fixed inset-0 z-40" style={{ backgroundColor: '#00000080' }} onClick={() => setOpen(false)} />
-      <div className="card card-purple fixed z-50 rounded-2xl p-6 w-full shadow-2xl overflow-y-auto"
-        style={{
-          top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-          maxWidth: '480px', maxHeight: '92vh',
-        }}>
+      {/* Flex-centered overlay. We deliberately avoid `top: 50%; left: 50%;
+          transform: translate(-50%, -50%)` because any ancestor with its own
+          CSS transform (e.g. .breathe-purple / blob animations) becomes the
+          containing block for `position: fixed`, which made the modal render
+          "inline" within the page card instead of centered in the viewport. */}
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ background: 'rgba(0,0,0,0.62)', backdropFilter: 'blur(6px)' }}
+        onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false) }}
+      >
+        <div
+          className="card card-purple rounded-2xl p-6 w-full shadow-2xl overflow-y-auto"
+          style={{ maxWidth: '480px', maxHeight: '92vh' }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
 
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-white font-semibold text-lg">
@@ -155,6 +212,20 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
             <X size={16} />
           </button>
         </div>
+
+        {saveError && (
+          <div
+            className="rounded-xl flex items-center gap-2 text-sm mb-4"
+            style={{
+              padding:    '10px 12px',
+              background: 'rgba(239,68,68,0.08)',
+              border:     '1px solid rgba(239,68,68,0.25)',
+              color:      '#f87171',
+            }}
+          >
+            <span>⚠</span> {saveError}
+          </div>
+        )}
 
         {/* Íconos */}
         <div className="mb-4">
@@ -322,6 +393,7 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
               {saving ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear meta'}
             </button>
           </div>
+        </div>
         </div>
       </div>
       <ToastContainer />

@@ -1,7 +1,8 @@
 /**
- * Shared types for the client-side OCR transaction extractor.
+ * Shared types for the client-side OCR extractors.
  */
 
+// ── Transactions ─────────────────────────────────────────────────────────────
 export type TxType = 'income' | 'expense'
 
 export interface OcrTransaction {
@@ -19,8 +20,26 @@ export interface OcrResult {
   transactions: OcrTransaction[]
 }
 
-/**
- * Forward-only progress reporter. `progress` is a 0..1 float across
- * the entire OCR + parse pipeline (not just Tesseract's own progress).
- */
+// ── Investments ──────────────────────────────────────────────────────────────
+export type OcrAssetType = 'stock' | 'etf' | 'crypto' | 'fund' | 'unknown'
+export type OcrCurrency  = 'USD' | 'COP'
+
+export interface OcrPosition {
+  name:          string | null   // "Vanguard S&P 500 ETF"
+  ticker:        string | null   // "VOO"
+  asset_type:    OcrAssetType
+  shares:        number | null
+  avg_cost:      number | null
+  current_price: number | null
+  market_value:  number | null
+  currency:      OcrCurrency
+}
+
+export interface OcrInvestmentResult {
+  broker:    string
+  layout:    'single' | 'multi'
+  positions: OcrPosition[]
+}
+
+// ── Shared ───────────────────────────────────────────────────────────────────
 export type OcrProgressFn = (progress: number) => void
