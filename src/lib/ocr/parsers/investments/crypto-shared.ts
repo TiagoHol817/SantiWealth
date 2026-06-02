@@ -25,7 +25,7 @@ export function parseCryptoExchange(rawText: string): OcrPosition[] {
     const ticker = m[1].toUpperCase()
     if (seen.has(ticker)) continue
     const shares = parsePositive(cleanNumericNoise(m[2]))
-    if (!isFinite(shares) || shares <= 0) continue
+    if (shares === null || !isFinite(shares) || shares <= 0) continue
     seen.add(ticker)
 
     out.push({

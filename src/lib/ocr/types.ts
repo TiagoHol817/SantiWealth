@@ -36,9 +36,12 @@ export interface OcrPosition {
 }
 
 export interface OcrInvestmentResult {
-  broker:    string
-  layout:    'single' | 'multi'
-  positions: OcrPosition[]
+  broker:     string
+  layout:     'single' | 'multi'
+  positions:  OcrPosition[]
+  /** 'high' = math checks out; 'medium' / 'low' = surfaces a warning banner */
+  confidence: 'high' | 'medium' | 'low'
+  warnings:   string[]
 }
 
 // ── Shared ───────────────────────────────────────────────────────────────────

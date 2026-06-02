@@ -50,12 +50,12 @@ export function parseGenericInvestments(rawText: string): OcrPosition[] {
       const dollarAmounts: number[] = []
       for (const m of window.matchAll(DOLLAR_RE)) {
         const n = parsePositive(cleanNumericNoise(m[1]))
-        if (isFinite(n) && n > 0) dollarAmounts.push(n)
+        if (n !== null && isFinite(n) && n > 0) dollarAmounts.push(n)
       }
       const bareDecimals: number[] = []
       for (const m of window.matchAll(BARE_DEC_RE)) {
         const n = parsePositive(cleanNumericNoise(m[1]))
-        if (isFinite(n) && n > 0) bareDecimals.push(n)
+        if (n !== null && isFinite(n) && n > 0) bareDecimals.push(n)
       }
 
       // shares: largest decimal < 1000
@@ -72,7 +72,7 @@ export function parseGenericInvestments(rawText: string): OcrPosition[] {
         const dm = lines[j].match(/\$\s*-?\s*([\d.,'\s]+)/)
         if (dm) {
           const n = parsePositive(cleanNumericNoise(dm[1]))
-          if (isFinite(n) && n > 0) { avgCost = n; break }
+          if (n !== null && isFinite(n) && n > 0) { avgCost = n; break }
         }
       }
 
