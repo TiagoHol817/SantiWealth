@@ -115,6 +115,51 @@ export const HELP_CONTENT: Record<string, ModuleHelp> = {
     cta: 'Ver mis fuentes de ingreso →',
   },
 
+  patrimonio: {
+    id:    'patrimonio',
+    icon:  '⚡',
+    title: 'Tu centro de control patrimonial',
+    color: '#10b981',
+    steps: [
+      'La cifra grande es tu patrimonio neto en tiempo real — lo único que importa a largo plazo',
+      'La composición te muestra dónde vive tu dinero: cuentas, inversiones, CDTs, otros',
+      'El Wealth Score sube silenciosamente cada vez que mejoras un hábito',
+      'Cada tarjeta es clickeable y te lleva al módulo correspondiente para profundizar',
+    ],
+    stat: 'Quienes monitorean su patrimonio mensualmente lo duplican en la mitad del tiempo',
+    cta: 'Entendido, mostrarme mi patrimonio →',
+  },
+
+  cdts: {
+    id:    'cdts',
+    icon:  '🏛️',
+    title: 'Renta Fija — CDTs',
+    color: '#f59e0b',
+    steps: [
+      'Capital protegido: los CDTs garantizan tu capital y rinden a tasa fija',
+      'Importa el PDF de tu banco y la app extrae capital, tasa y fechas automáticamente',
+      'Visualiza días restantes hasta el vencimiento y planifica reinversiones a tiempo',
+      'El rendimiento esperado al vencimiento se calcula y muestra en cada CDT',
+    ],
+    stat: 'Los CDTs cubren la inflación y dan tranquilidad al portafolio defensivo',
+    cta: 'Agregar mi primer CDT →',
+  },
+
+  ahorros: {
+    id:    'ahorros',
+    icon:  '🐷',
+    title: 'Ahorro Programado',
+    color: '#a78bfa',
+    steps: [
+      'Define monto y frecuencia — la app calcula cuánto debes aportar cada periodo',
+      'Conecta el plan a una meta para que sus aportes alimenten el objetivo automáticamente',
+      'Las badges en tiempo real te dicen si vas adelantado, al día o atrasado',
+      'Cada depósito mueve el marcador del plan y, si está vinculada, también el de la meta',
+    ],
+    stat: 'Los aportes automáticos son la forma más confiable de construir patrimonio',
+    cta: 'Crear mi primer plan →',
+  },
+
   reportes: {
     id:    'reportes',
     icon:  '🔮',

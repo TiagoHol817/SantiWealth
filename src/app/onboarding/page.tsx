@@ -472,7 +472,7 @@ function StepDone({ name, data }: { name: string; data: WizardData }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <button
           type="button"
-          onClick={() => { try { localStorage.setItem('statement_imported', 'false') } catch {} window.location.href = '/transacciones/importar' }}
+          onClick={() => { window.location.href = '/transacciones' }}
           style={{
             width: '100%', padding: '12px', borderRadius: '10px', fontSize: '14px', fontWeight: 700,
             backgroundColor: '#6366f1', color: '#fff', border: 'none', cursor: 'pointer',

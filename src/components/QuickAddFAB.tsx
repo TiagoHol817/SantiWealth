@@ -27,6 +27,8 @@ export default function QuickAddFAB() {
       .from('accounts')
       .select('id, name, type')
       .in('type', ['bank', 'cash'])
+      .eq('is_active', true)
+      .is('deleted_at', null)
       .then(({ data }) => {
         if (data?.length) {
           setAccounts(data)

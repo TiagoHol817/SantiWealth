@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, X, Loader2, ArrowLeft, Check, AlertTriangle, RefreshCcw, Plus, ShieldCheck } from 'lucide-react'
+import { Upload, X, Loader2, ArrowLeft, Check, AlertTriangle, RefreshCcw, Plus, ShieldCheck, HelpCircle, Scissors } from 'lucide-react'
 import { extractTransactionsFromImage } from '@/lib/ocr/extract-transactions'
+import ImportTutorialModal from './help/ImportTutorialModal'
+import ImageCropper from './ImageCropper'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Filter = 'gastos' | 'ingresos' | 'todos'
@@ -70,6 +72,36 @@ export default function ScreenshotImportModal({ open, onClose }: ScreenshotImpor
   // `analyzing` gates the UI; `progress` is a 0..1 float across the pipeline.
   const [analyzing, setAnalyzing]     = useState(false)
   const [progress, setProgress]       = useState(0)
+
+  // Tutorial state — DB-backed (per-user). Auto-opens the first time this
+  // user opens the transactions import modal; the "?" button reopens it.
+  const [tutorialOpen, setTutorialOpen] = useState(false)
+  // Cropper state — opt-in flow before OCR.
+  const [cropperOpen, setCropperOpen]   = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    fetch('/api/import-tutorial/status?type=transactions')
+      .then((r) => r.json())
+      .then((data: { seen?: boolean }) => {
+        if (cancelled) return
+        if (!data.seen) {
+          setTimeout(() => { if (!cancelled) setTutorialOpen(true) }, 600)
+        }
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [open])
+
+  function closeTutorial() {
+    setTutorialOpen(false)
+    fetch('/api/import-tutorial/mark-seen', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ type: 'transactions' }),
+    }).catch(() => {})
+  }
 
   // Preview state
   const [bank, setBank]               = useState<string>('')
@@ -254,8 +286,25 @@ export default function ScreenshotImportModal({ open, onClose }: ScreenshotImpor
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
+    <>
+    {/* Tutorial self-portals into <body>; it's stacked above the parent
+        import modal via its own z-[110] layer. */}
+    <ImportTutorialModal open={tutorialOpen} onClose={closeTutorial} type="transactions" />
+    {cropperOpen && previewUrl && (
+      <ImageCropper
+        imageUrl={previewUrl}
+        fileName={file?.name}
+        onCancel={() => setCropperOpen(false)}
+        onCrop={(cropped) => {
+          if (previewUrl) URL.revokeObjectURL(previewUrl)
+          setFile(cropped)
+          setPreviewUrl(URL.createObjectURL(cropped))
+          setCropperOpen(false)
+        }}
+      />
+    )}
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 screenshot-modal-overlay"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 screenshot-modal-overlay"
       style={{
         background:    'rgba(0,0,0,0.62)',
         backdropFilter:'blur(8px)',
@@ -277,6 +326,33 @@ export default function ScreenshotImportModal({ open, onClose }: ScreenshotImpor
           animation:    'screenshotZoomIn 240ms cubic-bezier(0.16,1,0.3,1) both',
         }}
       >
+        {/* Help — reopens the tutorial regardless of seen-state */}
+        <button
+          type="button"
+          onClick={() => setTutorialOpen(true)}
+          aria-label="Tutorial"
+          className="absolute transition-all"
+          style={{
+            top:        '14px',
+            right:      '54px',
+            width:      '32px',
+            height:     '32px',
+            display:    'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(255,255,255,0.04)',
+            border:     '1px solid rgba(255,255,255,0.06)',
+            borderRadius: '8px',
+            color:      '#9ca3af',
+            cursor:     'pointer',
+            zIndex:     2,
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.10)' }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)' }}
+        >
+          <HelpCircle size={15} />
+        </button>
+
         {/* Close */}
         <button
           type="button"
@@ -831,35 +907,50 @@ export default function ScreenshotImportModal({ open, onClose }: ScreenshotImpor
               >
                 Cancelar
               </button>
-              <button
-                type="button"
-                onClick={analyze}
-                disabled={analyzing || loading || !file || !accountId || accounts.length === 0}
-                title={
-                  accounts.length === 0 && hasLoadedAccounts && !loadError
-                    ? 'Crea una cuenta primero'
-                    : !file
-                      ? 'Selecciona una imagen primero'
-                      : undefined
-                }
-                className="btn-primary flex items-center gap-2"
-                style={{
-                  padding:    '11px 20px',
-                  opacity:    (analyzing || loading || !file || !accountId || accounts.length === 0) ? 0.5 : 1,
-                  cursor:     (analyzing || loading || !file || !accountId || accounts.length === 0) ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {analyzing ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" />
-                    {progress < 0.1  ? 'Cargando OCR...'
-                     : progress < 0.9 ? 'Leyendo imagen...'
-                                      : 'Identificando movimientos...'}
-                  </>
-                ) : (
-                  'Analizar imagen →'
-                )}
-              </button>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setCropperOpen(true)}
+                  disabled={analyzing || loading || !file || !previewUrl}
+                  className="btn-secondary inline-flex items-center gap-2"
+                  style={{
+                    padding: '10px 16px',
+                    opacity: (analyzing || loading || !file) ? 0.5 : 1,
+                    cursor:  (analyzing || loading || !file) ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <Scissors size={13} /> Recortar primero
+                </button>
+                <button
+                  type="button"
+                  onClick={analyze}
+                  disabled={analyzing || loading || !file || !accountId || accounts.length === 0}
+                  title={
+                    accounts.length === 0 && hasLoadedAccounts && !loadError
+                      ? 'Crea una cuenta primero'
+                      : !file
+                        ? 'Selecciona una imagen primero'
+                        : undefined
+                  }
+                  className="btn-primary flex items-center gap-2"
+                  style={{
+                    padding:    '11px 20px',
+                    opacity:    (analyzing || loading || !file || !accountId || accounts.length === 0) ? 0.5 : 1,
+                    cursor:     (analyzing || loading || !file || !accountId || accounts.length === 0) ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {analyzing ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      {progress < 0.1  ? 'Cargando OCR...'
+                       : progress < 0.9 ? 'Leyendo imagen...'
+                                        : 'Identificando movimientos...'}
+                    </>
+                  ) : (
+                    'Analizar imagen completa →'
+                  )}
+                </button>
+              </div>
             </>
           )}
 
@@ -938,6 +1029,7 @@ export default function ScreenshotImportModal({ open, onClose }: ScreenshotImpor
         }
       `}</style>
     </div>
+    </>
   )
 }
 

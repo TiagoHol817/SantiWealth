@@ -1,13 +1,15 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { HELP_CONTENT, type ModuleHelp } from './helpContent'
 
 const STORAGE_KEY = 'santiwealth_help_seen'
 
 const MODULE_ORDER = [
-  'dashboard', 'transacciones', 'inversiones', 'presupuestos',
-  'metas', 'costos-op', 'ingresos', 'reportes',
+  'patrimonio', 'dashboard',           // dashboard kept as legacy alias
+  'transacciones', 'inversiones', 'cdts', 'presupuestos',
+  'metas', 'ahorros', 'costos-op', 'reportes',
 ]
 
 function getSeenModules(): string[] {
@@ -50,6 +52,21 @@ export default function HelpModal({ moduleId, autoOpen = true }: Props) {
     setTimeout(() => setOpen(false), 250)
   }
 
+  // Esc-to-close + body-scroll-lock while the modal is open. Mirrors every
+  // other modal in the app (ConfirmModal, AccountEditModal, etc.).
+  useEffect(() => {
+    if (!open) return
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') handleClose() }
+    window.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
   if (!content) return null
 
   const seenCount  = typeof window !== 'undefined' ? getSeenModules().length : 0
@@ -68,11 +85,14 @@ export default function HelpModal({ moduleId, autoOpen = true }: Props) {
         ?
       </button>
 
-      {/* Overlay */}
-      {open && (
+      {/* Overlay — portaled to <body> so it escapes any ancestor `transform`
+          or `opacity` that would otherwise create a containing block for
+          `position: fixed` and trap the modal inside the page header
+          (every page wrapper uses `.page-enter` which animates transform). */}
+      {open && typeof document !== 'undefined' && createPortal(
         <>
           <div
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-[60]"
             style={{
               backgroundColor: 'rgba(0,0,0,0.75)',
               backdropFilter: 'blur(4px)',
@@ -82,9 +102,12 @@ export default function HelpModal({ moduleId, autoOpen = true }: Props) {
             onClick={handleClose}
           />
 
-          {/* Modal */}
+          {/* Modal — flex-centered alternative would also work via portal,
+              but we keep the existing top/left + transform to preserve the
+              entrance animation. Now safe because we're a direct child of
+              <body> — no transformed ancestors to capture us. */}
           <div
-            className="fixed z-50 rounded-2xl shadow-2xl overflow-hidden"
+            className="fixed z-[70] rounded-2xl shadow-2xl overflow-hidden"
             style={{
               backgroundColor: '#1a1f2e',
               border: `1px solid ${content.color}40`,
@@ -208,7 +231,8 @@ export default function HelpModal({ moduleId, autoOpen = true }: Props) {
               </div>
             </div>
           </div>
-        </>
+        </>,
+        document.body,
       )}
     </>
   )

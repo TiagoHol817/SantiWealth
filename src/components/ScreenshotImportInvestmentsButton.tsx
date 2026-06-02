@@ -1,18 +1,30 @@
 'use client'
 
-import { useState } from 'react'
-import dynamic from 'next/dynamic'
+import { useEffect, useState } from 'react'
 import { Camera } from 'lucide-react'
+import ScreenshotImportInvestmentsModal from './ScreenshotImportInvestmentsModal'
 
-// Lazy-loaded so neither the modal nor Tesseract.js enters the main bundle
-// until the user actually clicks the button.
-const ScreenshotImportInvestmentsModal = dynamic(
-  () => import('./ScreenshotImportInvestmentsModal'),
-  { ssr: false, loading: () => null },
-)
-
+/**
+ * Static import of the modal + a `mounted` flag.
+ *
+ * Why not `next/dynamic({ ssr: false })` here:
+ *   Turbopack + React 19 occasionally loses the chunk graph when a route
+ *   has TWO dynamic imports that both transitively pull `tesseract.js`
+ *   through different ancestors. Statically importing the modal removes
+ *   one of those boundaries — the modal code joins the button's client
+ *   chunk, which is fine because the heavy work (Tesseract.js + language
+ *   data, ~10 MB) is still gated behind a separate `await import('tesseract.js')`
+ *   in src/lib/ocr/run-ocr.ts and only runs when the user clicks Analizar.
+ *
+ *   The `mounted` flag matches what `{ ssr: false }` was buying us: we
+ *   delay rendering the modal until after hydration so document.body
+ *   (used by createPortal inside the modal) is available.
+ */
 export default function ScreenshotImportInvestmentsButton() {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen]       = useState(false)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
   return (
     <>
       <button
@@ -23,7 +35,9 @@ export default function ScreenshotImportInvestmentsButton() {
       >
         <Camera size={13} /> Importar desde captura
       </button>
-      {open && <ScreenshotImportInvestmentsModal open={open} onClose={() => setOpen(false)} />}
+      {mounted && open && (
+        <ScreenshotImportInvestmentsModal open={open} onClose={() => setOpen(false)} />
+      )}
     </>
   )
 }

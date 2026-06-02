@@ -1,10 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { Upload, X, Loader2, ArrowLeft, Check, AlertTriangle, ShieldCheck, TrendingUp } from 'lucide-react'
+import { Upload, X, Loader2, ArrowLeft, Check, AlertTriangle, ShieldCheck, TrendingUp, HelpCircle, Scissors } from 'lucide-react'
 import { extractInvestmentsFromImage } from '@/lib/ocr/extract-investments'
 import type { OcrAssetType, OcrCurrency, OcrPosition } from '@/lib/ocr/types'
+import ImportTutorialModal from './help/ImportTutorialModal'
+import ImageCropper from './ImageCropper'
 
 interface ScreenshotImportInvestmentsModalProps {
   open:    boolean
@@ -33,6 +36,32 @@ const fmtCOP = (n: number) =>
 const fmt = (n: number, c: OcrCurrency) => (c === 'USD' ? fmtUSD(n) : fmtCOP(n))
 
 function uid() { return Math.random().toString(36).slice(2, 10) }
+
+// Explicit dark-palette select styling. The default `.form-input` produced
+// white-bg + light-gray text in some browsers because the native option
+// list and select container inherit browser-default colors that override
+// our card theme. Pure inline styles guarantee contrast.
+const DARK_SELECT_STYLE: React.CSSProperties = {
+  width:        '100%',
+  appearance:   'none',
+  cursor:       'pointer',
+  padding:      '8px 32px 8px 12px',
+  borderRadius: '8px',
+  fontSize:     '13px',
+  fontWeight:   500,
+  background:   '#1a1f2e',
+  color:        '#ffffff',
+  border:       '1px solid rgba(255,255,255,0.16)',
+  outline:      'none',
+  // White chevron baked in as inline SVG — replaces the native arrow that
+  // appearance:none removes. Encoded with `%23ffffff` (#ffffff) so it
+  // doesn't depend on stroke inheritance.
+  backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E")',
+  backgroundRepeat:   'no-repeat',
+  backgroundPosition: 'right 10px center',
+  transition:   'background-color 150ms ease',
+}
+const DARK_OPTION_STYLE: React.CSSProperties = { background: '#1a1f2e', color: '#ffffff' }
 
 function toRow(p: OcrPosition): EditableRow {
   return {
@@ -64,6 +93,40 @@ export default function ScreenshotImportInvestmentsModal({ open, onClose }: Scre
   const [rows, setRows]               = useState<EditableRow[]>([])
   const [savedCount, setSavedCount]   = useState(0)
   const [failedCount, setFailedCount] = useState(0)
+  const [confidence, setConfidence]   = useState<'high' | 'medium' | 'low'>('high')
+
+  // Tutorial state — DB-backed (per-user) with auto-open the first time
+  // this user ever opens the investments import modal.
+  const [tutorialOpen, setTutorialOpen] = useState(false)
+  // Cropper state — opt-in flow before OCR.
+  const [cropperOpen, setCropperOpen]   = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    // Check seen status once per session-open of the parent modal.
+    let cancelled = false
+    fetch('/api/import-tutorial/status?type=investments')
+      .then((r) => r.json())
+      .then((data: { seen?: boolean }) => {
+        if (cancelled) return
+        if (!data.seen) {
+          // Slight delay so the parent modal mount-animation completes first.
+          setTimeout(() => { if (!cancelled) setTutorialOpen(true) }, 600)
+        }
+      })
+      .catch(() => { /* network failure — don't pop unexpectedly */ })
+    return () => { cancelled = true }
+  }, [open])
+
+  function closeTutorial() {
+    setTutorialOpen(false)
+    // Best-effort persistence — UI doesn't depend on the response.
+    fetch('/api/import-tutorial/mark-seen', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ type: 'investments' }),
+    }).catch(() => {})
+  }
 
   // Reset on close
   useEffect(() => {
@@ -74,6 +137,7 @@ export default function ScreenshotImportInvestmentsModal({ open, onClose }: Scre
       setAnalyzing(false); setProgress(0)
       setSaving(false); setBroker(''); setRows([])
       setSavedCount(0); setFailedCount(0)
+      setConfidence('high')
     }, 200)
     return () => clearTimeout(t)
   }, [open])
@@ -118,12 +182,20 @@ export default function ScreenshotImportInvestmentsModal({ open, onClose }: Scre
 
     try {
       const result = await extractInvestmentsFromImage(file, (p) => setProgress(p))
-      if (result.positions.length === 0) {
+      // Show ANY position the OCR extracted — even one without a ticker —
+      // as long as it has at least one useful field. The user fills the gap
+      // manually in the preview. We only show the red error banner when the
+      // OCR yielded zero rows at all OR every row lacks every useful field.
+      const usable = result.positions.filter(
+        (p) => (p.shares ?? 0) > 0 || (p.avg_cost ?? 0) > 0 || (p.market_value ?? 0) > 0 || (p.ticker ?? '').length > 0,
+      )
+      if (usable.length === 0) {
         setError('No se detectaron posiciones. Intenta con una imagen más clara.')
         return
       }
       setBroker(result.broker)
-      setRows(result.positions.map(toRow))
+      setConfidence(result.confidence)
+      setRows(usable.map(toRow))
       setStep('preview')
     } catch {
       setError('No se pudieron leer las posiciones. Intenta con una imagen más clara.')
@@ -182,12 +254,43 @@ export default function ScreenshotImportInvestmentsModal({ open, onClose }: Scre
   }
 
   const selectedCount = rows.filter((r) => r.selected).length
+  // Count selected rows whose ticker is still empty — drives the soft warning
+  // banner above the preview AND gates the save button so the user can't
+  // submit positions without an identifier.
+  const missingTickers = rows.filter((r) => r.selected && r.ticker.trim().length === 0).length
+  const allTickersFilled = missingTickers === 0
 
   if (!open) return null
+  // SSR guard: createPortal needs document. The button uses dynamic({ssr: false})
+  // so we're on the client by the time this runs, but the explicit check makes
+  // the intent obvious to readers and survives any future direct import.
+  if (typeof document === 'undefined') return null
 
+  // Portal into <body> so this modal escapes any ancestor that establishes a
+  // containing block via `transform` / `filter` / `perspective`. The
+  // /inversiones header uses .page-enter (animates transform: translateY) which
+  // would otherwise trap this `position: fixed` overlay inside the header card.
   return (
+    <>
+    {/* Tutorial self-portals into body, so it doesn't need to be inside our portal */}
+    <ImportTutorialModal open={tutorialOpen} onClose={closeTutorial} type="investments" />
+    {cropperOpen && previewUrl && (
+      <ImageCropper
+        imageUrl={previewUrl}
+        fileName={file?.name}
+        onCancel={() => setCropperOpen(false)}
+        onCrop={(cropped) => {
+          // Replace the uploaded file + preview with the cropped one.
+          if (previewUrl) URL.revokeObjectURL(previewUrl)
+          setFile(cropped)
+          setPreviewUrl(URL.createObjectURL(cropped))
+          setCropperOpen(false)
+        }}
+      />
+    )}
+    {createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       style={{
         background:    'rgba(0,0,0,0.62)',
         backdropFilter:'blur(8px)',
@@ -209,6 +312,31 @@ export default function ScreenshotImportInvestmentsModal({ open, onClose }: Scre
           animation:    'invModalZoomIn 240ms cubic-bezier(0.16,1,0.3,1) both',
         }}
       >
+        {/* Help — reopens the tutorial regardless of seen-state */}
+        <button
+          type="button"
+          onClick={() => setTutorialOpen(true)}
+          aria-label="Tutorial"
+          style={{
+            position:     'absolute',
+            top:          '14px',
+            right:        '54px',
+            width:        '32px',
+            height:       '32px',
+            display:      'flex',
+            alignItems:   'center',
+            justifyContent: 'center',
+            background:   'rgba(255,255,255,0.04)',
+            border:       '1px solid rgba(255,255,255,0.06)',
+            borderRadius: '8px',
+            color:        '#9ca3af',
+            cursor:       'pointer',
+            zIndex:       2,
+          }}
+        >
+          <HelpCircle size={15} />
+        </button>
+
         {/* Close */}
         <button
           type="button"
@@ -371,6 +499,52 @@ export default function ScreenshotImportInvestmentsModal({ open, onClose }: Scre
           {/* STEP 2 */}
           {step === 'preview' && (
             <div className="space-y-4">
+              {missingTickers > 0 && (
+                <div
+                  style={{
+                    padding:      '12px 14px',
+                    borderRadius: '12px',
+                    background:   'rgba(245,158,11,0.10)',
+                    border:       '1px solid rgba(245,158,11,0.32)',
+                    display:      'flex',
+                    alignItems:   'flex-start',
+                    gap:          '10px',
+                  }}
+                >
+                  <AlertTriangle size={15} style={{ color: '#fbbf24', flexShrink: 0, marginTop: '2px' }} />
+                  <div>
+                    <p style={{ color: '#fbbf24', fontWeight: 600, fontSize: '13px', marginBottom: '2px' }}>
+                      No se detectó el ticker en {missingTickers} posición{missingTickers === 1 ? '' : 'es'}
+                    </p>
+                    <p style={{ color: '#fde68a', fontSize: '12px', lineHeight: 1.5 }}>
+                      Complétalo manualmente antes de guardar. Sin ticker no se puede registrar la posición.
+                    </p>
+                  </div>
+                </div>
+              )}
+              {confidence !== 'high' && (
+                <div
+                  style={{
+                    padding:      '12px 14px',
+                    borderRadius: '12px',
+                    background:   'rgba(245,158,11,0.08)',
+                    border:       '1px solid rgba(245,158,11,0.32)',
+                    display:      'flex',
+                    alignItems:   'flex-start',
+                    gap:          '10px',
+                  }}
+                >
+                  <AlertTriangle size={15} style={{ color: '#fbbf24', flexShrink: 0, marginTop: '2px' }} />
+                  <div>
+                    <p style={{ color: '#fbbf24', fontWeight: 600, fontSize: '13px', marginBottom: '2px' }}>
+                      Los datos extraídos tienen inconsistencias
+                    </p>
+                    <p style={{ color: '#fde68a', fontSize: '12px', lineHeight: 1.5 }}>
+                      Verifica los números antes de guardar — las matemáticas no cuadran.
+                    </p>
+                  </div>
+                </div>
+              )}
               {rows.map((r) => (
                 <div
                   key={r.id}
@@ -394,9 +568,16 @@ export default function ScreenshotImportInvestmentsModal({ open, onClose }: Scre
                       type="text"
                       value={r.ticker}
                       onChange={(e) => updateRow(r.id, { ticker: e.target.value.toUpperCase() })}
-                      placeholder="VOO"
+                      placeholder="ej: AAPL"
                       className="form-input"
-                      style={{ width: '110px', padding: '6px 10px', fontSize: '13px', fontFamily: 'ui-monospace, monospace', letterSpacing: '0.06em', textTransform: 'uppercase' }}
+                      style={{
+                        width: '110px', padding: '6px 10px', fontSize: '13px',
+                        fontFamily: 'ui-monospace, monospace', letterSpacing: '0.06em', textTransform: 'uppercase',
+                        // Highlight missing tickers with an amber outline so the user
+                        // knows exactly which rows still need attention.
+                        borderColor: r.ticker.trim().length === 0 ? 'rgba(245,158,11,0.45)' : undefined,
+                        boxShadow:   r.ticker.trim().length === 0 ? '0 0 0 1px rgba(245,158,11,0.30) inset' : undefined,
+                      }}
                     />
                     <input
                       type="text"
@@ -436,10 +617,11 @@ export default function ScreenshotImportInvestmentsModal({ open, onClose }: Scre
                       <select
                         value={r.asset_type}
                         onChange={(e) => updateRow(r.id, { asset_type: e.target.value as OcrAssetType })}
-                        className="form-input"
-                        style={{ padding: '6px 10px', fontSize: '13px', cursor: 'pointer', appearance: 'none' }}
+                        style={DARK_SELECT_STYLE}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLSelectElement).style.background = '#252a3d ' + DARK_SELECT_STYLE.backgroundImage + ' no-repeat right 10px center' }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLSelectElement).style.background = '#1a1f2e ' + DARK_SELECT_STYLE.backgroundImage + ' no-repeat right 10px center' }}
                       >
-                        {ASSET_TYPE_OPTS.map((t) => <option key={t} value={t}>{t}</option>)}
+                        {ASSET_TYPE_OPTS.map((t) => <option key={t} value={t} style={DARK_OPTION_STYLE}>{t}</option>)}
                       </select>
                     </div>
                     <div>
@@ -447,11 +629,12 @@ export default function ScreenshotImportInvestmentsModal({ open, onClose }: Scre
                       <select
                         value={r.currency}
                         onChange={(e) => updateRow(r.id, { currency: e.target.value as OcrCurrency })}
-                        className="form-input"
-                        style={{ padding: '6px 10px', fontSize: '13px', cursor: 'pointer', appearance: 'none' }}
+                        style={DARK_SELECT_STYLE}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLSelectElement).style.background = '#252a3d ' + DARK_SELECT_STYLE.backgroundImage + ' no-repeat right 10px center' }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLSelectElement).style.background = '#1a1f2e ' + DARK_SELECT_STYLE.backgroundImage + ' no-repeat right 10px center' }}
                       >
-                        <option value="USD">USD</option>
-                        <option value="COP">COP</option>
+                        <option value="USD" style={DARK_OPTION_STYLE}>USD</option>
+                        <option value="COP" style={DARK_OPTION_STYLE}>COP</option>
                       </select>
                     </div>
                   </div>
@@ -528,21 +711,36 @@ export default function ScreenshotImportInvestmentsModal({ open, onClose }: Scre
               <button type="button" onClick={onClose} className="btn-secondary" style={{ padding: '10px 18px' }}>
                 Cancelar
               </button>
-              <button
-                type="button"
-                onClick={analyze}
-                disabled={analyzing || !file}
-                className="btn-primary flex items-center gap-2"
-                style={{
-                  padding: '11px 20px',
-                  opacity: (analyzing || !file) ? 0.5 : 1,
-                  cursor:  (analyzing || !file) ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {analyzing
-                  ? (<><Loader2 size={14} className="animate-spin" /> Analizando…</>)
-                  : (<>Analizar captura →</>)}
-              </button>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setCropperOpen(true)}
+                  disabled={analyzing || !file || !previewUrl}
+                  className="btn-secondary inline-flex items-center gap-2"
+                  style={{
+                    padding: '10px 16px',
+                    opacity: (analyzing || !file) ? 0.5 : 1,
+                    cursor:  (analyzing || !file) ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <Scissors size={13} /> Recortar primero
+                </button>
+                <button
+                  type="button"
+                  onClick={analyze}
+                  disabled={analyzing || !file}
+                  className="btn-primary flex items-center gap-2"
+                  style={{
+                    padding: '11px 20px',
+                    opacity: (analyzing || !file) ? 0.5 : 1,
+                    cursor:  (analyzing || !file) ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {analyzing
+                    ? (<><Loader2 size={14} className="animate-spin" /> Analizando…</>)
+                    : (<>Analizar imagen completa →</>)}
+                </button>
+              </div>
             </>
           )}
 
@@ -559,12 +757,13 @@ export default function ScreenshotImportInvestmentsModal({ open, onClose }: Scre
               <button
                 type="button"
                 onClick={saveSelected}
-                disabled={saving || selectedCount === 0}
+                disabled={saving || selectedCount === 0 || !allTickersFilled}
+                title={!allTickersFilled ? 'Completa el ticker de cada posición antes de guardar' : undefined}
                 className="btn-primary flex items-center gap-2"
                 style={{
                   padding: '11px 20px',
-                  opacity: (saving || selectedCount === 0) ? 0.5 : 1,
-                  cursor:  (saving || selectedCount === 0) ? 'not-allowed' : 'pointer',
+                  opacity: (saving || selectedCount === 0 || !allTickersFilled) ? 0.5 : 1,
+                  cursor:  (saving || selectedCount === 0 || !allTickersFilled) ? 'not-allowed' : 'pointer',
                 }}
               >
                 {saving
@@ -616,6 +815,9 @@ export default function ScreenshotImportInvestmentsModal({ open, onClose }: Scre
           .inv-prev-grid { grid-template-columns: 1fr 1fr }
         }
       `}</style>
-    </div>
+    </div>,
+    document.body,
+    )}
+    </>
   )
 }
