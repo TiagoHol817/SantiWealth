@@ -33,8 +33,8 @@ export default function StatementBanner() {
 
   return (
     <div
-      className="rounded-2xl p-4 flex items-center justify-between gap-4 fade-light"
-      style={{ backgroundColor: '#1a1f2e', border: '1px solid #6366f130' }}
+      className="card p-4 flex items-center justify-between gap-4 fade-light"
+      style={{ border: '1px solid rgba(99,102,241,0.18)' }}
     >
       <div className="flex items-center gap-3">
         <div
@@ -55,12 +55,12 @@ export default function StatementBanner() {
 
       <div className="flex items-center gap-3 flex-shrink-0">
         <Link
-          href="/transacciones/importar"
+          href="/transacciones"
           onClick={() => { try { localStorage.removeItem('remind_statement_upload') } catch {} }}
           className="px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
           style={{ backgroundColor: '#6366f1', color: '#fff' }}
         >
-          Subir extracto →
+          Ir a transacciones →
         </Link>
         <button
           onClick={dismiss}

@@ -11,7 +11,7 @@ const fmtCOP = (n: number) =>
 
 function StatCard({
   label, value, color, borderColor, icon, delay, cardVariant,
-  isScore, scoreGrade, scoreColor,
+  isScore, scoreGrade, scoreColor, href,
 }: {
   label: string
   value: number
@@ -23,6 +23,7 @@ function StatCard({
   isScore?: boolean
   scoreGrade?: string
   scoreColor?: string
+  href?: string
 }) {
   const { visible } = useBalance()
   const animated    = useCountUp(isScore ? value : Math.abs(value), { duration: 1200, delay, ease: 'outExpo' })
@@ -31,11 +32,11 @@ function StatCard({
     ? `${Math.round(animated)}`
     : `${sign}${fmtCOP(animated)}`
 
-  return (
-    <div
-      className={`card${cardVariant ? ` ${cardVariant}` : ''} p-5 relative overflow-hidden`}
-      style={{ borderTop: `2px solid ${borderColor}` }}
-    >
+  const cardClasses = `card${cardVariant ? ` ${cardVariant}` : ''} p-5 relative overflow-hidden`
+  const cardStyle   = { borderTop: `2px solid ${borderColor}` } as const
+
+  const inner = (
+    <>
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#6b7280' }}>
           {label}
@@ -66,6 +67,22 @@ function StatCard({
           <span className="text-xs" style={{ color: '#4b5563' }}>/100</span>
         </div>
       ) : null}
+
+      {href && !isScore && (
+        <p className="text-xs mt-2 transition-opacity" style={{ color: '#6b7280' }}>
+          Ver {label.toLowerCase().includes('ingreso') ? 'ingresos' : 'gastos'} →
+        </p>
+      )}
+    </>
+  )
+
+  return href ? (
+    <Link href={href} className={cardClasses + ' block hover:opacity-95 transition-opacity'} style={cardStyle}>
+      {inner}
+    </Link>
+  ) : (
+    <div className={cardClasses} style={cardStyle}>
+      {inner}
     </div>
   )
 }
@@ -105,6 +122,7 @@ export default function MonthSummary({ ingresos, gastos, balance, monthName, wea
           icon="↑"
           delay={0}
           cardVariant="card-green"
+          href="/transacciones?tipo=income"
         />
         <StatCard
           label="Gastos del mes"
@@ -114,6 +132,7 @@ export default function MonthSummary({ ingresos, gastos, balance, monthName, wea
           icon="↓"
           delay={80}
           cardVariant="card-red"
+          href="/transacciones?tipo=expense"
         />
         <StatCard
           label="Balance neto"

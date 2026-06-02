@@ -38,8 +38,8 @@ export default function FeaturedGoalWidget({ goal }: Props) {
   }
 
   return (
-    <div className="rounded-2xl p-6 relative overflow-hidden breathe-purple"
-      style={{ backgroundColor: '#1a1f2e', border: `1px solid ${color}30` }}>
+    <div className="card p-6 relative overflow-hidden breathe-purple"
+      style={{ border: `1px solid ${color}30` }}>
       <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5 blur-3xl"
         style={{ background: color, transform: 'translate(20%,-20%)' }} />
 
@@ -81,7 +81,7 @@ export default function FeaturedGoalWidget({ goal }: Props) {
 
       {/* Progress bar */}
       <div className="rounded-full overflow-hidden mb-2"
-        style={{ height: '8px', backgroundColor: '#0f1117' }}>
+        style={{ height: '8px', background: 'rgba(255,255,255,0.06)' }}>
         <div className="h-full rounded-full transition-all duration-700"
           style={{
             width: `${pct}%`,
@@ -96,7 +96,7 @@ export default function FeaturedGoalWidget({ goal }: Props) {
       {/* Monthly needed + deadline */}
       {(mensualNecesario !== null || diasLabel) && (
         <div className="rounded-xl px-3 py-2.5 mb-4 flex items-center justify-between"
-          style={{ backgroundColor: '#0f1117', border: '1px solid #1e2535' }}>
+          style={{ background: 'rgba(0,0,0,0.28)', border: '1px solid rgba(255,255,255,0.05)' }}>
           {mensualNecesario !== null && (
             <div>
               <p style={{ color: '#4b5563', fontSize: '10px' }}>Ahorra/mes</p>

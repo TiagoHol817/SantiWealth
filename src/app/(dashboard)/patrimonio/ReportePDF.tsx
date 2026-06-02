@@ -222,7 +222,7 @@ export default function ReportePDF({ patrimonio }: { patrimonio: PatrimonioData 
         checkPage(60)
         titulo('PRESUPUESTO — ' + fmtMes(mes).toUpperCase(), MORADO)
         const [mesNum, yearNum] = [Number(mes.split('-')[1]), Number(mes.split('-')[0])]
-        const { data: budget } = await supabase.from('budgets').select('*').eq('month',mesNum).eq('year',yearNum).single()
+        const { data: budget } = await supabase.from('budgets').select('*').eq('month',mesNum).eq('year',yearNum).maybeSingle()
         const limites: Record<string,number> = budget?.notes ? JSON.parse(budget.notes) : {}
         const { data: txs } = await supabase.from('transactions').select('category,amount').eq('type','expense')
           .gte('date',`${mes}-01`).lte('date', lastDayOfMonth(mes))

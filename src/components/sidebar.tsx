@@ -7,7 +7,7 @@ import { animate, stagger } from 'animejs'
 import { createClient } from '@/lib/supabase/client'
 import { useBalance } from '@/context/BalanceContext'
 import {
-  LayoutDashboard, ArrowLeftRight, TrendingUp,
+  LayoutDashboard, Layers, ArrowLeftRight, TrendingUp,
   PieChart, Target, Receipt, LogOut,
   Eye, EyeOff, Bell, X, BarChart3, Wallet,
   Sun, Moon, Settings2, Trash2, Landmark, PiggyBank,
@@ -24,7 +24,7 @@ interface SidebarProps {
 const navGroups: { label?: string; items: { href: string; label: string; icon: ElementType; tooltip: string }[] }[] = [
   {
     items: [
-      { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Tu resumen financiero' },
+      { href: '/patrimonio', label: 'Patrimonio', icon: Layers, tooltip: 'Composición y centro de control' },
     ],
   },
   {
@@ -42,15 +42,20 @@ const navGroups: { label?: string; items: { href: string; label: string; icon: E
       { href: '/metas',     label: 'Metas',             icon: Target,    tooltip: 'Tus objetivos financieros'              },
       { href: '/ahorros',   label: 'Ahorro programado', icon: PiggyBank, tooltip: 'Planes de ahorro con depósitos periódicos' },
       { href: '/costos-op', label: 'Costos fijos',      icon: Receipt,   tooltip: 'Gastos recurrentes'                      },
-      { href: '/ingresos',  label: 'Ingresos',          icon: Wallet,    tooltip: 'Fuentes de ingreso'                      },
     ],
   },
   {
     label: 'ANÁLISIS',
     items: [
-      { href: '/reportes',                  label: 'Reportes', icon: BarChart3, tooltip: 'Análisis y estadísticas' },
-      { href: '/settings',                  label: 'Ajustes',  icon: Settings2, tooltip: 'Configuración'           },
-      { href: '/configuracion/papelera',    label: 'Papelera', icon: Trash2,    tooltip: 'Elementos eliminados (30 días)' },
+      { href: '/reportes', label: 'Reportes', icon: BarChart3, tooltip: 'Análisis y estadísticas' },
+      { href: '/settings', label: 'Ajustes',  icon: Settings2, tooltip: 'Configuración'           },
+    ],
+  },
+  {
+    label: 'CONFIGURACIÓN',
+    items: [
+      { href: '/configuracion/cuentas',  label: 'Cuentas',  icon: Wallet, tooltip: 'Edita o elimina tus cuentas'      },
+      { href: '/configuracion/papelera', label: 'Papelera', icon: Trash2, tooltip: 'Elementos eliminados (30 días)' },
     ],
   },
 ]
@@ -255,7 +260,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       const mesNum  = today.getMonth() + 1
       const yearNum = today.getFullYear()
       const mesStr  = `${yearNum}-${String(mesNum).padStart(2,'0')}`
-      const { data: budget } = await supabase.from('budgets').select('*').eq('month', mesNum).eq('year', yearNum).single()
+      const { data: budget } = await supabase.from('budgets').select('*').eq('month', mesNum).eq('year', yearNum).maybeSingle()
       const limites: Record<string,number> = budget?.notes ? JSON.parse(budget.notes) : {}
       const { data: txs } = await supabase.from('transactions').select('category,amount')
         .eq('type','expense').gte('date',`${mesStr}-01`).lte('date',`${mesStr}-31`)
