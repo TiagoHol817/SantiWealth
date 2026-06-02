@@ -18,7 +18,11 @@ async function getPrices(tickers: string[]): Promise<Record<string, PriceData>> 
     try {
       const res  = await fetch(
         `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`,
-        { next: { revalidate: 60 }, headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } }
+        {
+          next:    { revalidate: 60 },
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+          signal:  AbortSignal.timeout(3000),
+        }
       )
       const data = await res.json()
       const meta = data?.chart?.result?.[0]?.meta
@@ -31,7 +35,9 @@ async function getPrices(tickers: string[]): Promise<Record<string, PriceData>> 
         dayHigh: meta?.regularMarketDayHigh ?? price,
         dayLow:  meta?.regularMarketDayLow  ?? price,
       }
-    } catch {}
+    } catch (err) {
+      console.error('[inversiones yahoo]', ticker, err instanceof Error ? err.name : 'unknown')
+    }
   }))
   return result
 }
@@ -66,6 +72,13 @@ export default async function InversionesPage() {
   const trmResult = await getTRM()
   const trm       = trmResult.rate
 
+  // The (dashboard) route group is gated by src/proxy.ts so an unauthenticated
+  // request never reaches this page in production. The explicit check narrows
+  // `user` for the user_id filters below and protects against accidental
+  // auth-middleware regressions (skill 1.5 defense-in-depth).
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
   // ── Portafolio ────────────────────────────────────────────────────────────
   // There is no `investments` table in the schema — that was a legacy name.
   // Positions are derived from `investment_assets` (catalog) + `investment_transactions`
@@ -74,13 +87,16 @@ export default async function InversionesPage() {
   const [{ data: assets }, { data: txs }] = await Promise.all([
     supabase
       .from('investment_assets')
-      .select('id, name, ticker, asset_type, currency, is_active')
+      .select('id, name, ticker, asset_type, currency, is_active, yfinance_key')
+      .eq('user_id', user.id)
       .eq('is_active', true)
       .is('deleted_at', null),
     supabase
       .from('investment_transactions')
       .select('asset_id, type, shares, price_usd, fee_usd, total_usd')
-      .eq('is_active', true),
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .is('deleted_at', null),
   ])
 
   type TxRow = {
@@ -119,22 +135,27 @@ export default async function InversionesPage() {
       const avgCost  = agg.sharesBuy > 0 ? agg.usdBuy / agg.sharesBuy : 0
       const invested = netShares * avgCost
       return {
-        id:       a.id,
-        ticker:   a.ticker,
-        name:     a.name,
-        type:     a.asset_type, // 'stock' | 'crypto' | 'etf' | 'fund' | 'real_estate'
-        shares:   netShares,
+        id:           a.id,
+        ticker:       a.ticker,
+        yfinance_key: a.yfinance_key,
+        name:         a.name,
+        type:         a.asset_type, // 'stock' | 'crypto' | 'etf' | 'fund' | 'real_estate'
+        shares:       netShares,
         invested,
-        avg_cost: avgCost,
+        avg_cost:     avgCost,
       }
     })
     .filter((inv) => inv.shares > 0)
 
-  const tickers  = investments.map((i) => i.ticker)
+  // Yahoo Finance expects `yfinance_key` (e.g. BTC-USD, ETH-USD for crypto).
+  // Fall back to `ticker` for legacy assets created before the key was added.
+  // The user-facing display below still uses `row.ticker` so the avatar/name
+  // stays "BTC", not "BTC-USD".
+  const tickers  = investments.map((i) => i.yfinance_key ?? i.ticker)
   const prices   = await getPrices(tickers)
 
   const rows = investments.map((inv) => {
-    const pd       = prices[inv.ticker]
+    const pd       = prices[inv.yfinance_key ?? inv.ticker]
     const price    = pd?.price ?? 0
     const mktVal   = price * Number(inv.shares)
     const invested = Number(inv.invested)

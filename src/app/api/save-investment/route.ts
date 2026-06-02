@@ -109,18 +109,30 @@ export async function POST(req: NextRequest) {
   const feeRaw       = Number(body.fee_usd)
   const feeUsd       = isFinite(feeRaw) && feeRaw >= 0 ? feeRaw : 0
 
-  // Upsert the asset definition (safe if user already owns this ticker)
+  // Normalize yfinance_key for crypto: Yahoo expects e.g. "BTC-USD", not
+  // "BTC" or "BTCUSD". Stocks/ETFs/funds pass through unchanged.
+  const yfinanceKey = assetType === 'crypto' && !/-USD$/i.test(ticker)
+    ? `${ticker.replace(/USD$/i, '')}-USD`
+    : ticker
+
+  // Upsert the asset definition (safe if user already owns this ticker).
+  // deleted_at/deleted_by are explicitly set to null so a previously
+  // soft-deleted asset gets fully resurrected — not left in a half-deleted
+  // state (is_active=true + deleted_at NOT NULL) that breaks downstream
+  // queries on portfolio_positions.
   const { data: assetRow, error: assetErr } = await supabase
     .from('investment_assets')
     .upsert(
       {
-        user_id:     user.id,
+        user_id:      user.id,
         ticker,
         name,
-        asset_type:  assetType,
+        asset_type:   assetType,
         currency,
-        yfinance_key: ticker,
-        is_active:   true,
+        yfinance_key: yfinanceKey,
+        is_active:    true,
+        deleted_at:   null,
+        deleted_by:   null,
       },
       { onConflict: 'user_id,ticker', ignoreDuplicates: false }
     )
