@@ -79,13 +79,13 @@ export default async function PresupuestosPage({
   const diasRestantes  = isCurrentMonth ? Math.max(0, daysInMonth - now.getDate()) : daysInMonth
 
   const { data: budget } = await supabase
-    .from('budgets').select('*').eq('month', mes).eq('year', year).single()
+    .from('budgets').select('*').eq('month', mes).eq('year', year).maybeSingle()
   const limites: Record<string,number> = budget?.notes ? JSON.parse(budget.notes) : {}
 
   const mesPrev  = mes === 1 ? 12 : mes - 1
   const yearPrev = mes === 1 ? year - 1 : year
   const { data: budgetPrev } = await supabase
-    .from('budgets').select('*').eq('month', mesPrev).eq('year', yearPrev).single()
+    .from('budgets').select('*').eq('month', mesPrev).eq('year', yearPrev).maybeSingle()
   const limitesPrev: Record<string,number> = budgetPrev?.notes ? JSON.parse(budgetPrev.notes) : {}
 
   const mesStr     = `${year}-${String(mes).padStart(2,'0')}`

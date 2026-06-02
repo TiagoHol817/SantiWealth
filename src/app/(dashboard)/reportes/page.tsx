@@ -89,7 +89,10 @@ export default async function ReportesPage({
     gastosPorCat[t.category] = (gastosPorCat[t.category] ?? 0) + normalizeToCOP(t.amount, t.currency ?? 'COP', trm)
   })
 
-  const { data: accounts }    = await supabase.from('accounts').select('*')
+  const { data: accounts }    = await supabase
+    .from('accounts').select('*')
+    .eq('is_active', true)
+    .is('deleted_at', null)
   const { data: investments } = await supabase.from('investments').select('*')
 
   const cuentasBanco = accounts?.filter(a => ['bank','cash','other'].includes(a.type)) ?? []

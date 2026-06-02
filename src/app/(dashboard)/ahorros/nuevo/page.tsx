@@ -20,6 +20,11 @@ interface AccountOption {
   name: string
 }
 
+interface GoalOption {
+  id:   string
+  name: string
+}
+
 const today = new Date().toISOString().split('T')[0]
 function addMonths(iso: string, months: number): string {
   const d = new Date(iso + 'T00:00:00')
@@ -48,21 +53,25 @@ export default function NuevoAhorroPage() {
   const [frequency, setFrequency] = useState<Frequency>('monthly')
   const [sourceAccount, setSourceAccount] = useState('')
   const [destinationAccount, setDestinationAccount] = useState('')
+  const [linkedGoal, setLinkedGoal] = useState('')
 
   const [accounts, setAccounts]   = useState<AccountOption[]>([])
+  const [goals, setGoals]         = useState<GoalOption[]>([])
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState<string | null>(null)
 
-  // Load accounts for the source/destination pickers
+  // Load accounts + goals in parallel. Goals are user-specific (RLS-scoped
+  // through the supabase client → only this user's goals are returned).
   useEffect(() => {
     let cancelled = false
-    fetch('/api/accounts')
-      .then((r) => r.json())
-      .then((data: { accounts?: AccountOption[] }) => {
-        if (cancelled) return
-        setAccounts(data.accounts ?? [])
-      })
-      .catch(() => { /* silent — pickers stay empty */ })
+    Promise.all([
+      fetch('/api/accounts').then((r) => r.json()).catch(() => ({ accounts: [] })),
+      fetch('/api/goals/list').then((r) => r.json()).catch(() => ({ goals: [] })),
+    ]).then(([accData, goalData]: [{ accounts?: AccountOption[] }, { goals?: GoalOption[] }]) => {
+      if (cancelled) return
+      setAccounts(accData.accounts ?? [])
+      setGoals(goalData.goals ?? [])
+    })
     return () => { cancelled = true }
   }, [])
 
@@ -101,6 +110,7 @@ export default function NuevoAhorroPage() {
           frequency,
           source_account_id:      sourceAccount      || null,
           destination_account_id: destinationAccount || null,
+          linked_goal_id:         linkedGoal         || null,
           icon,
           color: '#6366f1',
         }),
@@ -311,6 +321,56 @@ export default function NuevoAhorroPage() {
               </select>
             </div>
           </div>
+
+          {/* Optional: connect this plan to one of the user's existing goals.
+              Renders only if the user has at least one goal — no specific
+              goal name is hardcoded; the list is loaded from the API.
+              Styled with an explicit purple/white palette because the default
+              form-input theme was rendering purple-on-purple in some browsers
+              and the option list inherited unreadable colors. */}
+          {goals.length > 0 && (
+            <div>
+              <label className="form-label">¿Conectar a una meta? (opcional)</label>
+              <select
+                value={linkedGoal}
+                onChange={(e) => setLinkedGoal(e.target.value)}
+                style={{
+                  width:          '100%',
+                  appearance:     'none',
+                  cursor:         'pointer',
+                  padding:        '11px 14px',
+                  borderRadius:   '10px',
+                  fontSize:       '14px',
+                  fontWeight:     500,
+                  // Explicit purple-on-white so contrast is guaranteed regardless
+                  // of browser default option-list styling.
+                  background:     '#6366f1',
+                  color:          '#ffffff',
+                  border:         '1px solid rgba(255,255,255,0.16)',
+                  outline:        'none',
+                  // Arrow indicator via background-image, since we removed the
+                  // native one with appearance:none.
+                  backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E")',
+                  backgroundRepeat:   'no-repeat',
+                  backgroundPosition: 'right 14px center',
+                  paddingRight:       '36px',
+                  transition:     'background 150ms ease',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLSelectElement).style.background = '#7c83f4 url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") right 14px center / 12px no-repeat' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLSelectElement).style.background = '#6366f1 url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") right 14px center / 12px no-repeat' }}
+              >
+                {/* Native <option> elements inherit OS styling, but in modern
+                    browsers we can force them dark/white for parity. */}
+                <option value="" style={{ background: '#1a1f2e', color: '#ffffff' }}>No vincular</option>
+                {goals.map((g) => (
+                  <option key={g.id} value={g.id} style={{ background: '#1a1f2e', color: '#ffffff' }}>{g.name}</option>
+                ))}
+              </select>
+              <p style={{ color: '#9ca3af', fontSize: '11px', marginTop: '6px' }}>
+                Los depósitos de este plan aparecerán en el detalle de la meta seleccionada.
+              </p>
+            </div>
+          )}
 
           <div className="flex items-center gap-3 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <button

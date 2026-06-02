@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
   const frequency     = (FREQS as readonly string[]).includes(String(body.frequency)) ? body.frequency as Frequency : 'monthly'
   const sourceAccount      = body.source_account_id      ? String(body.source_account_id)      : null
   const destinationAccount = body.destination_account_id ? String(body.destination_account_id) : null
+  const linkedGoal         = body.linked_goal_id         ? String(body.linked_goal_id)         : null
   const icon  = sanitizeText(String(body.icon  ?? '🐷'),    8) || '🐷'
   const color = sanitizeText(String(body.color ?? '#6366f1'), 16) || '#6366f1'
 
@@ -68,6 +69,7 @@ export async function POST(req: NextRequest) {
   if (targetDate <= startDate)                  return NextResponse.json({ error: 'La fecha objetivo debe ser posterior al inicio' }, { status: 400 })
   if (sourceAccount      && !isValidUUID(sourceAccount))      return NextResponse.json({ error: 'Cuenta origen inválida' },  { status: 400 })
   if (destinationAccount && !isValidUUID(destinationAccount)) return NextResponse.json({ error: 'Cuenta destino inválida' }, { status: 400 })
+  if (linkedGoal         && !isValidUUID(linkedGoal))         return NextResponse.json({ error: 'Meta vinculada inválida' }, { status: 400 })
 
   const { data, error } = await supabase
     .from('savings_plans')
@@ -83,6 +85,7 @@ export async function POST(req: NextRequest) {
       frequency,
       source_account_id:      sourceAccount,
       destination_account_id: destinationAccount,
+      linked_goal_id:         linkedGoal,
       icon,
       color,
       status:                 'active',

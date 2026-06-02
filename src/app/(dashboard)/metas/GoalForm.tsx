@@ -1,10 +1,12 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { X, Plus, Pencil, Pin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/context/ToastContext'
 import { useAchievementToast } from '@/components/ui/WealthMessage'
+import ConfirmModal from '@/components/ConfirmModal'
 
 const ICONOS  = ['🎯','🏠','🚗','✈️','💰','📈','🎓','💍','🏖️','💻','🏗️','📦']
 const COLORES = ['#D4AF37','#6366f1','#f59e0b','#ef4444','#3b82f6','#ec4899']
@@ -26,6 +28,8 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
   const [open, setOpen]     = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting]   = useState(false)
   const [form, setForm]     = useState({
     name:                  editGoal?.name                  ?? '',
     target_amount:         String(editGoal?.target_amount  ?? ''),
@@ -157,16 +161,22 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
     }
   }
 
-  async function eliminar() {
-    if (!confirm('¿Eliminar esta meta?')) return
+  function eliminar() { setConfirmDelete(true) }
+
+  async function confirmEliminar() {
+    setDeleting(true)
     try {
       const supabase = createClient()
       const { error } = await supabase.from('investment_goals').delete().eq('id', editGoal!.id)
       if (error) throw error
       toast.success('Meta eliminada', `${editGoal!.name} fue eliminada.`)
+      setConfirmDelete(false)
+      setOpen(false)
       router.refresh()
-    } catch (e: any) {
-      toast.error('Error al eliminar meta', e?.message ?? 'No se pudo eliminar.')
+    } catch {
+      toast.error('Error al eliminar meta', 'No se pudo eliminar.')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -184,13 +194,17 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
     </button>
   )
 
+  // Portal the modal into <body>. Flex-centered + position:fixed alone is not
+  // enough — the /metas page header uses .page-enter which animates `transform`
+  // with `animation-fill-mode: both`, so `transform: translateY(0)` persists
+  // after the animation completes. Per the CSS spec, any ancestor with a
+  // non-`none` transform becomes the containing block for descendant
+  // `position: fixed` elements, which trapped the modal inside the header card
+  // and made it appear "inline". Rendering through document.body sidesteps it
+  // entirely and is robust against any future ancestor transform.
   return (
     <>
-      {/* Flex-centered overlay. We deliberately avoid `top: 50%; left: 50%;
-          transform: translate(-50%, -50%)` because any ancestor with its own
-          CSS transform (e.g. .breathe-purple / blob animations) becomes the
-          containing block for `position: fixed`, which made the modal render
-          "inline" within the page card instead of centered in the viewport. */}
+      {typeof document !== 'undefined' && createPortal(
       <div
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ background: 'rgba(0,0,0,0.62)', backdropFilter: 'blur(6px)' }}
@@ -395,8 +409,20 @@ export default function GoalForm({ editGoal }: { editGoal?: Goal }) {
           </div>
         </div>
         </div>
-      </div>
+      </div>,
+      document.body,
+      )}
       <ToastContainer />
+      <ConfirmModal
+        open={confirmDelete}
+        title="Eliminar meta"
+        message={`Se eliminará "${editGoal?.name ?? 'esta meta'}" permanentemente.`}
+        confirmLabel="Eliminar"
+        variant="danger"
+        loading={deleting}
+        onConfirm={confirmEliminar}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </>
   )
 }

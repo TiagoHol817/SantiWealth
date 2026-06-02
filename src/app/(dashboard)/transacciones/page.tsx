@@ -8,6 +8,7 @@ import HelpModal from '@/components/help/HelpModal'
 import QuickAddFAB from '@/components/QuickAddFAB'
 import ScreenshotImportButton from '@/components/ScreenshotImportButton'
 import TransactionDeleteButton from '@/components/TransactionDeleteButton'
+import TipoFilterChips from './TipoFilterChips'
 import Link from 'next/link'
 
 const fmtCOP = (n: number) =>
@@ -45,6 +46,8 @@ export default async function TransaccionesPage({
     .from('accounts')
     .select('id, name, type')
     .in('type', ['bank', 'cash'])
+    .eq('is_active', true)
+    .is('deleted_at', null)
 
   const accounts = (accountsRaw ?? []).sort((a, b) => {
     const aEs = a.name.toLowerCase().includes('bancolombia')
@@ -137,12 +140,6 @@ export default async function TransaccionesPage({
           <div className="flex items-center gap-3">
             <HelpModal moduleId="transacciones" />
             <ScreenshotImportButton />
-            <Link
-              href="/transacciones/importar"
-              className="btn-secondary flex items-center gap-2 px-3 py-2 text-sm"
-            >
-              Importar CSV
-            </Link>
             <TransaccionForm accounts={accounts} />
           </div>
         </div>
@@ -163,12 +160,6 @@ export default async function TransaccionesPage({
           </p>
           <div className="flex items-center justify-center gap-3">
             <TransaccionForm accounts={accounts} />
-            <Link
-              href="/transacciones/importar"
-              className="btn-secondary flex items-center gap-2 px-4 py-2 text-sm"
-            >
-              Importar CSV
-            </Link>
           </div>
         </div>
       )}
@@ -218,7 +209,10 @@ export default async function TransaccionesPage({
         </div>
       )}
 
-      <FiltrosMes />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+        <TipoFilterChips />
+        <FiltrosMes />
+      </div>
 
       {/* Tabla de transacciones */}
       <div className="card overflow-hidden table-scroll page-enter page-enter-delay-3">

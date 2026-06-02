@@ -12,15 +12,29 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { rateLimit, getIP } from '@/lib/rateLimit'
 
-export type TrashItemType = 'investment' | 'transaction'
+export type TrashItemType = 'investment' | 'transaction' | 'account'
 
 export interface TrashItem {
   id:             string
   type:           TrashItemType
   title:          string
   subtitle:       string
+  /** For accounts: 'bank' | 'cash' | 'brokerage' | 'crypto' | 'liability' | 'other'. Optional otherwise. */
+  meta?:          string
   deletedAt:      string
   daysRemaining:  number
+}
+
+// Generic subtitle composer — uses whatever type/balance/currency the user
+// recorded. No hardcoded account names or specific amounts.
+function formatAccountSubtitle(a: { type?: string; currency?: string; current_balance?: number | string | null }): string {
+  const t = String(a.type ?? '').toUpperCase()
+  const c = a.currency === 'USD' ? 'USD' : 'COP'
+  const bal = Number(a.current_balance) || 0
+  const fmt = c === 'USD'
+    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(bal)
+    : new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(bal)
+  return `${t} · ${fmt}`
 }
 
 function daysRemaining(deletedAt: string): number {
@@ -42,7 +56,7 @@ export async function GET(req: NextRequest) {
   const { data: { user }, error: authErr } = await supabase.auth.getUser()
   if (authErr || !user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-  const [{ data: assets }, { data: txs }] = await Promise.all([
+  const [{ data: assets }, { data: txs }, { data: accountsList }] = await Promise.all([
     supabase
       .from('investment_assets')
       .select('id, name, ticker, asset_type, deleted_at')
@@ -52,6 +66,12 @@ export async function GET(req: NextRequest) {
     supabase
       .from('transactions')
       .select('id, description, amount, date, type, deleted_at')
+      .eq('user_id', user.id)
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false }),
+    supabase
+      .from('accounts')
+      .select('id, name, type, currency, current_balance, deleted_at')
       .eq('user_id', user.id)
       .not('deleted_at', 'is', null)
       .order('deleted_at', { ascending: false }),
@@ -80,6 +100,19 @@ export async function GET(req: NextRequest) {
       subtitle:      `${fmtCOP(Number(t.amount))} · ${fmtDate(t.date)}`,
       deletedAt:     t.deleted_at,
       daysRemaining: daysRemaining(t.deleted_at),
+    })
+  }
+
+  for (const a of accountsList ?? []) {
+    if (!a.deleted_at) continue
+    items.push({
+      id:            a.id,
+      type:          'account',
+      title:         a.name,
+      subtitle:      formatAccountSubtitle(a),
+      meta:          String(a.type ?? ''),
+      deletedAt:     a.deleted_at,
+      daysRemaining: daysRemaining(a.deleted_at),
     })
   }
 

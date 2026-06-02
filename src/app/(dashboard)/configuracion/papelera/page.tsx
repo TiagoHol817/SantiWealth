@@ -2,27 +2,42 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, RefreshCcw, AlertTriangle, TrendingUp, Receipt, ArrowLeft } from 'lucide-react'
+import { Trash2, RefreshCcw, AlertTriangle, TrendingUp, Receipt, ArrowLeft, Wallet, Landmark, Bitcoin, AlertCircle, Box } from 'lucide-react'
 import { useToast } from '@/context/ToastContext'
 
-type TrashItemType = 'investment' | 'transaction'
+type TrashItemType = 'investment' | 'transaction' | 'account'
 
 interface TrashItem {
   id:             string
   type:           TrashItemType
   title:          string
   subtitle:       string
+  meta?:          string          // for accounts: the type token (bank/cash/etc.)
   deletedAt:      string
   daysRemaining:  number
 }
 
-type FilterKey = 'all' | 'investment' | 'transaction'
+type FilterKey = 'all' | 'investment' | 'transaction' | 'account'
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'all',         label: 'Todos' },
   { key: 'investment',  label: 'Inversiones' },
   { key: 'transaction', label: 'Transacciones' },
+  { key: 'account',     label: 'Cuentas' },
 ]
+
+// Pure rendering helper — selects icon per account-type token. No user-specific
+// data, no specific account names. Falls back to a generic icon.
+function iconForAccountType(t: string | undefined): React.ComponentType<{ size?: number; style?: React.CSSProperties }> {
+  switch (t) {
+    case 'bank':      return Landmark
+    case 'cash':      return Wallet
+    case 'brokerage': return TrendingUp
+    case 'crypto':    return Bitcoin
+    case 'liability': return AlertCircle
+    default:          return Box
+  }
+}
 
 function fmtDeletedAt(iso: string): string {
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)
@@ -61,8 +76,14 @@ export default function PapeleraPage() {
 
   const filtered = filter === 'all' ? items : items.filter((i) => i.type === filter)
 
+  function basePathFor(type: TrashItemType): string {
+    if (type === 'investment')  return '/api/investments'
+    if (type === 'transaction') return '/api/transactions'
+    return '/api/accounts'
+  }
+
   async function restoreOne(item: TrashItem) {
-    const path = item.type === 'investment' ? `/api/investments/${item.id}` : `/api/transactions/${item.id}`
+    const path = `${basePathFor(item.type)}/${item.id}`
     const res = await fetch(path, {
       method:  'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -78,9 +99,7 @@ export default function PapeleraPage() {
   }
 
   async function hardDeleteOne(item: TrashItem) {
-    const path = item.type === 'investment'
-      ? `/api/investments/${item.id}/hard-delete`
-      : `/api/transactions/${item.id}/hard-delete`
+    const path = `${basePathFor(item.type)}/${item.id}/hard-delete`
     const res = await fetch(path, { method: 'DELETE' })
     if (res.ok) {
       setItems((prev) => prev.filter((x) => !(x.id === item.id && x.type === item.type)))
@@ -223,21 +242,31 @@ export default function PapeleraPage() {
                 borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
               }}
             >
-              <div
-                style={{
-                  width:        '36px',
-                  height:       '36px',
-                  borderRadius: '10px',
-                  background:   item.type === 'investment' ? 'rgba(99,102,241,0.12)' : 'rgba(16,185,129,0.10)',
-                  color:        item.type === 'investment' ? '#a78bfa' : '#10b981',
-                  display:      'flex',
-                  alignItems:   'center',
-                  justifyContent: 'center',
-                  flexShrink:   0,
-                }}
-              >
-                {item.type === 'investment' ? <TrendingUp size={16} /> : <Receipt size={16} />}
-              </div>
+              {(() => {
+                // Per-type color/icon. For accounts the icon is selected from
+                // the row's `meta` (account-type token) — never from a specific
+                // user-facing string like the account name.
+                const palette =
+                  item.type === 'investment'  ? { bg: 'rgba(99,102,241,0.12)',  fg: '#a78bfa' }
+                  : item.type === 'transaction' ? { bg: 'rgba(16,185,129,0.10)',  fg: '#10b981' }
+                                                : { bg: 'rgba(245,158,11,0.12)',  fg: '#f59e0b' }
+                const Icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }> =
+                  item.type === 'investment'   ? TrendingUp
+                  : item.type === 'transaction' ? Receipt
+                                                : iconForAccountType(item.meta)
+                return (
+                  <div
+                    style={{
+                      width: '36px', height: '36px', borderRadius: '10px',
+                      background: palette.bg, color: palette.fg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Icon size={16} />
+                  </div>
+                )
+              })()}
 
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ color: '#e5e7eb', fontWeight: 600, fontSize: '14px', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

@@ -16,13 +16,14 @@ export async function POST(req: NextRequest) {
   const reset = { is_active: true, deleted_at: null, deleted_by: null }
   let restored = 0
 
-  const [a, b, c] = await Promise.all([
+  const [a, b, c, d] = await Promise.all([
     supabase.from('investment_transactions').update(reset).eq('user_id', user.id).not('deleted_at', 'is', null).select('id'),
     supabase.from('investment_assets')      .update(reset).eq('user_id', user.id).not('deleted_at', 'is', null).select('id'),
     supabase.from('transactions')           .update(reset).eq('user_id', user.id).not('deleted_at', 'is', null).select('id'),
+    supabase.from('accounts')               .update(reset).eq('user_id', user.id).not('deleted_at', 'is', null).select('id'),
   ])
 
-  for (const r of [a, b, c]) {
+  for (const r of [a, b, c, d]) {
     if (r.error) {
       console.error('[trash restore-all]', r.error.code)
       return NextResponse.json({ error: 'No se pudo restaurar todo' }, { status: 500 })

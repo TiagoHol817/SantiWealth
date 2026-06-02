@@ -4,6 +4,7 @@ import { Pencil, X, Check, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/context/ToastContext'
+import ConfirmModal from '@/components/ConfirmModal'
 
 const CATEGORIAS_GASTO   = ['Alimentación','Transporte','Vivienda','Servicios/Suscripciones','Salud','Entretenimiento','Ropa y personal','Educación','Otro']
 const CATEGORIAS_INGRESO = ['Salario','Freelance','Inversiones','Arriendo','Otro']
@@ -21,8 +22,9 @@ export default function EditarTransaccion({
   id: string; amount: number; description: string; category: string
   date: string; accounts: any[]; accountId: string; type: string
 }) {
-  const [open, setOpen]       = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [open, setOpen]               = useState(false)
+  const [loading, setLoading]         = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [amt, setAmt]         = useState(amount.toString())
   const [desc, setDesc]       = useState(description ?? '')
   const [cat, setCat]         = useState(category)
@@ -62,17 +64,19 @@ export default function EditarTransaccion({
     }
   }
 
-  async function handleDelete() {
-    if (!confirm('¿Eliminar esta transacción?')) return
+  function handleDelete() { setConfirmDelete(true) }
+
+  async function confirmDeleteTx() {
     setLoading(true)
     try {
       const supabase = createClient()
       const { error } = await supabase.from('transactions').delete().eq('id', id)
       if (error) throw error
       toast.success('Transacción eliminada', desc || category)
+      setConfirmDelete(false)
       setOpen(false)
       router.refresh()
-    } catch (e: any) {
+    } catch {
       toast.error('Error al eliminar', 'Por favor intenta de nuevo.')
     } finally {
       setLoading(false)
@@ -174,6 +178,17 @@ export default function EditarTransaccion({
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        open={confirmDelete}
+        title="Eliminar transacción"
+        message={`Se eliminará "${desc || category}". Esta acción no se puede deshacer.`}
+        confirmLabel="Eliminar"
+        variant="danger"
+        loading={loading}
+        onConfirm={confirmDeleteTx}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </>
   )
 }

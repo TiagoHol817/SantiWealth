@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, X, Pencil, Trash2, ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/context/ToastContext'
+import ConfirmModal from '@/components/ConfirmModal'
 
 type CDTData = {
   id?: string
@@ -24,6 +25,7 @@ export default function CDTUploader({ cdts }: { cdts?: { id: string; name: strin
   const [showManage, setShowManage] = useState(false)
   const [saving, setSaving]         = useState(false)
   const [deleting, setDeleting]     = useState<string|null>(null)
+  const [confirmTarget, setConfirmTarget] = useState<{ id: string; name?: string } | null>(null)
   const [form, setForm]             = useState<CDTData>(EMPTY)
   const router                      = useRouter()
   const { toast }                   = useToast()
@@ -96,18 +98,24 @@ export default function CDTUploader({ cdts }: { cdts?: { id: string; name: strin
     }
   }
 
-  async function eliminar(id: string, nombre?: string) {
-    if (!confirm('¿Eliminar este CDT?')) return
+  function eliminar(id: string, nombre?: string) {
+    setConfirmTarget({ id, name: nombre })
+  }
+
+  async function confirmEliminar() {
+    if (!confirmTarget) return
+    const { id, name } = confirmTarget
     setDeleting(id)
     try {
       const supabase = createClient()
       const { error } = await supabase.from('accounts').delete().eq('id', id)
 
       if (error) throw error
-      toast.success('CDT eliminado', nombre ? `${nombre} fue eliminado.` : 'CDT eliminado correctamente.')
+      toast.success('CDT eliminado', name ? `${name} fue eliminado.` : 'CDT eliminado correctamente.')
+      setConfirmTarget(null)
       setMode('none')
       router.refresh()
-    } catch (e: any) {
+    } catch {
       toast.error(
         'Error al eliminar CDT',
         'No se pudo eliminar. Por favor intenta de nuevo.'
@@ -262,6 +270,19 @@ export default function CDTUploader({ cdts }: { cdts?: { id: string; name: strin
           </div>
         </>
       )}
+
+      <ConfirmModal
+        open={confirmTarget !== null}
+        title="Eliminar CDT"
+        message={confirmTarget?.name
+          ? `Se eliminará "${confirmTarget.name}" permanentemente.`
+          : 'Se eliminará este CDT permanentemente.'}
+        confirmLabel="Eliminar"
+        variant="danger"
+        loading={deleting !== null}
+        onConfirm={confirmEliminar}
+        onCancel={() => setConfirmTarget(null)}
+      />
     </div>
   )
 }

@@ -54,5 +54,17 @@ export async function DELETE(req: NextRequest) {
   }
   purged += c.data?.length ?? 0
 
+  const d = await supabase
+    .from('accounts')
+    .delete()
+    .eq('user_id', user.id)
+    .not('deleted_at', 'is', null)
+    .select('id')
+  if (d.error) {
+    console.error('[trash empty accounts]', d.error.code)
+    return NextResponse.json({ error: 'No se pudo vaciar la papelera' }, { status: 500 })
+  }
+  purged += d.data?.length ?? 0
+
   return NextResponse.json({ success: true, count: purged })
 }

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/context/ToastContext'
 import { useAchievementToast } from '@/components/ui/WealthMessage'
+import ConfirmModal from '@/components/ConfirmModal'
 
 const CATEGORIAS = ['Arriendo', 'Servicios públicos', 'Internet/Celular', 'Suscripciones', 'Alimentación', 'Transporte', 'Otro']
 
@@ -21,6 +22,8 @@ type Mode = 'list' | 'add' | 'edit'
 
 export default function CostosForm({ costs }: { costs: Cost[] }) {
   const [mode, setMode]           = useState<Mode>('list')
+  const [confirmTarget, setConfirmTarget] = useState<{ id: string; nombre: string } | null>(null)
+  const [deletingCosto, setDeletingCosto] = useState(false)
   const [editId, setEditId]       = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
   const [form, setForm]           = useState({ name: '', category: 'Arriendo', amount: '', frequency: 'monthly' })
@@ -100,16 +103,24 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
     }
   }
 
-  async function eliminar(id: string, nombre: string) {
-    if (!confirm('¿Eliminar este costo?')) return
+  function eliminar(id: string, nombre: string) {
+    setConfirmTarget({ id, nombre })
+  }
+
+  async function confirmEliminar() {
+    if (!confirmTarget) return
+    setDeletingCosto(true)
     try {
       const supabase = createClient()
-      const { error } = await supabase.from('operational_costs').delete().eq('id', id)
+      const { error } = await supabase.from('operational_costs').delete().eq('id', confirmTarget.id)
       if (error) throw error
-      toast.success('Costo eliminado', `${nombre} fue eliminado.`)
+      toast.success('Costo eliminado', `${confirmTarget.nombre} fue eliminado.`)
+      setConfirmTarget(null)
       router.refresh()
-    } catch (e: any) {
+    } catch {
       toast.error('Error al eliminar', 'No se pudo eliminar. Por favor intenta de nuevo.')
+    } finally {
+      setDeletingCosto(false)
     }
   }
 
@@ -235,6 +246,16 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
         })}
       </div>
       <ToastContainer />
+      <ConfirmModal
+        open={confirmTarget !== null}
+        title="Eliminar costo fijo"
+        message={confirmTarget ? `Se eliminará "${confirmTarget.nombre}" permanentemente.` : ''}
+        confirmLabel="Eliminar"
+        variant="danger"
+        loading={deletingCosto}
+        onConfirm={confirmEliminar}
+        onCancel={() => setConfirmTarget(null)}
+      />
     </div>
   )
 }

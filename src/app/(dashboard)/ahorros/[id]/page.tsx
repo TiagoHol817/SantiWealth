@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, Loader2, Plus, Trash2, TrendingUp } from 'lucide-react'
 import { useToast } from '@/context/ToastContext'
+import ConfirmModal from '@/components/ConfirmModal'
 import { type SavingsPlanRow, type PlanComputed } from '@/lib/savings'
 
 interface Deposit {
@@ -36,6 +37,8 @@ export default function AhorroDetailPage() {
   const [addDate, setAddDate]     = useState(new Date().toISOString().split('T')[0])
   const [addNotes, setAddNotes]   = useState('')
   const [saving, setSaving]       = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting]   = useState(false)
   const submittingRef             = useRef(false)
 
   const load = useCallback(async () => {
@@ -99,15 +102,20 @@ export default function AhorroDetailPage() {
   }
 
   async function deletePlan() {
-    if (!plan) return
-    if (!confirm('¿Eliminar este plan de ahorro? Va a la papelera.')) return
-    const res = await fetch(`/api/savings/${id}`, { method: 'DELETE' })
-    if (res.ok) {
-      toast.success('Plan eliminado')
-      router.push('/ahorros')
-      router.refresh()
-    } else {
-      toast.error('No se pudo eliminar')
+    if (!plan || deleting) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/savings/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Plan eliminado')
+        router.push('/ahorros')
+        router.refresh()
+      } else {
+        toast.error('No se pudo eliminar')
+        setConfirmDelete(false)
+      }
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -170,7 +178,7 @@ export default function AhorroDetailPage() {
             </button>
             <button
               type="button"
-              onClick={deletePlan}
+              onClick={() => setConfirmDelete(true)}
               style={{
                 padding: '10px 14px', borderRadius: '10px',
                 background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.30)',
@@ -377,6 +385,17 @@ export default function AhorroDetailPage() {
           </form>
         </div>
       )}
+
+      <ConfirmModal
+        open={confirmDelete}
+        title="Eliminar plan de ahorro"
+        message={`"${plan.name}" se moverá a la papelera con todos sus depósitos. Puedes restaurarlo en 30 días.`}
+        confirmLabel="Eliminar"
+        variant="danger"
+        loading={deleting}
+        onConfirm={deletePlan}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   )
 }

@@ -11,7 +11,7 @@ export default async function ResumenPresupuesto() {
   const mesStr = `${year}-${String(mes).padStart(2, '0')}`
 
   const { data: budget } = await supabase
-    .from('budgets').select('*').eq('month', mes).eq('year', year).single()
+    .from('budgets').select('*').eq('month', mes).eq('year', year).maybeSingle()
 
   if (!budget?.notes) return null
 
