@@ -61,7 +61,10 @@ const nextConfig: NextConfig = {
               // tessdata.projectnaptha.com → Spanish/English language data.
               // cdn.jsdelivr.net           → primary Tesseract.js v5 CDN.
               // unpkg.com                  → Tesseract fallback CDN.
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://query1.finance.yahoo.com https://datos.gov.co https://tessdata.projectnaptha.com https://cdn.jsdelivr.net https://unpkg.com",
+              // data: + blob: are required because Tesseract.js v5 fetches its
+              // WASM binary as a data: URL after loading the core script, and
+              // OCR worker may also XHR a blob: URL of its own internals.
+              "connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://query1.finance.yahoo.com https://datos.gov.co https://tessdata.projectnaptha.com https://cdn.jsdelivr.net https://unpkg.com",
               // blob: is required so URL.createObjectURL() previews of
               // user-selected files (e.g. screenshot import modal) can render.
               "img-src 'self' data: blob: https://*.supabase.co",
