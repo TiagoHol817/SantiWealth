@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/context/ToastContext'
@@ -102,14 +103,26 @@ export default function PresupuestoForm({ limites, budgetId, mes, year, limitesA
     </button>
   )
 
+  // Portal the modal into <body>. position:fixed alone is not enough — the
+  // /presupuestos page wrapper uses `.page-enter`, which animates `transform`
+  // with `animation-fill-mode: both`, so a non-`none` transform persists on the
+  // ancestor. Per the CSS spec that ancestor becomes the containing block for
+  // descendant `position: fixed`, trapping the modal off-screen. Rendering
+  // through document.body (plus flex centering + max-height/overflow) sidesteps
+  // it entirely. Same pattern as EditarTransaccion / GoalForm.
   return (
     <>
-      <div className="fixed inset-0 z-40" style={{ backgroundColor: '#00000090' }} onClick={() => setAbierto(false)} />
-      <div className="card card-purple fixed z-50 rounded-2xl w-full shadow-2xl overflow-y-auto breathe-purple"
-        style={{
-          top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-          maxWidth: '560px', maxHeight: '90vh', padding: '1.5rem',
-        }}>
+      {typeof document !== 'undefined' && createPortal(
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ backgroundColor: '#00000090' }}
+        onMouseDown={(e) => { if (e.target === e.currentTarget) setAbierto(false) }}
+      >
+        <div
+          className="card card-purple rounded-2xl w-full shadow-2xl overflow-y-auto breathe-purple"
+          style={{ maxWidth: '560px', maxHeight: '92vh', padding: '1.5rem' }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -202,7 +215,10 @@ export default function PresupuestoForm({ limites, budgetId, mes, year, limitesA
             {guardando ? 'Guardando...' : budgetId ? 'Guardar cambios' : 'Crear presupuesto'}
           </button>
         </div>
-      </div>
+        </div>
+      </div>,
+      document.body
+      )}
       <ToastContainer />
     </>
   )

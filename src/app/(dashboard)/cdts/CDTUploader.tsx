@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { Plus, X, Pencil, Trash2, ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -205,12 +206,23 @@ export default function CDTUploader({ cdts }: { cdts?: { id: string; name: strin
         </button>
       )}
 
-      {/* Modal formulario */}
-      {(mode === 'add' || mode === 'edit') && (
-        <>
-          <div className="fixed inset-0 z-40" style={{ backgroundColor: '#00000080' }} onClick={() => setMode('none')} />
-          <div className="fixed z-50 rounded-2xl p-6 w-full max-w-lg shadow-2xl overflow-y-auto"
-            style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', maxHeight: '90vh' }}>
+      {/* Modal formulario — portaled into <body>. position:fixed alone is not
+          enough: the /cdts page wrapper uses `.page-enter`, which animates
+          `transform` (animation-fill-mode: both) so a non-`none` transform
+          persists on the ancestor and becomes the containing block for the
+          modal's position:fixed, trapping it off-screen. Same pattern as
+          EditarTransaccion / GoalForm. */}
+      {(mode === 'add' || mode === 'edit') && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: '#00000080' }}
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setMode('none') }}
+        >
+          <div
+            className="rounded-2xl p-6 w-full max-w-lg shadow-2xl overflow-y-auto"
+            style={{ backgroundColor: '#1a1f2e', border: '1px solid #2a3040', maxHeight: '92vh' }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
 
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-white font-semibold text-lg">
@@ -268,7 +280,8 @@ export default function CDTUploader({ cdts }: { cdts?: { id: string; name: strin
             </div>
 
           </div>
-        </>
+        </div>,
+        document.body
       )}
 
       <ConfirmModal
