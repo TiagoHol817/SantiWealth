@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { X, Loader2 } from 'lucide-react'
 import { useToast } from '@/context/ToastContext'
+import Select from '@/components/ui/Select'
 
 type AccountType = 'bank' | 'cash' | 'brokerage' | 'crypto' | 'liability' | 'other'
 type Currency   = 'COP' | 'USD'
@@ -170,14 +171,11 @@ export default function AccountEditModal({ open, onClose, initial }: Props) {
 
           <div>
             <label className="form-label">Tipo</label>
-            <select
-              className="form-input"
+            <Select
               value={type}
-              onChange={(e) => setType(e.target.value as AccountType)}
-              style={{ appearance: 'none', cursor: 'pointer' }}
-            >
-              {TYPE_OPTS.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-            </select>
+              onChange={(v) => setType(v as AccountType)}
+              options={TYPE_OPTS.map((t) => ({ value: t.id, label: t.label }))}
+            />
           </div>
 
           <div>

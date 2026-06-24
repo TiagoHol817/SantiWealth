@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Loader2, PiggyBank, Calendar, Target } from 'lucide-react'
+import Select from '@/components/ui/Select'
 
 const ICONS = ['🐷', '✈️', '🏠', '🚗', '🎓', '💍', '🏖️', '📱'] as const
 const FREQ_OPTS = [
@@ -291,81 +292,47 @@ export default function NuevoAhorroPage() {
           <div className="agregar-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
             <div>
               <label className="form-label">Cuenta origen (opcional)</label>
-              <select
-                className="form-input"
+              <Select
                 value={sourceAccount}
-                onChange={(e) => setSourceAccount(e.target.value)}
-                style={{ appearance: 'none', cursor: 'pointer' }}
-              >
-                <option value="">— Ninguna —</option>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>{a.name}</option>
-                ))}
-              </select>
+                onChange={setSourceAccount}
+                options={[
+                  { value: '', label: '— Ninguna —' },
+                  ...accounts.map((a) => ({ value: a.id, label: a.name })),
+                ]}
+              />
               <p style={{ color: '#6b7280', fontSize: '11px', marginTop: '5px' }}>
                 Si la seleccionas, cada aporte se registra como gasto en esta cuenta.
               </p>
             </div>
             <div>
               <label className="form-label">Cuenta destino (opcional)</label>
-              <select
-                className="form-input"
+              <Select
                 value={destinationAccount}
-                onChange={(e) => setDestinationAccount(e.target.value)}
-                style={{ appearance: 'none', cursor: 'pointer' }}
-              >
-                <option value="">— Ninguna —</option>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>{a.name}</option>
-                ))}
-              </select>
+                onChange={setDestinationAccount}
+                options={[
+                  { value: '', label: '— Ninguna —' },
+                  ...accounts.map((a) => ({ value: a.id, label: a.name })),
+                ]}
+              />
             </div>
           </div>
 
           {/* Optional: connect this plan to one of the user's existing goals.
               Renders only if the user has at least one goal — no specific
               goal name is hardcoded; the list is loaded from the API.
-              Styled with an explicit purple/white palette because the default
-              form-input theme was rendering purple-on-purple in some browsers
-              and the option list inherited unreadable colors. */}
+              The "No vincular" empty option is supplied here by the call-site,
+              not hardcoded inside <Select>. */}
           {goals.length > 0 && (
             <div>
               <label className="form-label">¿Conectar a una meta? (opcional)</label>
-              <select
+              <Select
                 value={linkedGoal}
-                onChange={(e) => setLinkedGoal(e.target.value)}
-                style={{
-                  width:          '100%',
-                  appearance:     'none',
-                  cursor:         'pointer',
-                  padding:        '11px 14px',
-                  borderRadius:   '10px',
-                  fontSize:       '14px',
-                  fontWeight:     500,
-                  // Explicit purple-on-white so contrast is guaranteed regardless
-                  // of browser default option-list styling.
-                  background:     '#6366f1',
-                  color:          '#ffffff',
-                  border:         '1px solid rgba(255,255,255,0.16)',
-                  outline:        'none',
-                  // Arrow indicator via background-image, since we removed the
-                  // native one with appearance:none.
-                  backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E")',
-                  backgroundRepeat:   'no-repeat',
-                  backgroundPosition: 'right 14px center',
-                  paddingRight:       '36px',
-                  transition:     'background 150ms ease',
-                }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLSelectElement).style.background = '#7c83f4 url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") right 14px center / 12px no-repeat' }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLSelectElement).style.background = '#6366f1 url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") right 14px center / 12px no-repeat' }}
-              >
-                {/* Native <option> elements inherit OS styling, but in modern
-                    browsers we can force them dark/white for parity. */}
-                <option value="" style={{ background: '#1a1f2e', color: '#ffffff' }}>No vincular</option>
-                {goals.map((g) => (
-                  <option key={g.id} value={g.id} style={{ background: '#1a1f2e', color: '#ffffff' }}>{g.name}</option>
-                ))}
-              </select>
+                onChange={setLinkedGoal}
+                options={[
+                  { value: '', label: 'No vincular' },
+                  ...goals.map((g) => ({ value: g.id, label: g.name })),
+                ]}
+              />
               <p style={{ color: '#9ca3af', fontSize: '11px', marginTop: '6px' }}>
                 Los depósitos de este plan aparecerán en el detalle de la meta seleccionada.
               </p>

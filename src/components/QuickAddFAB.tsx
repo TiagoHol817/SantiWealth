@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, X, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/context/ToastContext'
+import Select from '@/components/ui/Select'
 
 const CATS = [
   'Alimentación','Transporte','Vivienda','Servicios/Suscripciones',
@@ -151,9 +152,12 @@ export default function QuickAddFAB() {
               </div>
               <div>
                 <label style={lbl}>Categoría</label>
-                <select style={inp} value={form.category} onChange={e => set('category', e.target.value)}>
-                  {CATS.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <Select
+                  style={inp}
+                  value={form.category}
+                  onChange={v => set('category', v)}
+                  options={CATS.map(c => ({ value: c, label: c }))}
+                />
               </div>
               <div>
                 <label style={lbl}>Descripción</label>
@@ -168,9 +172,12 @@ export default function QuickAddFAB() {
               {accounts.length > 1 && (
                 <div>
                   <label style={lbl}>Cuenta</label>
-                  <select style={inp} value={form.account_id} onChange={e => set('account_id', e.target.value)}>
-                    {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                  </select>
+                  <Select
+                    style={inp}
+                    value={form.account_id}
+                    onChange={v => set('account_id', v)}
+                    options={accounts.map(a => ({ value: a.id, label: a.name }))}
+                  />
                 </div>
               )}
             </div>

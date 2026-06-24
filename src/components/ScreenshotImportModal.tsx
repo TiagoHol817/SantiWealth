@@ -6,6 +6,7 @@ import { Upload, X, Loader2, ArrowLeft, Check, AlertTriangle, RefreshCcw, Plus, 
 import { extractTransactionsFromImage } from '@/lib/ocr/extract-transactions'
 import ImportTutorialModal from './help/ImportTutorialModal'
 import ImageCropper from './ImageCropper'
+import Select from '@/components/ui/Select'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Filter = 'gastos' | 'ingresos' | 'todos'
@@ -648,18 +649,14 @@ export default function ScreenshotImportModal({ open, onClose }: ScreenshotImpor
 
                 {/* State D: loaded with accounts → real dropdown */}
                 {!accountsLoading && !loadError && accounts.length > 0 && (
-                  <select
-                    className="form-input"
+                  <Select
                     value={accountId}
-                    onChange={(e) => setAccountId(e.target.value)}
-                    style={{ appearance: 'none', cursor: 'pointer' }}
-                  >
-                    {accounts.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.name} {a.institution ? `· ${a.institution}` : ''}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setAccountId}
+                    options={accounts.map((a) => ({
+                      value: a.id,
+                      label: `${a.name}${a.institution ? ` · ${a.institution}` : ''}`,
+                    }))}
+                  />
                 )}
               </div>
 

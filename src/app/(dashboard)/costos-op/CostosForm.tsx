@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/context/ToastContext'
 import { useAchievementToast } from '@/components/ui/WealthMessage'
 import ConfirmModal from '@/components/ConfirmModal'
+import Select from '@/components/ui/Select'
 
 const CATEGORIAS = ['Arriendo', 'Servicios públicos', 'Internet/Celular', 'Suscripciones', 'Alimentación', 'Transporte', 'Otro']
 
@@ -139,9 +140,11 @@ export default function CostosForm({ costs }: { costs: Cost[] }) {
           </div>
           <div>
             <label className="form-label">Categoría</label>
-            <select className="form-input" value={form.category} onChange={e => set('category', e.target.value)}>
-              {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <Select
+              value={form.category}
+              onChange={v => set('category', v)}
+              options={CATEGORIAS.map(c => ({ value: c, label: c }))}
+            />
           </div>
           <div>
             <label className="form-label">Monto mensual (COP)</label>

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/context/ToastContext'
 import ConfirmModal from '@/components/ConfirmModal'
+import Select from '@/components/ui/Select'
 
 const CATEGORIAS_GASTO   = ['Alimentación','Transporte','Vivienda','Servicios/Suscripciones','Salud','Entretenimiento','Ropa y personal','Educación','Otro']
 const CATEGORIAS_INGRESO = ['Salario','Freelance','Inversiones','Arriendo','Otro']
@@ -163,15 +164,19 @@ export default function EditarTransaccion({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="form-label">Categoría</label>
-              <select className="form-input" value={cat} onChange={e => setCat(e.target.value)}>
-                {cats.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <Select
+                value={cat}
+                onChange={setCat}
+                options={cats.map(c => ({ value: c, label: c }))}
+              />
             </div>
             <div>
               <label className="form-label">Cuenta</label>
-              <select className="form-input" value={accId} onChange={e => setAccId(e.target.value)}>
-                {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-              </select>
+              <Select
+                value={accId}
+                onChange={setAccId}
+                options={accounts.map(a => ({ value: a.id, label: a.name }))}
+              />
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import { extractInvestmentsFromImage } from '@/lib/ocr/extract-investments'
 import type { OcrAssetType, OcrCurrency, OcrPosition } from '@/lib/ocr/types'
 import ImportTutorialModal from './help/ImportTutorialModal'
 import ImageCropper from './ImageCropper'
+import Select from '@/components/ui/Select'
 
 interface ScreenshotImportInvestmentsModalProps {
   open:    boolean
@@ -41,27 +42,6 @@ function uid() { return Math.random().toString(36).slice(2, 10) }
 // white-bg + light-gray text in some browsers because the native option
 // list and select container inherit browser-default colors that override
 // our card theme. Pure inline styles guarantee contrast.
-const DARK_SELECT_STYLE: React.CSSProperties = {
-  width:        '100%',
-  appearance:   'none',
-  cursor:       'pointer',
-  padding:      '8px 32px 8px 12px',
-  borderRadius: '8px',
-  fontSize:     '13px',
-  fontWeight:   500,
-  background:   '#1a1f2e',
-  color:        '#ffffff',
-  border:       '1px solid rgba(255,255,255,0.16)',
-  outline:      'none',
-  // White chevron baked in as inline SVG — replaces the native arrow that
-  // appearance:none removes. Encoded with `%23ffffff` (#ffffff) so it
-  // doesn't depend on stroke inheritance.
-  backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E")',
-  backgroundRepeat:   'no-repeat',
-  backgroundPosition: 'right 10px center',
-  transition:   'background-color 150ms ease',
-}
-const DARK_OPTION_STYLE: React.CSSProperties = { background: '#1a1f2e', color: '#ffffff' }
 
 function toRow(p: OcrPosition): EditableRow {
   return {
@@ -614,28 +594,24 @@ export default function ScreenshotImportInvestmentsModal({ open, onClose }: Scre
                     </div>
                     <div>
                       <p className="form-label">Tipo</p>
-                      <select
+                      <Select
+                        style={{ padding: '6px 10px', fontSize: '13px' }}
                         value={r.asset_type}
-                        onChange={(e) => updateRow(r.id, { asset_type: e.target.value as OcrAssetType })}
-                        style={DARK_SELECT_STYLE}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLSelectElement).style.background = '#252a3d ' + DARK_SELECT_STYLE.backgroundImage + ' no-repeat right 10px center' }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLSelectElement).style.background = '#1a1f2e ' + DARK_SELECT_STYLE.backgroundImage + ' no-repeat right 10px center' }}
-                      >
-                        {ASSET_TYPE_OPTS.map((t) => <option key={t} value={t} style={DARK_OPTION_STYLE}>{t}</option>)}
-                      </select>
+                        onChange={(v) => updateRow(r.id, { asset_type: v as OcrAssetType })}
+                        options={ASSET_TYPE_OPTS.map((t) => ({ value: t, label: t }))}
+                      />
                     </div>
                     <div>
                       <p className="form-label">Moneda</p>
-                      <select
+                      <Select
+                        style={{ padding: '6px 10px', fontSize: '13px' }}
                         value={r.currency}
-                        onChange={(e) => updateRow(r.id, { currency: e.target.value as OcrCurrency })}
-                        style={DARK_SELECT_STYLE}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLSelectElement).style.background = '#252a3d ' + DARK_SELECT_STYLE.backgroundImage + ' no-repeat right 10px center' }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLSelectElement).style.background = '#1a1f2e ' + DARK_SELECT_STYLE.backgroundImage + ' no-repeat right 10px center' }}
-                      >
-                        <option value="USD" style={DARK_OPTION_STYLE}>USD</option>
-                        <option value="COP" style={DARK_OPTION_STYLE}>COP</option>
-                      </select>
+                        onChange={(v) => updateRow(r.id, { currency: v as OcrCurrency })}
+                        options={[
+                          { value: 'USD', label: 'USD' },
+                          { value: 'COP', label: 'COP' },
+                        ]}
+                      />
                     </div>
                   </div>
 

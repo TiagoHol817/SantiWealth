@@ -5,6 +5,7 @@ import { Plus, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/context/ToastContext'
 import { useAchievementToast } from '@/components/ui/WealthMessage'
+import Select from '@/components/ui/Select'
 
 const CATEGORIAS_GASTO   = ['Alimentación','Transporte','Vivienda','Servicios/Suscripciones','Salud','Entretenimiento','Ropa y personal','Educación','Otro']
 const CATEGORIAS_INGRESO = ['Salario','Freelance','Inversiones','Arriendo','Otro']
@@ -135,15 +136,19 @@ export default function TransaccionForm({ accounts }: { accounts: any[] }) {
           </div>
           <div>
             <label className="form-label">Categoría</label>
-            <select className="form-input" value={form.category} onChange={e => set('category', e.target.value)}>
-              {cats.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <Select
+              value={form.category}
+              onChange={v => set('category', v)}
+              options={cats.map(c => ({ value: c, label: c }))}
+            />
           </div>
           <div>
             <label className="form-label">Cuenta</label>
-            <select className="form-input" value={form.account_id} onChange={e => set('account_id', e.target.value)}>
-              {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
+            <Select
+              value={form.account_id}
+              onChange={v => set('account_id', v)}
+              options={accounts.map(a => ({ value: a.id, label: a.name }))}
+            />
           </div>
           <div className="col-span-2">
             <label className="form-label">Descripción (opcional)</label>
