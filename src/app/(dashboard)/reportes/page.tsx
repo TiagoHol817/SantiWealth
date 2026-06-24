@@ -40,9 +40,13 @@ function getRangoFechas(periodo: string, mes: string): { desde: string; hasta: s
     }
   }
   const [y, m] = mes.split('-')
+  // Último día real del mes: new Date(year, month, 0) con month 1-based devuelve
+  // el día 0 del mes siguiente = último día del mes pedido. Evita "-31" hardcodeado
+  // (p.ej. 2026-06-31, fecha inválida → Postgres 400). Inclusivo, para el .lte.
+  const ultimoDia = new Date(Number(y), Number(m), 0).getDate()
   return {
     desde: `${y}-${m}-01`,
-    hasta: `${y}-${m}-31`,
+    hasta: `${y}-${m}-${String(ultimoDia).padStart(2, '0')}`,
     label: new Date(`${y}-${m}-15`).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' }),
   }
 }

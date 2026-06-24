@@ -9,6 +9,12 @@ export default async function ResumenPresupuesto() {
   const mes = now.getMonth() + 1
   const year = now.getFullYear()
   const mesStr = `${year}-${String(mes).padStart(2, '0')}`
+  // Rango semiabierto [inicioMes, inicioMesSiguiente): evita construir el fin de
+  // mes con un día hardcodeado (p.ej. "-31" daba 2026-06-31, fecha inválida →
+  // Postgres 400). `new Date(year, mes, 1)` usa mes 0-based, así que con mes
+  // 1-based apunta al primer día del mes siguiente (y rota bien en diciembre).
+  const sig = new Date(year, mes, 1)
+  const inicioMesSiguiente = `${sig.getFullYear()}-${String(sig.getMonth() + 1).padStart(2, '0')}-01`
 
   const { data: budget } = await supabase
     .from('budgets').select('*').eq('month', mes).eq('year', year).maybeSingle()
@@ -21,7 +27,7 @@ export default async function ResumenPresupuesto() {
     .from('transactions').select('category, amount')
     .eq('type', 'expense')
     .gte('date', `${mesStr}-01`)
-    .lte('date', `${mesStr}-31`)
+    .lt('date', inicioMesSiguiente)
 
   const gastos: Record<string, number> = {}
   transactions?.forEach(t => {

@@ -105,6 +105,11 @@ export default async function MetasPage() {
 
   const now    = new Date()
   const mesStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  // Rango semiabierto: evita el fin de mes hardcodeado ("-31" → fechas inválidas
+  // como 2026-06-31 que Postgres rechaza con 400). getMonth()+1 (0-based) apunta
+  // al primer día del mes siguiente, rotando bien en diciembre.
+  const sigMes = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+  const inicioMesSiguiente = `${sigMes.getFullYear()}-${String(sigMes.getMonth() + 1).padStart(2, '0')}-01`
 
   const hace6 = new Date(now)
   hace6.setMonth(hace6.getMonth() - 5)
@@ -112,7 +117,7 @@ export default async function MetasPage() {
 
   const [{ data: txMes }, { data: txRecent }] = await Promise.all([
     supabase.from('transactions').select('type, amount')
-      .gte('date', `${mesStr}-01`).lte('date', `${mesStr}-31`),
+      .gte('date', `${mesStr}-01`).lt('date', inicioMesSiguiente),
     supabase.from('transactions').select('date, amount, type')
       .gte('date', desdeHace6),
   ])
