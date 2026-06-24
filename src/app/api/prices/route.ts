@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { rateLimit, getIP } from '@/lib/rateLimit'
+import { createClient } from '@/lib/supabase/server'
+import { rateLimit } from '@/lib/rateLimit'
 
 const TICKER_RE = /^[A-Z0-9.\-^=]{1,20}$/
 
 export async function GET(req: NextRequest) {
-  const { allowed } = rateLimit(getIP(req), { limit: 30, windowMs: 60_000 })
+  // Auth gate first — the endpoint proxies an external service and previously
+  // accepted unauthenticated traffic, which let any IP burn Yahoo Finance
+  // quota via this route. Auth is cheap (cookie + JWT verify); only callers
+  // with a valid session reach the rate-limit and the fetch below.
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
+  // Per-user rate limit, namespaced so this bucket doesn't collide with any
+  // future per-user limits on other endpoints. 60/min covers an active user
+  // refreshing a portfolio with 20+ assets in a session without permitting
+  // runaway loops.
+  const { allowed } = rateLimit(`prices:${user.id}`, { limit: 60, windowMs: 60_000 })
   if (!allowed) return NextResponse.json({ error: 'Demasiadas solicitudes' }, { status: 429 })
 
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase().trim() ?? ''
