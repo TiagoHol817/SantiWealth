@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Pencil, X, Check, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -91,11 +92,27 @@ export default function EditarTransaccion({
     </button>
   )
 
+  // Portal the modal into <body>. position:fixed alone is not enough — the
+  // /transacciones table sits inside `.page-enter`, which animates `transform`
+  // with `animation-fill-mode: both`, so a non-`none` transform persists on the
+  // ancestor. Per the CSS spec that ancestor becomes the containing block for
+  // descendant `position: fixed`, trapping the modal inside the table card and
+  // pushing the "Guardar" button off-screen. Rendering through document.body
+  // (plus flex centering + max-height/overflow) sidesteps it entirely. Same
+  // pattern as GoalForm / ConfirmModal / AccountEditModal.
   return (
     <>
-      <div className="fixed inset-0 z-40" style={{ backgroundColor: '#00000080' }} onClick={() => setOpen(false)} />
-      <div className="card fixed z-50 p-6 w-full max-w-md shadow-2xl"
-        style={{ top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }}>
+      {typeof document !== 'undefined' && createPortal(
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ backgroundColor: '#00000080' }}
+        onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false) }}
+      >
+        <div
+          className="card p-6 w-full max-w-md shadow-2xl overflow-y-auto"
+          style={{ maxHeight: '92vh' }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
 
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-white font-semibold text-lg">Editar transacción</h3>
@@ -177,7 +194,10 @@ export default function EditarTransaccion({
             </button>
           </div>
         </div>
-      </div>
+        </div>
+      </div>,
+      document.body
+      )}
 
       <ConfirmModal
         open={confirmDelete}
